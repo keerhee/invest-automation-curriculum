@@ -169,3 +169,8 @@ scratch/
 invest-automation-curriculum.zip
 REPO_STRUCTURE.txt
 
+# ═══════════════════════════════════════════════
+# Claude Code 내부 파일
+# ═══════════════════════════════════════════════
+.claude/
+
