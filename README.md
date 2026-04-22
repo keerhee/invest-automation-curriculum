@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🤖 대학생을 위한 투자 자동화 커리큘럼
+# 🤖 투자 자동화 커리큘럼
 
 **AI 에이전트 · n8n · 페이퍼 트레이딩으로 배우는 8주 실습형 교육 과정**
 
@@ -21,7 +21,7 @@
 
 ## 📖 이 리포가 무엇인가?
 
-학생이 **n8n + Claude + 금융 API**를 활용해 **자기만의 자동 매매 리서치 시스템**을 직접 구축하는 8주 과정 전체 자료입니다.
+수강생이 **n8n + Claude + 금융 API**를 활용해 **자기만의 자동 매매 리서치 시스템**을 직접 구축하는 8주 과정 전체 자료입니다.
 
 단순히 라이브러리 사용법이 아니라:
 
@@ -30,9 +30,9 @@
 - 🛡️ **Risk Guards** — 실전 수준의 4단계 안전장치
 - 📈 **Paper Trading** — Alpaca + KIS 모의투자로 실 주문 파이프라인까지
 
-완주 시 학생은 "AI 분석 → 판단 → 승인 → 실제 주문" 전 과정을 자신의 손으로 구축한 경험을 얻습니다.
+완주 시 수강생은 "AI 분석 → 판단 → 승인 → 실제 주문" 전 과정을 자신의 손으로 구축한 경험을 얻습니다.
 
-> ⚠️ **교육 목적 선언**: 본 자료는 학습 목적이며 투자 권유가 아닙니다. 모든 실습은 Paper Trading(가상 자본)으로 진행하며, 실계좌 전환은 학생 본인 책임입니다. 자세한 내용은 [`SAFETY.md`](SAFETY.md) 참조.
+> ⚠️ **교육 목적 선언**: 본 자료는 학습 목적이며 투자 권유가 아닙니다. 모든 실습은 Paper Trading(가상 자본)으로 진행하며, 실계좌 전환은 수강생 본인 책임입니다. 자세한 내용은 [`SAFETY.md`](SAFETY.md) 참조.
 
 ---
 
@@ -58,7 +58,7 @@
 
 ## 🚀 빠른 시작
 
-### 학생용 (처음 시작하는 경우)
+### 수강생용 (처음 시작하는 경우)
 
 ```bash
 # 1. 리포 클론
@@ -90,9 +90,9 @@ git checkout -b my-class-2026-spring
 #    - lectures/ 안의 HTML을 프로젝터에서 직접 띄우거나
 #    - 강의 자료 PPT가 있다면 별도 제작 (roadmap에 포함)
 
-# 3. 학생 과제 수합용 구조 생성
+# 3. 수강생 과제 수합용 구조 생성
 mkdir -p submissions/{W1,W2,W3,W4,W5,W6,W7,W8,SP}
-echo "submissions/" >> .gitignore  # 학생 제출물은 커밋하지 않음
+echo "submissions/" >> .gitignore  # 수강생 제출물은 커밋하지 않음
 ```
 
 ---
@@ -105,7 +105,7 @@ invest-automation-curriculum/
 ├── 📖 README.md                    # 여기부터 시작
 ├── 🛡️ SAFETY.md                    # 안전 수칙 (필독)
 ├── 📜 LICENSE                      # CC BY-NC 4.0
-├── 🤝 CONTRIBUTING.md              # 기여 가이드 (강사/학생)
+├── 🤝 CONTRIBUTING.md              # 기여 가이드 (강사/수강생)
 ├── 💬 CODE_OF_CONDUCT.md           # 커뮤니티 규범
 ├── ❓ FAQ.md                       # 자주 묻는 질문
 ├── 📝 CHANGELOG.md                 # 버전 변경 이력
@@ -189,7 +189,7 @@ python scripts/verify_env.py
 
 ## 📝 과제 제출 가이드
 
-학생은 각 주차마다 과제 워크북의 **5개 과제**(필수 3 + 심화 2) 중 최소 필수 3개를 완료해야 합니다.
+수강생은 각 주차마다 과제 워크북의 **5개 과제**(필수 3 + 심화 2) 중 최소 필수 3개를 완료해야 합니다.
 
 ### 제출 폴더 자동 생성
 
@@ -259,7 +259,7 @@ python scripts/generate_submission.py --week W1 --name HongGilDong
 
 인용 시:
 ```
-대학생을 위한 투자 자동화 커리큘럼 (2026)
+투자 자동화 커리큘럼 (2026)
 https://github.com/YOUR_ORG/invest-automation-curriculum
 CC BY-NC 4.0
 ```
