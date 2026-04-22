@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>W4 — 차트 이미지 3차원 + Claude Vision + 조건 분기</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;600&display=swap');
+:root{
+  --black:#0d0d0d;--gray:#6b6b6b;--light:#f3f3f3;--border:#e6e6e6;--white:#fff;
+  --fh:46px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Noto Sans KR',-apple-system,sans-serif;background:#fff;color:var(--black);font-size:14px;line-height:1.75;padding-bottom:var(--fh)}
+
+#sf{position:fixed;bottom:0;left:0;right:0;height:var(--fh);background:var(--black);display:flex;align-items:center;justify-content:space-between;padding:0 16px;z-index:999}
+#sf .lbl{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:#555}
+#sf .ttl{font-size:12px;font-weight:700;color:#fff;max-width:60%;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#sf .pct{font-size:10px;color:#555;white-space:nowrap}
+
+.hero{background:var(--black);color:#fff;padding:48px 20px 40px;text-align:center;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;top:-80px;right:-80px;width:260px;height:260px;border:1px solid rgba(255,255,255,.05);border-radius:50%}
+.hero-badge{display:inline-block;border:1px solid rgba(255,255,255,.18);border-radius:20px;padding:4px 14px;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#aaa;margin-bottom:14px}
+.hero h1{font-size:22px;font-weight:900;line-height:1.35;margin-bottom:8px;letter-spacing:-.5px}
+.hero-sub{font-size:12px;color:#777;margin-bottom:22px}
+.hero-meta{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:rgba(255,255,255,.07);border-radius:10px;overflow:hidden;margin-top:18px}
+.hero-meta-item{background:rgba(255,255,255,.04);padding:12px 5px;text-align:center}
+.hero-meta-num{font-size:15px;font-weight:900;color:#fff;display:block}
+.hero-meta-lbl{font-size:9px;color:#555;margin-top:2px;line-height:1.3}
+
+.container{max-width:720px;margin:0 auto;padding:0 15px}
+section{padding:36px 0 0}
+.divider{height:1px;background:var(--border);margin:34px 0 0}
+.eyebrow{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--gray);margin-bottom:5px}
+h2{font-size:19px;font-weight:900;letter-spacing:-.3px;margin-bottom:12px;line-height:1.3}
+h3{font-size:14px;font-weight:700;margin:20px 0 8px}
+h4{font-size:12px;font-weight:700;margin:14px 0 6px;color:#333}
+p{color:#333;margin-bottom:8px;font-size:13px}
+strong{color:var(--black);font-weight:700}
+code{font-family:'JetBrains Mono','Courier New',monospace;background:#eef;padding:1px 5px;border-radius:3px;font-size:11px;color:#1d4ed8}
+
+.callout{background:var(--light);border-left:3px solid var(--black);padding:13px 15px;border-radius:0 8px 8px 0;margin:10px 0;font-size:13px;line-height:1.65}
+.callout.orange{background:#fff8ed;border-left-color:#d97706}
+.callout.blue{background:#eff6ff;border-left-color:#1d4ed8}
+.callout.green{background:#f0fdf4;border-left-color:#15803d}
+.callout.purple{background:#faf5ff;border-left-color:#7c3aed}
+.callout.red{background:#fef2f2;border-left-color:#dc2626}
+
+.lesson-meta{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:14px 0 4px}
+.meta-card{background:var(--light);border:1px solid var(--border);border-radius:8px;padding:10px 8px;text-align:center}
+.meta-card-lbl{font-size:9px;font-weight:700;letter-spacing:1px;color:#aaa;text-transform:uppercase;margin-bottom:3px}
+.meta-card-val{font-size:12px;font-weight:700;color:var(--black);line-height:1.3}
+
+.goals{display:flex;flex-direction:column;gap:7px;margin:12px 0}
+.goal{display:flex;gap:11px;align-items:flex-start;background:var(--light);border-radius:9px;padding:11px 13px;border:1px solid var(--border)}
+.goal-chk{width:20px;height:20px;background:var(--black);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;flex-shrink:0}
+.goal-text{font-size:12px;line-height:1.55}
+
+/* 3D DIMENSION */
+.dim-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:14px 0}
+.dim-card{border:1px solid var(--border);border-radius:10px;padding:12px 11px;background:#fff;opacity:.55;transition:opacity .2s}
+.dim-card.active{opacity:1;border-color:var(--black);box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.dim-card.done{opacity:.85}
+.dim-icon{font-size:22px;margin-bottom:5px}
+.dim-label{font-size:11px;font-weight:700;margin-bottom:5px;line-height:1.3}
+.dim-desc{font-size:10px;color:var(--gray);line-height:1.5}
+.dim-card.d-price.done{background:#eff6ff;border-color:#93c5fd}
+.dim-card.d-news.done{background:#fff8ed;border-color:#fcd34d}
+.dim-card.d-chart.active{background:#faf5ff;border-color:#7c3aed}
+
+/* CODE BLOCK (표준) */
+.code-block{background:#0d1117;color:#e6edf3;border-radius:9px;padding:14px 16px;margin:10px 0;font-family:'JetBrains Mono','Courier New',monospace;font-size:11px;line-height:1.7;overflow-x:auto;white-space:pre;tab-size:2;-moz-tab-size:2;word-wrap:normal}
+.code-block code{background:transparent;padding:0;color:inherit;font-size:inherit}
+.code-block .cm{color:#8b949e;font-style:italic}
+.code-block .kw{color:#ff7b72}
+.code-block .str{color:#a5d6ff}
+.code-block .num{color:#79c0ff}
+.code-block .fn{color:#d2a8ff}
+
+.step-block{background:#fffbeb;border:1px solid #fcd34d;border-radius:11px;padding:14px 15px;margin:12px 0}
+.step-title{font-size:11px;font-weight:700;color:#92400e;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.step-title::before{content:'▶';font-size:9px}
+.step-list{counter-reset:s;list-style:none;padding:0}
+.step-list li{counter-increment:s;position:relative;padding:6px 0 6px 30px;font-size:12px;line-height:1.65;color:#78350f;border-bottom:1px dashed #fcd34d}
+.step-list li:last-child{border-bottom:none}
+.step-list li::before{content:counter(s);position:absolute;left:0;top:8px;width:20px;height:20px;background:#d97706;color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:900}
+
+.node-card{border:1px solid var(--border);border-radius:10px;margin:10px 0;overflow:hidden}
+.node-head{background:var(--black);color:#fff;padding:10px 14px;display:flex;align-items:center;gap:9px}
+.node-icon{font-size:16px}
+.node-name{font-size:12px;font-weight:700}
+.node-tag{background:rgba(255,255,255,.15);border-radius:3px;padding:2px 7px;font-size:9px;font-weight:700;margin-left:auto;letter-spacing:.5px}
+.node-body{padding:12px 14px;background:var(--light);font-size:12px;line-height:1.6}
+.node-config{background:#fff;border:1px solid var(--border);border-radius:6px;padding:10px 12px;margin-top:8px;font-size:11px;font-family:'JetBrains Mono','Courier New',monospace}
+.node-config-row{padding:3px 0;border-bottom:1px dashed #eee}
+.node-config-row:last-child{border-bottom:none}
+.ncr-k{color:#6b6b6b;display:inline-block;min-width:130px}
+.ncr-v{color:#1d4ed8;font-weight:600}
+
+.n8n-flow{background:#fffbeb;border:1px solid #fcd34d;border-radius:11px;padding:14px;margin:14px 0}
+.n8n-title{font-size:11px;font-weight:700;color:#92400e;margin-bottom:10px}
+.n8n-steps{display:flex;flex-direction:column;gap:4px}
+.n8n-step{display:flex;align-items:flex-start;gap:8px;padding:4px 0}
+.n8n-node{border-radius:5px;padding:3px 9px;font-size:10px;font-weight:700;white-space:nowrap;flex-shrink:0;margin-top:1px}
+.nn-t{background:#dc2626;color:#fff}
+.nn-a{background:#2563eb;color:#fff}
+.nn-ai{background:#7c3aed;color:#fff}
+.nn-o{background:#059669;color:#fff}
+.nn-c{background:#374151;color:#fff}
+.n8n-edge{font-size:10px;color:#bbb;padding-top:5px;flex-shrink:0}
+.n8n-desc{font-size:11px;color:#78350f;flex:1;line-height:1.6;padding-top:3px}
+
+.dtable{width:100%;border-collapse:collapse;margin:10px 0;font-size:11px}
+.dtable th{background:var(--black);color:#fff;padding:8px 10px;text-align:left;font-size:10px;font-weight:700}
+.dtable td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.5}
+.dtable tr:nth-child(even) td{background:var(--light)}
+.dtable code{font-size:10px}
+
+/* PATTERN CARDS */
+.pattern-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:9px;margin:12px 0}
+.pattern-card{border:1px solid var(--border);border-radius:10px;padding:11px;background:var(--light)}
+.pattern-name{font-size:11px;font-weight:700;margin-bottom:4px;display:flex;align-items:center;gap:5px}
+.pattern-desc{font-size:10px;color:var(--gray);line-height:1.5}
+.pattern-svg{background:#fff;border:1px solid var(--border);border-radius:6px;padding:6px;margin:6px 0;display:flex;justify-content:center}
+
+/* AGENT BOX */
+.agent-box{background:#faf5ff;border:1px solid #e9d5ff;border-radius:10px;padding:13px 15px;margin:10px 0}
+.ag-title{font-size:11px;font-weight:700;color:#5b21b6;margin-bottom:6px;display:flex;align-items:center;gap:5px}
+.ag-body{font-size:12px;color:#5b21b6;line-height:1.65}
+
+/* PROMPT CARD */
+.prompt-card{background:#1e293b;color:#e2e8f0;border-radius:10px;padding:14px 16px;margin:10px 0;font-size:12px;line-height:1.7}
+.pc-label{font-size:9px;font-weight:700;color:#94a3b8;letter-spacing:1px;margin-bottom:6px}
+.prompt-card strong{color:#fbbf24}
+
+/* SIGNAL VERDICT */
+.verdict-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:12px 0}
+.v-card{border-radius:8px;padding:10px 8px;text-align:center}
+.v-card.buy{background:#d1fae5;color:#065f46;border:1px solid #6ee7b7}
+.v-card.watch-buy{background:#dbeafe;color:#1e40af;border:1px solid #93c5fd}
+.v-card.watch-sell{background:#fef3c7;color:#92400e;border:1px solid #fcd34d}
+.v-card.sell{background:#fee2e2;color:#991b1b;border:1px solid #fca5a5}
+.v-label{font-size:10px;font-weight:900;margin-bottom:3px}
+.v-cond{font-size:9px;line-height:1.4}
+
+.ts-block{background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:13px 15px;margin:10px 0}
+.ts-item{padding:8px 0;border-bottom:1px dashed #fecaca}
+.ts-item:last-child{border-bottom:none}
+.ts-q{font-size:12px;font-weight:700;color:#991b1b;margin-bottom:4px}
+.ts-q::before{content:'Q. ';color:#dc2626}
+.ts-a{font-size:11px;color:#7f1d1d;line-height:1.6;padding-left:14px}
+.ts-a::before{content:'A. ';font-weight:700}
+
+.checklist{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:13px 15px;margin:12px 0}
+.ck-title{font-size:11px;font-weight:700;color:#14532d;margin-bottom:8px}
+.ck-item{padding:5px 0 5px 22px;font-size:12px;line-height:1.5;color:#166534;position:relative}
+.ck-item::before{content:'☐';position:absolute;left:0;top:3px;font-size:14px;color:#15803d}
+
+.hw-block{background:linear-gradient(135deg,#7c3aed,#1d4ed8);color:#fff;border-radius:11px;padding:16px;margin:14px 0}
+.hw-tag{display:inline-block;background:rgba(255,255,255,.2);border-radius:4px;padding:2px 8px;font-size:9px;font-weight:900;letter-spacing:1.5px;margin-bottom:8px}
+.hw-title{font-size:14px;font-weight:700;margin-bottom:8px}
+.hw-list{list-style:none;padding:0}
+.hw-list li{padding:5px 0 5px 16px;font-size:12px;line-height:1.55;position:relative;color:rgba(255,255,255,.9)}
+.hw-list li::before{content:'▸';position:absolute;left:0;color:#c4b5fd}
+
+/* COMPARE 2COL */
+.compare-2col{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}
+.cc-card{border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.cc-head{padding:9px 12px;font-size:11px;font-weight:700;color:#fff}
+.cc-head.num{background:#374151}
+.cc-head.vision{background:#7c3aed}
+.cc-body{padding:11px 12px;background:var(--light);font-size:11px;line-height:1.6}
+
+@media(max-width:400px){
+  .lesson-meta{grid-template-columns:repeat(2,1fr)}
+  .dim-grid{grid-template-columns:1fr}
+  .compare-2col{grid-template-columns:1fr}
+  .pattern-grid{grid-template-columns:1fr}
+  .verdict-grid{grid-template-columns:repeat(2,1fr)}
+  .hero h1{font-size:19px}
+}
+</style>
+</head>
+<body>
+
+<div id="sf">
+  <span class="lbl">W4 강의노트</span>
+  <span class="ttl" id="sf-t">차트 Vision + 조건 분기</span>
+  <span class="pct" id="sf-p">0%</span>
+</div>
+
+<!-- HERO -->
+<div class="hero" data-section="W4 강의노트">
+  <div class="hero-badge">Week 04 · Phase 2 · 3D 분석 완성</div>
+  <h1>차트 이미지 3차원 + Claude Vision + 조건 분기</h1>
+  <p class="hero-sub">숫자로는 못 보는 패턴을 AI가 직접 "본다" — 3D 분석 완성 주</p>
+  <div class="hero-meta">
+    <div class="hero-meta-item"><span class="hero-meta-num">3시간</span><span class="hero-meta-lbl">수업<br>시간</span></div>
+    <div class="hero-meta-item"><span class="hero-meta-num">3D</span><span class="hero-meta-lbl">가격+뉴스<br>+차트</span></div>
+    <div class="hero-meta-item"><span class="hero-meta-num">Vision</span><span class="hero-meta-lbl">Claude<br>멀티모달</span></div>
+  </div>
+</div>
+
+<div class="container">
+
+<!-- 학습 목표 -->
+<section data-section="학습 목표">
+  <div class="eyebrow">Learning Objectives</div>
+  <h2>이번 주 학습 목표</h2>
+
+  <div class="lesson-meta">
+    <div class="meta-card"><div class="meta-card-lbl">레벨</div><div class="meta-card-val">중급+</div></div>
+    <div class="meta-card"><div class="meta-card-lbl">선수지식</div><div class="meta-card-val">W1~W3</div></div>
+    <div class="meta-card"><div class="meta-card-lbl">실습</div><div class="meta-card-val">120분</div></div>
+    <div class="meta-card"><div class="meta-card-lbl">과제</div><div class="meta-card-val">확장 1개</div></div>
+  </div>
+
+  <div class="goals">
+    <div class="goal"><div class="goal-chk">1</div><div class="goal-text"><strong>Chart-IMG API</strong>로 TradingView 스타일 차트 이미지를 지표(RSI·MACD·BB)와 함께 자동 생성할 수 있다</div></div>
+    <div class="goal"><div class="goal-chk">2</div><div class="goal-text"><strong>Claude Vision (멀티모달)</strong>에 바이너리 이미지를 전달해 기술적 패턴을 자연어로 판독받을 수 있다</div></div>
+    <div class="goal"><div class="goal-chk">3</div><div class="goal-text"><strong>Switch 노드</strong>로 3D 판단 결과(BUY/WATCH/SELL/AVOID)에 따라 워크플로를 4갈래로 분기할 수 있다</div></div>
+    <div class="goal"><div class="goal-chk">4</div><div class="goal-text"><strong>Discord 알림 + 차트 이미지 첨부</strong>로 강한 신호만 자동 발송하는 최종 시스템을 완성할 수 있다</div></div>
+  </div>
+
+  <div class="callout green">
+    <strong>이번 주의 한 문장:</strong> "AI가 차트를 본다." 이번 주는 단순한 숫자 비교를 넘어 <strong>헤드앤숄더·삼각수렴·쌍봉</strong> 같은 시각적 패턴을 AI가 인식하는 순간을 직접 경험합니다. 3D 분석 프레임이 완성되는 주입니다.
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- 3D 진행도 -->
+<section data-section="3D 완성">
+  <div class="eyebrow">Progress · 3D Framework Complete</div>
+  <h2>3D 분석 프레임 — 오늘 드디어 완성</h2>
+  <p>8주 여정 중 가장 중요한 주 중 하나입니다. 가격(1D)·뉴스(2D)·차트(3D) 세 차원이 오늘 모두 연결됩니다. 이 3차원을 동시에 보는 AI 에이전트는 <strong>프로 트레이더와 동일한 시야</strong>를 갖게 됩니다.</p>
+
+  <div class="dim-grid">
+    <div class="dim-card d-price done">
+      <div class="dim-icon">📊</div>
+      <div class="dim-label">1차원 — 가격 + 지표 ✓</div>
+      <div class="dim-desc">W1~W2 완료. RSI·MA·볼린저가 Sheets에 누적 중.</div>
+    </div>
+    <div class="dim-card d-news done">
+      <div class="dim-icon">📰</div>
+      <div class="dim-label">2차원 — 뉴스 센티먼트 ✓</div>
+      <div class="dim-desc">W3 완료. Alpha Vantage 가중평균 센티먼트 연동 중.</div>
+    </div>
+    <div class="dim-card d-chart active">
+      <div class="dim-icon">📈</div>
+      <div class="dim-label">3차원 — 차트 Vision ⚡</div>
+      <div class="dim-desc"><strong>오늘 완성</strong>. Chart-IMG + Claude Vision으로 시각 패턴까지 추가.</div>
+    </div>
+  </div>
+
+  <h3>왜 "이미지"가 필요한가 — 숫자 vs 이미지의 차이</h3>
+  <div class="compare-2col">
+    <div class="cc-card">
+      <div class="cc-head num">🔢 숫자 지표만</div>
+      <div class="cc-body">
+        <strong>입력:</strong> RSI 55, MA20=178, 현재가=180<br><br>
+        <strong>AI 판단:</strong> "중립 구간, 이동평균 위에서 거래 중."<br><br>
+        <strong>놓치는 것:</strong> 고점을 두 번 찍고 내려오는 <strong>쌍봉(Double Top)</strong> 패턴이 형성되고 있다는 사실.
+      </div>
+    </div>
+    <div class="cc-card">
+      <div class="cc-head vision">👁️ 차트 이미지</div>
+      <div class="cc-body">
+        <strong>입력:</strong> 위 숫자 + 최근 3개월 캔들차트 PNG<br><br>
+        <strong>AI 판단:</strong> "쌍봉 패턴이 명확히 형성됐으며, 넥라인 175 이탈 시 가파른 하락 가능성."<br><br>
+        <strong>추가 정보:</strong> 거래량 감소 패턴, 지지선·저항선, 캔들 모양 등 시각 맥락 전체.
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- 1교시: 기술적 패턴 기초 -->
+<section data-section="1교시: 패턴 기초">
+  <div class="eyebrow">Session 1 · 30min</div>
+  <h2>1교시 — AI가 읽을 기술적 패턴 기초</h2>
+
+  <p>AI Vision이 차트에서 무엇을 찾아낼지 이해하려면 <strong>어떤 패턴이 있는지 먼저 알아야 합니다</strong>. 4가지 대표 패턴만 이번 주 기준으로 익힙니다.</p>
+
+  <div class="pattern-grid">
+    <div class="pattern-card">
+      <div class="pattern-name">📉 헤드앤숄더 (Head &amp; Shoulders)</div>
+      <div class="pattern-svg">
+        <svg width="180" height="80" viewBox="0 0 180 80">
+          <polyline points="10,60 35,45 60,30 85,15 110,30 135,45 160,60" stroke="#dc2626" stroke-width="2" fill="none"/>
+          <line x1="10" y1="60" x2="160" y2="60" stroke="#999" stroke-dasharray="3,3" stroke-width="1"/>
+          <text x="85" y="75" text-anchor="middle" font-size="7" fill="#666">넥라인</text>
+        </svg>
+      </div>
+      <div class="pattern-desc"><strong>하락 반전 신호.</strong> 왼쪽 어깨·머리·오른쪽 어깨 3봉 형성 후 넥라인 이탈 시 매도 확정.</div>
+    </div>
+
+    <div class="pattern-card">
+      <div class="pattern-name">🔺 삼각수렴 (Triangle)</div>
+      <div class="pattern-svg">
+        <svg width="180" height="80" viewBox="0 0 180 80">
+          <polyline points="10,20 40,55 60,25 90,50 110,30 135,45 155,38" stroke="#d97706" stroke-width="2" fill="none"/>
+          <line x1="10" y1="20" x2="160" y2="38" stroke="#999" stroke-dasharray="3,3" stroke-width="1"/>
+          <line x1="10" y1="70" x2="160" y2="38" stroke="#999" stroke-dasharray="3,3" stroke-width="1"/>
+        </svg>
+      </div>
+      <div class="pattern-desc"><strong>변동성 폭발 임박.</strong> 고점은 낮아지고 저점은 높아지며 수렴. 브레이크아웃 방향이 다음 추세.</div>
+    </div>
+
+    <div class="pattern-card">
+      <div class="pattern-name">⛰️ 쌍봉 (Double Top)</div>
+      <div class="pattern-svg">
+        <svg width="180" height="80" viewBox="0 0 180 80">
+          <polyline points="10,60 40,20 70,45 100,20 130,45 160,65" stroke="#dc2626" stroke-width="2" fill="none"/>
+          <line x1="60" y1="45" x2="150" y2="45" stroke="#999" stroke-dasharray="3,3" stroke-width="1"/>
+          <text x="105" y="55" text-anchor="middle" font-size="7" fill="#666">지지선</text>
+        </svg>
+      </div>
+      <div class="pattern-desc"><strong>고점 반전 신호.</strong> 같은 가격대에서 두 번 저항. 지지선 이탈 시 하락 추세 진입.</div>
+    </div>
+
+    <div class="pattern-card">
+      <div class="pattern-name">🏆 컵앤핸들 (Cup &amp; Handle)</div>
+      <div class="pattern-svg">
+        <svg width="180" height="80" viewBox="0 0 180 80">
+          <path d="M 10 25 Q 60 65, 110 25" stroke="#15803d" stroke-width="2" fill="none"/>
+          <polyline points="110,25 125,35 140,30 155,20" stroke="#15803d" stroke-width="2" fill="none"/>
+          <line x1="10" y1="25" x2="155" y2="25" stroke="#999" stroke-dasharray="3,3" stroke-width="1"/>
+        </svg>
+      </div>
+      <div class="pattern-desc"><strong>상승 돌파 신호.</strong> U자 컵 + 작은 하락 손잡이 → 저항선 돌파 시 매수 기회.</div>
+    </div>
+  </div>
+
+  <div class="callout purple">
+    <strong>💡 왜 AI Vision이 강력한가:</strong> 이런 패턴은 <strong>정의가 모호</strong>합니다. "봉이 얼마나 비슷해야 쌍봉인가?" "수렴이 얼마나 좁아져야 삼각형인가?" 전통 알고리즘으로는 수많은 예외가 생깁니다. 반면 Vision 모델은 수백만 장의 차트 이미지를 학습했기 때문에 <strong>시각적 게슈탈트</strong>로 인식합니다 — 인간 트레이더처럼.
+  </div>
+
+  <div class="callout red">
+    <strong>⚠️ 신뢰성 주의:</strong> AI Vision은 완벽하지 않습니다. 특히 <strong>애매한 패턴</strong>에서는 과잉 해석 위험이 있습니다. 따라서 우리 시스템은 Vision 단독 판단이 아닌 <strong>가격+뉴스와 함께 삼각 검증</strong>하는 구조입니다. Vision이 "쌍봉"이라고 해도 뉴스가 매우 긍정적이면 AI가 종합 판단해서 WATCH로 완화.
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- 2교시: Chart-IMG API -->
+<section data-section="2교시: Chart-IMG API">
+  <div class="eyebrow">Session 2 · 45min</div>
+  <h2>2교시 — Chart-IMG API로 차트 이미지 자동 생성</h2>
+
+  <h3>Chart-IMG API 키 발급</h3>
+  <div class="step-block">
+    <div class="step-title">Chart-IMG 가입 + 키 발급 (3분)</div>
+    <ol class="step-list">
+      <li><code>https://chart-img.com</code> 접속 → 우측 상단 <strong>Sign in with Google</strong></li>
+      <li>대시보드 진입 → <strong>API Keys</strong> 메뉴 → <strong>Create New Key</strong></li>
+      <li>키 이름 입력 (예: <code>n8n-w4</code>) → 생성된 키 복사</li>
+      <li>무료 플랜 한도 확인: 월 <strong>500 requests</strong> (수업에 충분)</li>
+      <li>n8n Credentials → <strong>Header Auth</strong> → Name: <code>x-api-key</code>, Value: 키 붙여넣기</li>
+    </ol>
+  </div>
+
+  <h3>Advanced Chart 엔드포인트 호출</h3>
+  <p>Chart-IMG v2는 POST 요청 + JSON body로 작동합니다. 이전까지의 GET 요청과 다르니 주의.</p>
+
+  <div class="node-card">
+    <div class="node-head">
+      <span class="node-icon">🎨</span>
+      <span class="node-name">HTTP Request — Chart-IMG 차트 생성</span>
+      <span class="node-tag">ACTION</span>
+    </div>
+    <div class="node-body">
+      AAPL 일봉 3개월 차트 + RSI + MACD + 볼린저밴드 포함. 응답은 PNG 바이너리.
+      <div class="node-config">
+        <div class="node-config-row"><span class="ncr-k">Method:</span> <span class="ncr-v">POST</span></div>
+        <div class="node-config-row"><span class="ncr-k">URL:</span> <span class="ncr-v">https://api.chart-img.com/v2/tradingview/advanced-chart</span></div>
+        <div class="node-config-row"><span class="ncr-k">Authentication:</span> <span class="ncr-v">Generic — Header Auth (x-api-key)</span></div>
+        <div class="node-config-row"><span class="ncr-k">Send Headers:</span> <span class="ncr-v">content-type: application/json</span></div>
+        <div class="node-config-row"><span class="ncr-k">Send Body:</span> <span class="ncr-v">JSON (아래 참조)</span></div>
+        <div class="node-config-row"><span class="ncr-k">Response Format:</span> <span class="ncr-v">File (중요!)</span></div>
+        <div class="node-config-row"><span class="ncr-k">Put Output in Field:</span> <span class="ncr-v">data (바이너리 속성명)</span></div>
+      </div>
+    </div>
+  </div>
+
+  <h4>Body JSON 예시 — 지표 포함 차트</h4>
+
+<pre class="code-block">{
+  <span class="str">"symbol"</span>: <span class="str">"NASDAQ:AAPL"</span>,
+  <span class="str">"interval"</span>: <span class="str">"1D"</span>,
+  <span class="str">"range"</span>: <span class="str">"3M"</span>,
+  <span class="str">"theme"</span>: <span class="str">"light"</span>,
+  <span class="str">"width"</span>: <span class="num">800</span>,
+  <span class="str">"height"</span>: <span class="num">500</span>,
+  <span class="str">"style"</span>: <span class="str">"candle"</span>,
+  <span class="str">"studies"</span>: [
+    { <span class="str">"name"</span>: <span class="str">"Volume"</span> },
+    { <span class="str">"name"</span>: <span class="str">"Relative Strength Index"</span>, <span class="str">"input"</span>: { <span class="str">"length"</span>: <span class="num">14</span> } },
+    { <span class="str">"name"</span>: <span class="str">"MACD"</span> },
+    { <span class="str">"name"</span>: <span class="str">"Bollinger Bands"</span>, <span class="str">"input"</span>: { <span class="str">"length"</span>: <span class="num">20</span>, <span class="str">"mult"</span>: <span class="num">2</span> } }
+  ]
+}
+</pre>
+
+  <div class="callout blue">
+    <strong>💡 심볼 형식이 중요:</strong> TradingView 스타일 심볼 — <code>EXCHANGE:SYMBOL</code> 형태 필수.<br>
+    - 미국 주식: <code>NASDAQ:AAPL</code>, <code>NYSE:TSLA</code><br>
+    - 한국 주식: <code>KRX:005930</code> (삼성전자)<br>
+    - 암호화폐: <code>BINANCE:BTCUSDT</code>, <code>BINANCE:ETHUSDT</code><br>
+    - 지수: <code>TVC:SPX</code> (S&amp;P 500), <code>TVC:VIX</code>
+  </div>
+
+  <h3>응답 확인 — 바이너리 이미지</h3>
+  <p>실행 후 n8n에서 결과를 확인하면 일반 JSON이 아니라 <strong>이미지 미리보기</strong>가 뜹니다. 바이너리 탭의 <code>data</code> 속성에 PNG 데이터가 담겨 있습니다. 이 바이너리를 다음 노드에서 그대로 사용합니다.</p>
+
+  <div class="ts-block">
+    <div style="font-size:11px;font-weight:700;color:#991b1b;margin-bottom:6px">🚨 Chart-IMG 자주 겪는 문제</div>
+    <div class="ts-item">
+      <div class="ts-q">"Invalid symbol" 오류</div>
+      <div class="ts-a">EXCHANGE: 접두사 누락. <code>AAPL</code> 대신 <code>NASDAQ:AAPL</code> 사용. 지원 심볼은 <code>doc.chart-img.com</code>의 Exchange List 참조.</div>
+    </div>
+    <div class="ts-item">
+      <div class="ts-q">응답이 JSON 오류 메시지로 오고 이미지가 안 됨</div>
+      <div class="ts-a">HTTP Request의 <strong>Response Format을 File</strong>로 설정하지 않은 경우. 반드시 Options → Response → Response Format → File 선택.</div>
+    </div>
+    <div class="ts-item">
+      <div class="ts-q">차트에 지표가 안 나타남</div>
+      <div class="ts-a">studies 배열의 <code>name</code>이 TradingView 공식 이름과 일치해야 함. 예: <code>"RSI"</code>가 아니라 <code>"Relative Strength Index"</code>.</div>
+    </div>
+    <div class="ts-item">
+      <div class="ts-q">무료 한도 초과</div>
+      <div class="ts-a">월 500회 제한. 5종목 × 하루 1회 = 월 150회로 여유. Schedule Trigger 활성화 전 Manual로 충분히 테스트.</div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- 3교시: Claude Vision -->
+<section data-section="3교시: Claude Vision">
+  <div class="eyebrow">Session 3 · 45min</div>
+  <h2>3교시 — Claude Vision으로 차트 판독</h2>
+
+  <p>n8n의 <strong>Anthropic 노드</strong>에는 공식 <strong>Analyze Image</strong> operation이 있습니다. 이전 HTTP Request의 바이너리 출력을 그대로 입력으로 받아 Claude에게 이미지를 보여주고 자연어 분석을 받습니다.</p>
+
+  <div class="agent-box">
+    <div class="ag-title">🤖 멀티모달 에이전트의 본질</div>
+    <div class="ag-body">Claude Vision은 이미지를 <strong>토큰화</strong>해 언어 모델에 통합합니다. 덕분에 차트 위의 숫자(RSI 값, 가격), 선(이동평균·볼린저), 캔들 모양, 거래량, 그리고 <strong>이들 사이의 공간적 관계</strong>까지 동시에 이해합니다. 단순 OCR이 아니라 "시장 맥락"을 해석합니다.</div>
+  </div>
+
+  <div class="node-card">
+    <div class="node-head">
+      <span class="node-icon">👁️</span>
+      <span class="node-name">Anthropic — Analyze Image</span>
+      <span class="node-tag">VISION</span>
+    </div>
+    <div class="node-body">
+      바로 이전 Chart-IMG 노드의 바이너리를 입력으로 사용.
+      <div class="node-config">
+        <div class="node-config-row"><span class="ncr-k">Resource:</span> <span class="ncr-v">Message</span></div>
+        <div class="node-config-row"><span class="ncr-k">Operation:</span> <span class="ncr-v">Analyze Image</span></div>
+        <div class="node-config-row"><span class="ncr-k">Model:</span> <span class="ncr-v">claude-haiku-4-5-20251001</span></div>
+        <div class="node-config-row"><span class="ncr-k">Input Type:</span> <span class="ncr-v">Binary</span></div>
+        <div class="node-config-row"><span class="ncr-k">Binary Property:</span> <span class="ncr-v">data</span></div>
+        <div class="node-config-row"><span class="ncr-k">Text:</span> <span class="ncr-v">(아래 프롬프트)</span></div>
+        <div class="node-config-row"><span class="ncr-k">Max Tokens:</span> <span class="ncr-v">512</span></div>
+      </div>
+    </div>
+  </div>
+
+  <h3>Vision 프롬프트 설계</h3>
+  <div class="prompt-card">
+    <div class="pc-label">VISION PROMPT</div>
+당신은 기술적 분석 전문가입니다. 첨부된 차트 이미지를 분석해 다음 항목을 <strong>JSON으로만</strong> 응답하세요.<br><br>
+<strong>분석 항목:</strong><br>
+1. <strong>trend</strong>: UP / DOWN / SIDEWAYS 중 하나<br>
+2. <strong>pattern</strong>: 발견된 패턴 (헤드앤숄더/쌍봉/삼각수렴/컵앤핸들/없음)<br>
+3. <strong>rsi_zone</strong>: OVERSOLD / NEUTRAL / OVERBOUGHT<br>
+4. <strong>bb_position</strong>: 가격이 볼린저밴드 어디에 있는지 (UPPER / MIDDLE / LOWER / OUTSIDE_UPPER / OUTSIDE_LOWER)<br>
+5. <strong>key_observation</strong>: 가장 중요한 관찰 1문장 (한국어)<br>
+6. <strong>visual_confidence</strong>: 1~5 (패턴이 얼마나 명확한가)<br><br>
+<strong>출력:</strong><br>
+{<br>
+&nbsp;&nbsp;"trend": "...",<br>
+&nbsp;&nbsp;"pattern": "...",<br>
+&nbsp;&nbsp;"rsi_zone": "...",<br>
+&nbsp;&nbsp;"bb_position": "...",<br>
+&nbsp;&nbsp;"key_observation": "...",<br>
+&nbsp;&nbsp;"visual_confidence": 1-5<br>
+}<br><br>
+패턴이 애매하면 "없음"으로 표기하고 confidence를 낮게 주세요. <strong>확신하지 않는 것을 확신하지 마세요.</strong>
+  </div>
+
+  <h3>예상 Vision 응답</h3>
+
+<pre class="code-block">{
+  <span class="str">"trend"</span>: <span class="str">"SIDEWAYS"</span>,
+  <span class="str">"pattern"</span>: <span class="str">"삼각수렴"</span>,
+  <span class="str">"rsi_zone"</span>: <span class="str">"NEUTRAL"</span>,
+  <span class="str">"bb_position"</span>: <span class="str">"MIDDLE"</span>,
+  <span class="str">"key_observation"</span>: <span class="str">"최근 6주간 고점은 낮아지고 저점은 높아지는 대칭 삼각수렴 형성. 거래량 감소 추세로 브레이크아웃 임박."</span>,
+  <span class="str">"visual_confidence"</span>: <span class="num">4</span>
+}
+</pre>
+
+  <div class="callout orange">
+    <strong>⚠️ 비용 관리 — Vision은 토큰 소모가 큼:</strong> 이미지 1장 = 약 1,500~2,000 토큰 입력. Haiku 기준 1회당 $0.003~0.005. 하루 5종목 × 30일 = 월 약 $0.8. 관심 종목이 늘어날수록 비용 증가하므로 <strong>강한 신호 종목만 Vision으로 돌리는 최적화</strong>를 4교시에서 구현.
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- 4교시: Switch 분기 + 통합 -->
+<section data-section="4교시: Switch + Discord">
+  <div class="eyebrow">Session 4 · 60min</div>
+  <h2>4교시 — Switch 분기 + 최종 통합 시스템</h2>
+
+  <h3>Merge: 3D 데이터 모두 합치기</h3>
+  <p>가격(W2), 뉴스(W3), 차트 Vision(W4) 세 가지 결과를 하나의 JSON으로 합쳐 최종 종합 에이전트에 전달합니다.</p>
+
+<pre class="code-block"><span class="cm">// 3차원 데이터를 종합 JSON으로 병합</span>
+<span class="kw">const</span> priceData = $(<span class="str">'Indicators'</span>).item.json;
+<span class="kw">const</span> newsData = $(<span class="str">'NewsAggregate'</span>).item.json;
+<span class="kw">const</span> visionData = $(<span class="str">'ChartVision'</span>).item.json;
+
+<span class="kw">return</span> {
+  ticker: priceData.ticker,
+  dimension_1_price: {
+    current: priceData.price,
+    rsi14: priceData.rsi14,
+    ma20: priceData.ma20,
+    bb_upper: priceData.bb_upper,
+    bb_lower: priceData.bb_lower,
+    numeric_signal: priceData.signal
+  },
+  dimension_2_news: {
+    sentiment: newsData.avg_sentiment,
+    label: newsData.sentiment_label,
+    top_headlines: newsData.top_headlines
+  },
+  dimension_3_chart: {
+    trend: visionData.trend,
+    pattern: visionData.pattern,
+    rsi_zone: visionData.rsi_zone,
+    bb_position: visionData.bb_position,
+    observation: visionData.key_observation,
+    vision_confidence: visionData.visual_confidence
+  }
+};
+</pre>
+
+  <h3>종합 에이전트 System Message — 3D 판단</h3>
+
+  <div class="prompt-card">
+    <div class="pc-label">FINAL AGENT SYSTEM MESSAGE</div>
+당신은 <strong>3차원 통합 분석 에이전트</strong>입니다. 다음 세 차원의 데이터를 받습니다:<br><br>
+<strong>1. 가격·지표 (숫자)</strong> — 객관적 상태<br>
+<strong>2. 뉴스 센티먼트 (맥락)</strong> — 왜 움직이는가<br>
+<strong>3. 차트 Vision (패턴)</strong> — 시각적 흐름<br><br>
+<strong>판단 규칙:</strong><br>
+• 세 차원이 <strong>일치</strong>하면 신호 강도를 높게<br>
+• 하나라도 <strong>충돌</strong>하면 신호 강도를 낮추고 WATCH 우선<br>
+• 차트 패턴 confidence가 낮으면 Vision 가중치 축소<br>
+• 뉴스 센티먼트가 강하게 부정적이면 기술적 매수 신호라도 AVOID 고려<br><br>
+<strong>출력 JSON:</strong><br>
+{<br>
+&nbsp;&nbsp;"final_verdict": "BUY" | "WATCH_BUY" | "HOLD" | "WATCH_SELL" | "AVOID",<br>
+&nbsp;&nbsp;"confidence": 1~5,<br>
+&nbsp;&nbsp;"alignment": "ALIGNED" | "MIXED" | "CONFLICTED",<br>
+&nbsp;&nbsp;"summary": "3차원 통합 2문장 요약",<br>
+&nbsp;&nbsp;"alert_trigger": true | false<br>
+}<br><br>
+<strong>alert_trigger는 confidence가 4 이상이고 verdict가 BUY/AVOID일 때만 true.</strong> 교육 목적이며 투자 권유가 아님을 내부적으로 기억.
+  </div>
+
+  <h3>Switch 노드 — 4갈래 분기</h3>
+  <p>에이전트 최종 판단에 따라 워크플로를 4갈래로 나눕니다.</p>
+
+  <div class="verdict-grid">
+    <div class="v-card buy">
+      <div class="v-label">🚀 BUY</div>
+      <div class="v-cond">Discord 알림<br>+ 차트 이미지</div>
+    </div>
+    <div class="v-card watch-buy">
+      <div class="v-label">👀 WATCH</div>
+      <div class="v-cond">Sheets 기록만<br>(알림 X)</div>
+    </div>
+    <div class="v-card watch-sell">
+      <div class="v-label">⚠️ HOLD</div>
+      <div class="v-cond">로그만<br>저장</div>
+    </div>
+    <div class="v-card sell">
+      <div class="v-label">🛑 AVOID</div>
+      <div class="v-cond">Discord 긴급 알림<br>+ 차트 이미지</div>
+    </div>
+  </div>
+
+  <div class="node-card">
+    <div class="node-head">
+      <span class="node-icon">🔀</span>
+      <span class="node-name">Switch Node — 판단 분기</span>
+      <span class="node-tag">LOGIC</span>
+    </div>
+    <div class="node-body">
+      AI 에이전트 JSON 응답의 <code>final_verdict</code> 값에 따라 4개 출력 포트로 분기.
+      <div class="node-config">
+        <div class="node-config-row"><span class="ncr-k">Mode:</span> <span class="ncr-v">Rules</span></div>
+        <div class="node-config-row"><span class="ncr-k">Value:</span> <span class="ncr-v">{{ $json.final_verdict }}</span></div>
+        <div class="node-config-row"><span class="ncr-k">Rule 1:</span> <span class="ncr-v">equals "BUY" → Output 0</span></div>
+        <div class="node-config-row"><span class="ncr-k">Rule 2:</span> <span class="ncr-v">equals "WATCH_BUY" → Output 1</span></div>
+        <div class="node-config-row"><span class="ncr-k">Rule 3:</span> <span class="ncr-v">equals "HOLD" → Output 2</span></div>
+        <div class="node-config-row"><span class="ncr-k">Rule 4:</span> <span class="ncr-v">equals "AVOID" → Output 3</span></div>
+        <div class="node-config-row"><span class="ncr-k">Fallback:</span> <span class="ncr-v">Output 2 (HOLD로)</span></div>
+      </div>
+    </div>
+  </div>
+
+  <h3>Discord 알림 + 차트 이미지 첨부</h3>
+  <p>BUY/AVOID 분기에서는 Discord에 차트 이미지를 첨부해 발송합니다. n8n의 <strong>Discord 노드</strong>는 바이너리 데이터를 파일 첨부로 처리합니다.</p>
+
+  <div class="step-block">
+    <div class="step-title">Discord Webhook 준비</div>
+    <ol class="step-list">
+      <li>Discord 서버 설정 → 통합 → <strong>웹훅 만들기</strong></li>
+      <li>채널 선택 (예: <code>#투자-알림</code>) → 이름 지정 → <strong>웹훅 URL 복사</strong></li>
+      <li>n8n Credentials → <strong>Discord Webhook</strong> 추가 → URL 붙여넣기</li>
+      <li>Discord 노드 Operation: <strong>Send Message</strong> 선택</li>
+      <li>Authentication: <strong>Webhook</strong>, Files: 바이너리 데이터 포함 활성화</li>
+    </ol>
+  </div>
+
+  <div class="node-card">
+    <div class="node-head">
+      <span class="node-icon">📢</span>
+      <span class="node-name">Discord — BUY 알림 (이미지 첨부)</span>
+      <span class="node-tag">NOTIFY</span>
+    </div>
+    <div class="node-body">
+      Switch Output 0에 연결. 메시지는 에이전트 summary를 포함, 이미지는 Chart-IMG 바이너리 재사용.
+      <div class="node-config">
+        <div class="node-config-row"><span class="ncr-k">Authentication:</span> <span class="ncr-v">Webhook</span></div>
+        <div class="node-config-row"><span class="ncr-k">Operation:</span> <span class="ncr-v">Send Message</span></div>
+        <div class="node-config-row"><span class="ncr-k">Content:</span> <span class="ncr-v">🚀 **BUY 신호** — {{ $json.ticker }}...</span></div>
+        <div class="node-config-row"><span class="ncr-k">Files:</span> <span class="ncr-v">Add Files → Binary Property = data</span></div>
+      </div>
+    </div>
+  </div>
+
+  <h4>Discord 메시지 템플릿 (Content 필드)</h4>
+
+<pre class="code-block">🚀 **BUY 신호** — {{ $json.ticker }}
+
+**종합 판단:** {{ $json.final_verdict }} (신뢰도 {{ $json.confidence }}/5)
+**정렬 상태:** {{ $json.alignment }}
+
+📊 **가격·지표**
+• RSI: {{ $('Merge').item.json.dimension_1_price.rsi14 }}
+• BB 위치: {{ $('Merge').item.json.dimension_3_chart.bb_position }}
+
+📰 **뉴스 센티먼트:** {{ $('Merge').item.json.dimension_2_news.label }}
+
+📈 **차트 패턴:** {{ $('Merge').item.json.dimension_3_chart.pattern }}
+
+💬 **요약:** {{ $json.summary }}
+
+⚠️ _교육 목적 분석. 투자 판단은 본인 책임._
+</pre>
+</section>
+
+<div class="divider"></div>
+
+<!-- 전체 워크플로 -->
+<section data-section="전체 워크플로">
+  <div class="eyebrow">Complete Workflow</div>
+  <h2>W4 최종 워크플로 — 3D 분석 자동 알림 시스템</h2>
+
+  <div class="n8n-flow">
+    <div class="n8n-title">🔧 3D 분석 통합 에이전트 — 매일 장전 자동 실행</div>
+    <div class="n8n-steps">
+      <div class="n8n-step"><span class="n8n-node nn-t">Schedule</span><span class="n8n-edge">→</span><span class="n8n-desc">평일 오전 8시 30분 (한국장 개장 30분 전)</span></div>
+      <div class="n8n-step"><span class="n8n-node nn-a">Yahoo HTTP</span><span class="n8n-edge">→</span><span class="n8n-desc">60일 종가 데이터 수집</span></div>
+      <div class="n8n-step"><span class="n8n-node nn-c">Code(Indicators)</span><span class="n8n-edge">→</span><span class="n8n-desc">W2 RSI·MA·볼린저 계산 (1차원)</span></div>
+      <div class="n8n-step"><span class="n8n-node nn-a">Alpha Vantage</span><span class="n8n-edge">→</span><span class="n8n-desc">뉴스 센티먼트 조회</span></div>
+      <div class="n8n-step"><span class="n8n-node nn-c">Code(NewsAgg)</span><span class="n8n-edge">→</span><span class="n8n-desc">W3 가중평균 집계 (2차원)</span></div>
+      <div class="n8n-step"><span class="n8n-node nn-a">Chart-IMG</span><span class="n8n-edge">→</span><span class="n8n-desc">TradingView 차트 PNG 생성 (지표 포함)</span></div>
+      <div class="n8n-step"><span class="n8n-node nn-ai">Claude Vision</span><span class="n8n-edge">→</span><span class="n8n-desc">차트 패턴 판독 (3차원)</span></div>
+      <div class="n8n-step"><span class="n8n-node nn-c">Code(Merge)</span><span class="n8n-edge">→</span><span class="n8n-desc">3차원 데이터 통합 JSON</span></div>
+      <div class="n8n-step"><span class="n8n-node nn-ai">Final Agent</span><span class="n8n-edge">→</span><span class="n8n-desc">Claude가 3D 종합 최종 판단 생성</span></div>
+      <div class="n8n-step"><span class="n8n-node nn-c">Switch (4갈래)</span><span class="n8n-edge">→</span><span class="n8n-desc">BUY / WATCH / HOLD / AVOID</span></div>
+      <div class="n8n-step"><span class="n8n-node nn-o">Discord + Sheets</span><span class="n8n-edge">→</span><span class="n8n-desc">강한 신호만 알림, 모든 판단은 Sheets 누적</span></div>
+    </div>
+  </div>
+
+  <div class="callout green">
+    <strong>🎉 이 순간이 이번 과정의 꼭짓점:</strong> 대학생이 2주 전엔 n8n이 뭔지도 몰랐는데, 지금은 <strong>가격·뉴스·차트 3차원을 AI가 종합 분석해 알림까지 보내주는 시스템</strong>을 혼자 만들었습니다. 이게 진짜 "에이전트"입니다. 금융·테크 인턴 지원서에 바로 쓸 수 있는 포트폴리오입니다.
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- 체크리스트 -->
+<section data-section="완료 체크리스트">
+  <div class="eyebrow">Completion Checklist</div>
+  <h2>이번 주 완료 체크리스트</h2>
+
+  <div class="checklist">
+    <div class="ck-title">✅ 아래 항목이 모두 체크되면 W4 완료</div>
+    <div class="ck-item">Chart-IMG API 키 발급 + n8n Header Auth 등록</div>
+    <div class="ck-item">Advanced Chart POST 요청 성공 — 바이너리 PNG 수신</div>
+    <div class="ck-item">Response Format을 File로 설정, Output Field를 data로</div>
+    <div class="ck-item">Anthropic Analyze Image 노드로 차트 판독 JSON 수신</div>
+    <div class="ck-item">3차원 데이터(가격·뉴스·차트)를 Merge Code 노드로 통합</div>
+    <div class="ck-item">Final Agent가 alignment·final_verdict JSON 생성</div>
+    <div class="ck-item">Switch 노드로 BUY/WATCH/HOLD/AVOID 4갈래 분기 작동</div>
+    <div class="ck-item">Discord Webhook으로 BUY/AVOID 시 차트 이미지 첨부 발송</div>
+    <div class="ck-item">종목 3개 이상으로 테스트 — 패턴이 다른 종목에서 판단 차이 확인</div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- 과제 -->
+<section data-section="이번 주 과제">
+  <div class="eyebrow">Homework</div>
+  <h2>이번 주 과제</h2>
+
+  <div class="hw-block">
+    <span class="hw-tag">📝 HOMEWORK · W4</span>
+    <div class="hw-title">3D 에이전트 성능 검증 프로젝트</div>
+    <ul class="hw-list">
+      <li>본인 관심 종목 <strong>5개를 1주일간 매일 실행</strong> → verdicts 시트에 35개 판단 누적</li>
+      <li><strong>7일 후 회고:</strong> BUY 신호 종목의 실제 1주 수익률 추적, 예측 적중률 계산</li>
+      <li><strong>차원별 기여도 분석:</strong> 가격만 봤을 때, 가격+뉴스 때, 3D 모두 때 판단이 어떻게 달라지는지 비교 (같은 프롬프트로 3번 실행)</li>
+      <li><strong>선택 챌린지 A:</strong> confidence 4 이상인 종목만 Chart-IMG를 호출하도록 IF 노드 앞에 추가 (Vision 비용 70% 절감)</li>
+      <li><strong>선택 챌린지 B:</strong> Google Sheets에 추적 탭 생성 — 예측 vs 실제 결과 일주일 간격 자동 비교</li>
+    </ul>
+  </div>
+
+  <div class="callout green" style="margin-top:12px">
+    <strong>💡 W5 미리보기:</strong> Phase 2 종료. 다음 주(Phase 3)는 <strong>스케줄·멀티채널 알림 + RAG 1</strong>입니다. 지금까지 만든 3D 에이전트에 <strong>증권사 리포트·FOMC 의사록 PDF 검색</strong> 능력을 추가합니다. "연준이 언제 금리 인하 시그널을 준다고 했지?" 물으면 벡터 DB에서 원문을 찾아 출처 페이지까지 인용하는 <strong>에이전트의 장기 기억</strong>을 만듭니다.
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- 참고 자료 -->
+<section data-section="참고 자료">
+  <div class="eyebrow">References</div>
+  <h2>참고 자료</h2>
+  <table class="dtable">
+    <thead><tr><th>자료</th><th>용도</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Chart-IMG API Docs</strong><br><code>doc.chart-img.com</code></td><td>v2 advanced-chart 파라미터 전체, 지원 심볼 목록, 인디케이터 이름</td></tr>
+      <tr><td><strong>n8n Anthropic Node Docs</strong><br><code>docs.n8n.io/integrations/builtin/app-nodes/n8n-nodes-langchain.anthropic</code></td><td>Analyze Image operation 상세, 바이너리 입력 처리</td></tr>
+      <tr><td><strong>Claude Vision 공식 가이드</strong><br><code>docs.anthropic.com/en/docs/build-with-claude/vision</code></td><td>이미지 처리 한계, 해상도 권장사항, 토큰 계산</td></tr>
+      <tr><td><strong>TradingView Symbol Directory</strong></td><td>거래소·심볼 정확한 형식 검색 (NASDAQ:AAPL 등)</td></tr>
+      <tr><td><strong>Investopedia — Chart Patterns</strong></td><td>헤드앤숄더·삼각수렴·쌍봉 등 기술적 패턴 정의 표준 설명</td></tr>
+      <tr><td><strong>Nate Herk — Technical Analyst Agent</strong> (YouTube)</td><td>Chart-IMG + Vision 흐름 영상 복습용</td></tr>
+    </tbody>
+  </table>
+</section>
+
+</div>
+
+<div style="background:var(--black);color:#888;text-align:center;padding:24px 20px;font-size:11px;line-height:2;margin-bottom:var(--fh)">
+  W4 강의노트 · 차트 Vision + 조건 분기 · 3D 분석 완성 · 대학생 투자 자동화 과정 · 2026
+</div>
+
+<script>
+const sections = document.querySelectorAll('[data-section]');
+const sfT = document.getElementById('sf-t');
+const sfP = document.getElementById('sf-p');
+function update(){
+  const sy = window.scrollY;
+  const dh = document.documentElement.scrollHeight - window.innerHeight;
+  sfP.textContent = Math.round((sy / Math.max(dh, 1)) * 100) + '%';
+  let cur = sections[0]?.dataset.section || '';
+  sections.forEach(s => {
+    if(sy >= s.getBoundingClientRect().top + sy - 110) cur = s.dataset.section;
+  });
+  if(sfT.textContent !== cur) sfT.textContent = cur;
+}
+window.addEventListener('scroll', update, {passive:true});
+update();
+</script>
+</body>
+</html>

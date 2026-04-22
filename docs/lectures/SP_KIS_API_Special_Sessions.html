@@ -1,0 +1,1194 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>특별세션 — KIS API 모의투자 완전정복</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;600&display=swap');
+:root{
+  --black:#0d0d0d;--gray:#6b6b6b;--light:#f3f3f3;--border:#e6e6e6;--white:#fff;
+  --kis-blue:#0056a5;--kis-red:#d42128;
+  --fh:46px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Noto Sans KR',-apple-system,sans-serif;background:#fff;color:var(--black);font-size:14px;line-height:1.75;padding-bottom:var(--fh)}
+
+#sf{position:fixed;bottom:0;left:0;right:0;height:var(--fh);background:var(--black);display:flex;align-items:center;justify-content:space-between;padding:0 16px;z-index:999}
+#sf .lbl{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:#555}
+#sf .ttl{font-size:12px;font-weight:700;color:#fff;max-width:60%;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#sf .pct{font-size:10px;color:#555;white-space:nowrap}
+
+.hero{background:linear-gradient(135deg,#0056a5,#0d0d0d);color:#fff;padding:48px 20px 40px;text-align:center;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;top:-80px;right:-80px;width:260px;height:260px;border:1px solid rgba(255,255,255,.08);border-radius:50%}
+.hero-badge{display:inline-block;border:1px solid rgba(255,255,255,.25);border-radius:20px;padding:4px 14px;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#7dd3fc;margin-bottom:14px;font-weight:700}
+.hero h1{font-size:22px;font-weight:900;line-height:1.35;margin-bottom:8px;letter-spacing:-.5px}
+.hero-sub{font-size:12px;color:rgba(255,255,255,.8);margin-bottom:22px}
+.hero-meta{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:rgba(255,255,255,.08);border-radius:10px;overflow:hidden;margin-top:18px}
+.hero-meta-item{background:rgba(255,255,255,.06);padding:12px 5px;text-align:center}
+.hero-meta-num{font-size:15px;font-weight:900;color:#fff;display:block}
+.hero-meta-lbl{font-size:9px;color:rgba(255,255,255,.6);margin-top:2px;line-height:1.3}
+
+.container{max-width:720px;margin:0 auto;padding:0 15px}
+section{padding:36px 0 0}
+.divider{height:1px;background:var(--border);margin:34px 0 0}
+.eyebrow{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--gray);margin-bottom:5px}
+h2{font-size:19px;font-weight:900;letter-spacing:-.3px;margin-bottom:12px;line-height:1.3}
+h3{font-size:14px;font-weight:700;margin:20px 0 8px}
+h4{font-size:12px;font-weight:700;margin:14px 0 6px;color:#333}
+p{color:#333;margin-bottom:8px;font-size:13px}
+strong{color:var(--black);font-weight:700}
+code{font-family:'JetBrains Mono','Courier New',monospace;background:#eef;padding:1px 5px;border-radius:3px;font-size:11px;color:var(--kis-blue)}
+
+.callout{background:var(--light);border-left:3px solid var(--black);padding:13px 15px;border-radius:0 8px 8px 0;margin:10px 0;font-size:13px;line-height:1.65}
+.callout.orange{background:#fff8ed;border-left-color:#d97706}
+.callout.blue{background:#eff6ff;border-left-color:var(--kis-blue)}
+.callout.green{background:#f0fdf4;border-left-color:#15803d}
+.callout.purple{background:#faf5ff;border-left-color:#7c3aed}
+.callout.red{background:#fef2f2;border-left-color:var(--kis-red)}
+
+/* SESSION TAB */
+.sp-tabs{display:flex;gap:4px;margin:14px 0;background:var(--light);border-radius:10px;padding:4px;border:1px solid var(--border);position:sticky;top:5px;z-index:10;backdrop-filter:blur(10px)}
+.sp-tab{flex:1;padding:9px 8px;text-align:center;font-size:10px;font-weight:700;color:var(--gray);border-radius:7px;cursor:pointer;transition:all .2s;border:1px solid transparent}
+.sp-tab.active{background:var(--black);color:#fff;box-shadow:0 2px 6px rgba(0,0,0,.15)}
+.sp-tab-num{font-size:9px;color:#aaa;letter-spacing:1px;display:block;margin-bottom:1px}
+.sp-tab.active .sp-tab-num{color:#7dd3fc}
+.sp-tab-name{font-size:11px;line-height:1.3}
+.sp-content{display:none}
+.sp-content.active{display:block;animation:fadeIn .3s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+
+/* SESSION HEADER */
+.sp-header{background:linear-gradient(135deg,#0056a5,#1d4ed8);color:#fff;border-radius:12px;padding:16px 18px;margin:14px 0}
+.sp-header-tag{font-size:9px;font-weight:900;letter-spacing:2px;color:#7dd3fc;margin-bottom:4px}
+.sp-header-title{font-size:15px;font-weight:700;margin-bottom:4px}
+.sp-header-desc{font-size:11px;color:rgba(255,255,255,.82);line-height:1.6}
+
+.lesson-meta{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:14px 0 4px}
+.meta-card{background:var(--light);border:1px solid var(--border);border-radius:8px;padding:10px 8px;text-align:center}
+.meta-card-lbl{font-size:9px;font-weight:700;letter-spacing:1px;color:#aaa;text-transform:uppercase;margin-bottom:3px}
+.meta-card-val{font-size:12px;font-weight:700;color:var(--black);line-height:1.3}
+
+.goals{display:flex;flex-direction:column;gap:7px;margin:12px 0}
+.goal{display:flex;gap:11px;align-items:flex-start;background:var(--light);border-radius:9px;padding:11px 13px;border:1px solid var(--border)}
+.goal-chk{width:20px;height:20px;background:var(--kis-blue);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;flex-shrink:0}
+.goal-text{font-size:12px;line-height:1.55}
+
+/* CODE BLOCK */
+.code-block{background:#0d1117;color:#e6edf3;border-radius:9px;padding:14px 16px;margin:10px 0;font-family:'JetBrains Mono','Courier New',monospace;font-size:11px;line-height:1.7;overflow-x:auto;white-space:pre;tab-size:2;-moz-tab-size:2;word-wrap:normal}
+.code-block code{background:transparent;padding:0;color:inherit;font-size:inherit}
+.code-block .cm{color:#8b949e;font-style:italic}
+.code-block .kw{color:#ff7b72}
+.code-block .str{color:#a5d6ff}
+.code-block .num{color:#79c0ff}
+.code-block .fn{color:#d2a8ff}
+
+.step-block{background:#fffbeb;border:1px solid #fcd34d;border-radius:11px;padding:14px 15px;margin:12px 0}
+.step-title{font-size:11px;font-weight:700;color:#92400e;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.step-title::before{content:'▶';font-size:9px}
+.step-list{counter-reset:s;list-style:none;padding:0}
+.step-list li{counter-increment:s;position:relative;padding:6px 0 6px 30px;font-size:12px;line-height:1.65;color:#78350f;border-bottom:1px dashed #fcd34d}
+.step-list li:last-child{border-bottom:none}
+.step-list li::before{content:counter(s);position:absolute;left:0;top:8px;width:20px;height:20px;background:#d97706;color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:900}
+
+.node-card{border:1px solid var(--border);border-radius:10px;margin:10px 0;overflow:hidden}
+.node-head{background:var(--black);color:#fff;padding:10px 14px;display:flex;align-items:center;gap:9px}
+.node-icon{font-size:16px}
+.node-name{font-size:12px;font-weight:700}
+.node-tag{background:rgba(255,255,255,.15);border-radius:3px;padding:2px 7px;font-size:9px;font-weight:700;margin-left:auto;letter-spacing:.5px}
+.node-body{padding:12px 14px;background:var(--light);font-size:12px;line-height:1.6}
+.node-config{background:#fff;border:1px solid var(--border);border-radius:6px;padding:10px 12px;margin-top:8px;font-size:11px;font-family:'JetBrains Mono','Courier New',monospace}
+.node-config-row{padding:3px 0;border-bottom:1px dashed #eee}
+.node-config-row:last-child{border-bottom:none}
+.ncr-k{color:#6b6b6b;display:inline-block;min-width:130px}
+.ncr-v{color:var(--kis-blue);font-weight:600}
+
+.n8n-flow{background:#fffbeb;border:1px solid #fcd34d;border-radius:11px;padding:14px;margin:14px 0}
+.n8n-title{font-size:11px;font-weight:700;color:#92400e;margin-bottom:10px}
+.n8n-steps{display:flex;flex-direction:column;gap:4px}
+.n8n-step{display:flex;align-items:flex-start;gap:8px;padding:4px 0}
+.n8n-node{border-radius:5px;padding:3px 9px;font-size:10px;font-weight:700;white-space:nowrap;flex-shrink:0;margin-top:1px}
+.nn-t{background:var(--kis-red);color:#fff}
+.nn-a{background:var(--kis-blue);color:#fff}
+.nn-ai{background:#7c3aed;color:#fff}
+.nn-o{background:#059669;color:#fff}
+.nn-c{background:#374151;color:#fff}
+.nn-trade{background:#eab308;color:#000}
+.n8n-edge{font-size:10px;color:#bbb;padding-top:5px;flex-shrink:0}
+.n8n-desc{font-size:11px;color:#78350f;flex:1;line-height:1.6;padding-top:3px}
+
+.dtable{width:100%;border-collapse:collapse;margin:10px 0;font-size:11px}
+.dtable th{background:var(--black);color:#fff;padding:8px 10px;text-align:left;font-size:10px;font-weight:700}
+.dtable td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.5}
+.dtable tr:nth-child(even) td{background:var(--light)}
+.dtable code{font-size:10px}
+
+/* KIS URL BOX */
+.url-box{background:#fff;border:2px solid var(--kis-blue);border-radius:10px;padding:12px 14px;margin:10px 0}
+.url-label{font-size:10px;font-weight:700;color:var(--kis-blue);margin-bottom:4px;letter-spacing:1px}
+.url-value{font-family:'JetBrains Mono',monospace;font-size:11px;color:#333;word-break:break-all}
+
+/* TR_ID CARD */
+.tr-cards{display:grid;grid-template-columns:1fr;gap:8px;margin:12px 0}
+.tr-card{background:var(--light);border:1px solid var(--border);border-radius:8px;padding:10px 12px;display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center}
+.tr-card-name{font-size:12px;font-weight:700;color:#333}
+.tr-card-desc{font-size:10px;color:var(--gray);margin-top:2px}
+.tr-card-id{font-family:'JetBrains Mono',monospace;font-size:10px;background:#fff;border:1px solid var(--border);border-radius:4px;padding:3px 8px;color:var(--kis-blue);font-weight:700;text-align:center;min-width:100px}
+.tr-card.buy{border-color:#86efac}
+.tr-card.buy .tr-card-id{background:#dcfce7;color:#166534;border-color:#bbf7d0}
+.tr-card.sell{border-color:#fca5a5}
+.tr-card.sell .tr-card-id{background:#fee2e2;color:#991b1b;border-color:#fecaca}
+
+/* HASH KEY VISUAL */
+.hash-flow{background:var(--light);border-radius:10px;padding:14px;margin:12px 0;border:1px solid var(--border)}
+.hash-step{display:grid;grid-template-columns:40px 1fr;gap:10px;margin-bottom:8px;align-items:center}
+.hash-step:last-child{margin-bottom:0}
+.hash-num{background:var(--kis-blue);color:#fff;border-radius:6px;padding:8px;text-align:center;font-size:11px;font-weight:700}
+.hash-body{background:#fff;border:1px solid var(--border);border-radius:6px;padding:8px 11px;font-size:11px;line-height:1.55}
+
+/* PROMPT CARD */
+.prompt-card{background:#1e293b;color:#e2e8f0;border-radius:10px;padding:14px 16px;margin:10px 0;font-size:12px;line-height:1.7}
+.pc-label{font-size:9px;font-weight:700;color:#94a3b8;letter-spacing:1px;margin-bottom:6px}
+.prompt-card strong{color:#fbbf24}
+
+.ts-block{background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:13px 15px;margin:10px 0}
+.ts-item{padding:8px 0;border-bottom:1px dashed #fecaca}
+.ts-item:last-child{border-bottom:none}
+.ts-q{font-size:12px;font-weight:700;color:#991b1b;margin-bottom:4px}
+.ts-q::before{content:'Q. ';color:var(--kis-red)}
+.ts-a{font-size:11px;color:#7f1d1d;line-height:1.6;padding-left:14px}
+.ts-a::before{content:'A. ';font-weight:700}
+
+.checklist{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:13px 15px;margin:12px 0}
+.ck-title{font-size:11px;font-weight:700;color:#14532d;margin-bottom:8px}
+.ck-item{padding:5px 0 5px 22px;font-size:12px;line-height:1.5;color:#166534;position:relative}
+.ck-item::before{content:'☐';position:absolute;left:0;top:3px;font-size:14px;color:#15803d}
+
+/* SAFETY LADDER */
+.safety-ladder{background:linear-gradient(135deg,#fef3c7,#fef9c3);border:2px solid #fbbf24;border-radius:12px;padding:14px;margin:12px 0}
+.sl-title{font-size:12px;font-weight:700;color:#78350f;margin-bottom:10px}
+.sl-step{padding:8px 0;border-bottom:1px dashed #fcd34d;font-size:11px;line-height:1.6;color:#78350f}
+.sl-step:last-child{border-bottom:none}
+.sl-step strong{display:inline-block;background:#d97706;color:#fff;border-radius:3px;padding:1px 7px;font-size:10px;margin-right:6px}
+
+/* WARNING BOX */
+.warning-box{background:#fef2f2;border:2px solid var(--kis-red);border-radius:12px;padding:14px 16px;margin:12px 0}
+.wb-title{font-size:12px;font-weight:900;color:var(--kis-red);margin-bottom:6px;display:flex;align-items:center;gap:5px}
+.wb-body{font-size:11px;color:#7f1d1d;line-height:1.7}
+
+@media(max-width:400px){
+  .lesson-meta{grid-template-columns:repeat(2,1fr)}
+  .hero h1{font-size:19px}
+  .sp-tab-num{display:none}
+  .tr-card{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<div id="sf">
+  <span class="lbl">SP · KIS API</span>
+  <span class="ttl" id="sf-t">한국투자증권 모의투자 완전정복</span>
+  <span class="pct" id="sf-p">0%</span>
+</div>
+
+<!-- HERO -->
+<div class="hero" data-section="특별세션">
+  <div class="hero-badge">⭐ SPECIAL SESSION · SP1-SP3</div>
+  <h1>KIS API 한국투자증권 모의투자 완전정복</h1>
+  <p class="hero-sub">Alpaca(미국주식) 다음 단계 — 국내 주식을 AI 에이전트로 자동매매</p>
+  <div class="hero-meta">
+    <div class="hero-meta-item"><span class="hero-meta-num">3세션</span><span class="hero-meta-lbl">OAuth → 시세<br>→ 주문</span></div>
+    <div class="hero-meta-item"><span class="hero-meta-num">5천만원</span><span class="hero-meta-lbl">모의투자<br>가상 자본</span></div>
+    <div class="hero-meta-item"><span class="hero-meta-num">KOSPI</span><span class="hero-meta-lbl">국내 상장<br>전 종목</span></div>
+  </div>
+</div>
+
+<div class="container">
+
+<!-- 전체 소개 -->
+<section data-section="전체 소개">
+  <div class="eyebrow">Overview</div>
+  <h2>왜 KIS API를 추가로 배우는가</h2>
+
+  <p>W8에서 Alpaca Paper Trading으로 <strong>미국 주식</strong>을 자동매매했습니다. 하지만 한국 학생들에게는 <strong>국내 주식</strong> 경험이 더 친근하고 실전적입니다. 삼성전자, SK하이닉스, 네이버, 카카오 같은 종목을 직접 자동매매해야 진정한 "내 시장"이 됩니다.</p>
+
+  <div class="callout blue">
+    <strong>💡 Alpaca vs KIS 비교:</strong><br>
+    • <strong>Alpaca</strong>: 미국 주식 전용, 이메일만으로 가입, 단순한 API, 즉시 시작<br>
+    • <strong>KIS</strong>: 국내+해외 주식, 실계좌 연동 필요, 해시키 등 복잡, 한국 종목 지원<br>
+    W8까지 Alpaca로 기본기 익힌 학생이 KIS로 <strong>실전 한국 시장</strong>까지 확장하는 구조입니다.
+  </div>
+
+  <div class="warning-box">
+    <div class="wb-title">🚨 시작 전 필수 숙지</div>
+    <div class="wb-body">
+      KIS Developers는 <strong>실계좌와 모의계좌</strong>를 같은 API로 다룹니다. URL과 TR_ID의 <strong>단 한 글자</strong>(T vs V)로 구분됩니다. 실수하면 실제 돈이 나갑니다. 이번 세션은 <strong>절대적으로 모의계좌만</strong> 사용하며, 실계좌 전환은 수료 후 각자의 판단에 따릅니다.
+    </div>
+  </div>
+
+  <!-- 탭 내비게이션 -->
+  <div class="sp-tabs">
+    <div class="sp-tab active" data-tab="sp1">
+      <span class="sp-tab-num">SP 1</span>
+      <span class="sp-tab-name">OAuth + 인증</span>
+    </div>
+    <div class="sp-tab" data-tab="sp2">
+      <span class="sp-tab-num">SP 2</span>
+      <span class="sp-tab-name">시세 + 잔고</span>
+    </div>
+    <div class="sp-tab" data-tab="sp3">
+      <span class="sp-tab-num">SP 3</span>
+      <span class="sp-tab-name">자동매매 + Claude</span>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════ SP1 ═══════════════ -->
+<div class="sp-content active" id="sp1">
+
+<section data-section="SP1: OAuth 인증">
+  <div class="sp-header">
+    <div class="sp-header-tag">▶ SPECIAL SESSION 1</div>
+    <div class="sp-header-title">KIS Developers 가입 + OAuth 토큰 발급</div>
+    <div class="sp-header-desc">모든 KIS API 호출의 전제 — 계좌·앱키·접근토큰 3종 세트 확보</div>
+  </div>
+
+  <div class="lesson-meta">
+    <div class="meta-card"><div class="meta-card-lbl">세션</div><div class="meta-card-val">60분</div></div>
+    <div class="meta-card"><div class="meta-card-lbl">레벨</div><div class="meta-card-val">중급</div></div>
+    <div class="meta-card"><div class="meta-card-lbl">선수</div><div class="meta-card-val">W8 완료</div></div>
+    <div class="meta-card"><div class="meta-card-lbl">목표</div><div class="meta-card-val">토큰 확보</div></div>
+  </div>
+
+  <h3>학습 목표</h3>
+  <div class="goals">
+    <div class="goal"><div class="goal-chk">1</div><div class="goal-text">한국투자증권 <strong>모의투자 계좌 개설</strong> + KIS Developers 서비스 신청을 완료할 수 있다</div></div>
+    <div class="goal"><div class="goal-chk">2</div><div class="goal-text"><strong>AppKey + AppSecret + 계좌번호</strong> 3종 세트를 발급받아 안전하게 n8n Credentials에 저장할 수 있다</div></div>
+    <div class="goal"><div class="goal-chk">3</div><div class="goal-text"><strong>Access Token 24시간 유효</strong> 발급 + n8n에서 자동 재발급 워크플로를 구축할 수 있다</div></div>
+  </div>
+</section>
+
+<!-- 1교시: 계좌 개설 -->
+<section data-section="계좌 개설">
+  <div class="eyebrow">Step 1 · 20min</div>
+  <h2>1단계 — 모의투자 계좌 개설</h2>
+
+  <div class="step-block">
+    <div class="step-title">한국투자증권 앱 가입 (이미 계좌 있으면 스킵)</div>
+    <ol class="step-list">
+      <li>한국투자증권 앱 설치 또는 <code>securities.koreainvestment.com</code> 접속</li>
+      <li>비대면 계좌개설 → 신분증 + 본인인증 (미성년자는 부모 동반)</li>
+      <li>계좌 개설 후 로그인 → <strong>HTS ID</strong>(영문) 설정 — 나중에 API에서 사용</li>
+      <li>입금 불필요. 모의투자는 별도 가상자본 지급</li>
+    </ol>
+  </div>
+
+  <div class="step-block">
+    <div class="step-title">모의투자 신청 (가상 5천만원 지급)</div>
+    <ol class="step-list">
+      <li>홈페이지 상단 <strong>트레이딩 → 모의투자</strong> 메뉴 진입</li>
+      <li><strong>주식 모의투자</strong> 대회 신청 — 상시 신청 가능</li>
+      <li>신청 완료 후 <strong>모의투자 계좌번호</strong> 자동 발급 (실계좌와 <strong>별개</strong>)</li>
+      <li>계좌번호 형식 예: <code>50123456-01</code> — 앞 8자리 + 뒤 2자리</li>
+      <li>계좌번호 메모장에 안전하게 저장</li>
+    </ol>
+  </div>
+
+  <div class="callout orange">
+    <strong>💡 모의투자 특징:</strong> 가상 5천만원 자동 지급, 실제 시세 기반 주문 체결, 매월 1일 자본 리셋. 주식 종목은 <strong>KOSPI + KOSDAQ 전 종목</strong> 주문 가능. 단, <strong>ETF 일부 · 파생상품은 제한</strong>될 수 있으니 주의.
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- 2단계: KIS Developers 신청 -->
+<section data-section="KIS Developers 신청">
+  <div class="eyebrow">Step 2 · 15min</div>
+  <h2>2단계 — KIS Developers API 서비스 신청</h2>
+
+  <div class="step-block">
+    <div class="step-title">KIS Developers 서비스 신청 (5분)</div>
+    <ol class="step-list">
+      <li><code>apiportal.koreainvestment.com</code> 접속 → 우측 상단 로그인</li>
+      <li><strong>KIS Developers 서비스 신청하기</strong> 클릭</li>
+      <li><strong>모의투자 계좌</strong> 선택 → 아까 발급받은 모의계좌 번호 입력</li>
+      <li>간편인증 · 휴대폰 인증 완료 → <strong>신청</strong></li>
+      <li>승인 즉시 <strong>AppKey (36자리) + AppSecret (180자리)</strong> 화면에 표시</li>
+      <li><strong>⚠️ AppSecret은 단 한 번만 표시!</strong> 즉시 복사해 안전한 곳에 저장</li>
+    </ol>
+  </div>
+
+  <div class="warning-box">
+    <div class="wb-title">🔐 앱키·시크릿 보관 원칙</div>
+    <div class="wb-body">
+      • 절대 GitHub에 커밋하지 않기 — <code>.env</code> 파일 + <code>.gitignore</code> 필수<br>
+      • AppSecret 유출 시 <strong>즉시 KIS Developers에서 재발급</strong> (기존 키 자동 만료)<br>
+      • n8n Credentials에 저장할 때 <strong>실전/모의 구분</strong> 명확히 (이름에 "paper" 포함)<br>
+      • 절대로 채팅·메신저·이메일로 앱키 전송 금지
+    </div>
+  </div>
+
+  <h3>n8n Credentials에 저장</h3>
+  <div class="node-card">
+    <div class="node-head">
+      <span class="node-icon">🔑</span>
+      <span class="node-name">n8n Credentials — KIS Paper</span>
+      <span class="node-tag">SECURE</span>
+    </div>
+    <div class="node-body">
+      Generic Credential Type으로 저장. n8n 변수 시스템에서 호출할 수 있게 일관된 이름 사용.
+      <div class="node-config">
+        <div class="node-config-row"><span class="ncr-k">Credential Name:</span> <span class="ncr-v">kis_paper_credentials</span></div>
+        <div class="node-config-row"><span class="ncr-k">APP_KEY:</span> <span class="ncr-v">36자리 문자열</span></div>
+        <div class="node-config-row"><span class="ncr-k">APP_SECRET:</span> <span class="ncr-v">180자리 문자열</span></div>
+        <div class="node-config-row"><span class="ncr-k">CANO:</span> <span class="ncr-v">계좌 앞 8자리 (50123456)</span></div>
+        <div class="node-config-row"><span class="ncr-k">ACNT_PRDT_CD:</span> <span class="ncr-v">계좌 뒤 2자리 (01)</span></div>
+        <div class="node-config-row"><span class="ncr-k">HTS_ID:</span> <span class="ncr-v">가입 시 설정한 영문 ID</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- 3단계: Access Token -->
+<section data-section="Access Token 발급">
+  <div class="eyebrow">Step 3 · 25min</div>
+  <h2>3단계 — Access Token 발급 + 자동 재발급 워크플로</h2>
+
+  <p>KIS API 호출 시마다 <strong>Access Token</strong>을 헤더에 실어야 합니다. 토큰은 <strong>24시간 유효</strong>하며, 하루에 최대 1회만 발급 가능(과도 발급 시 이용 제한). 따라서 <strong>토큰을 저장·재사용</strong>하는 워크플로가 필수입니다.</p>
+
+  <h3>Base URL 구분 — 실수 금지</h3>
+  <div class="url-box">
+    <div class="url-label">📗 모의투자 (우리가 사용할 URL)</div>
+    <div class="url-value">https://openapivts.koreainvestment.com:29443</div>
+  </div>
+  <div class="url-box" style="border-color:var(--kis-red);background:#fff5f5">
+    <div class="url-label" style="color:var(--kis-red)">⚠️ 실전투자 (절대 건드리지 말 것)</div>
+    <div class="url-value">https://openapi.koreainvestment.com:9443</div>
+  </div>
+
+  <h3>토큰 발급 API 호출</h3>
+  <div class="node-card">
+    <div class="node-head">
+      <span class="node-icon">🎫</span>
+      <span class="node-name">HTTP Request — Access Token 발급</span>
+      <span class="node-tag">AUTH</span>
+    </div>
+    <div class="node-body">
+      모의투자 URL에 POST. 앱키·시크릿을 Body에 전송.
+      <div class="node-config">
+        <div class="node-config-row"><span class="ncr-k">Method:</span> <span class="ncr-v">POST</span></div>
+        <div class="node-config-row"><span class="ncr-k">URL:</span> <span class="ncr-v">https://openapivts.koreainvestment.com:29443/oauth2/tokenP</span></div>
+        <div class="node-config-row"><span class="ncr-k">Content-Type:</span> <span class="ncr-v">application/json</span></div>
+        <div class="node-config-row"><span class="ncr-k">Body Mode:</span> <span class="ncr-v">JSON (아래)</span></div>
+      </div>
+    </div>
+  </div>
+
+<pre class="code-block"><span class="cm">// Request Body</span>
+{
+  <span class="str">"grant_type"</span>: <span class="str">"client_credentials"</span>,
+  <span class="str">"appkey"</span>: <span class="str">"{{ $credentials.APP_KEY }}"</span>,
+  <span class="str">"appsecret"</span>: <span class="str">"{{ $credentials.APP_SECRET }}"</span>
+}
+
+<span class="cm">// Response (성공)</span>
+{
+  <span class="str">"access_token"</span>: <span class="str">"eyJ0eXAiOiJKV1QiLCJh..."</span>,
+  <span class="str">"token_type"</span>: <span class="str">"Bearer"</span>,
+  <span class="str">"expires_in"</span>: <span class="num">86400</span>,
+  <span class="str">"access_token_token_expired"</span>: <span class="str">"2026-04-23 08:30:00"</span>
+}
+</pre>
+
+  <h3>토큰 자동 재발급 워크플로</h3>
+  <p>24시간마다 새 토큰을 발급받아 <strong>n8n 워크플로 변수</strong> 또는 <strong>Google Sheets</strong>에 저장하면 다른 워크플로에서 재사용 가능합니다.</p>
+
+  <div class="n8n-flow">
+    <div class="n8n-title">🔧 KIS 토큰 관리 워크플로 (별도 생성)</div>
+    <div class="n8n-steps">
+      <div class="n8n-step"><span class="n8n-node nn-t">Schedule</span><span class="n8n-edge">→</span><span class="n8n-desc">매일 오전 6시 30분 (장전 여유있게)</span></div>
+      <div class="n8n-step"><span class="n8n-node nn-a">HTTP: Token 발급</span><span class="n8n-edge">→</span><span class="n8n-desc">KIS /oauth2/tokenP 호출</span></div>
+      <div class="n8n-step"><span class="n8n-node nn-c">Code: 유효시간 계산</span><span class="n8n-edge">→</span><span class="n8n-desc">expires_in + 안전마진 -5분</span></div>
+      <div class="n8n-step"><span class="n8n-node nn-o">Sheets: 토큰 저장</span><span class="n8n-edge">→</span><span class="n8n-desc">kis_tokens 탭에 token·expiry·timestamp 기록</span></div>
+      <div class="n8n-step"><span class="n8n-node nn-o">Discord 알림 (옵션)</span><span class="n8n-edge">→</span><span class="n8n-desc">"토큰 재발급 완료, 유효기한 ~4/23 06:30"</span></div>
+    </div>
+  </div>
+
+  <h3>토큰 조회 함수 — 다른 워크플로에서 재사용</h3>
+
+<pre class="code-block"><span class="cm">// 다른 워크플로에서 토큰이 필요할 때</span>
+<span class="cm">// Sheets "kis_tokens" 탭에서 최신 1행 조회 후 사용</span>
+
+<span class="kw">const</span> tokenRow = $(<span class="str">'Sheets Get Latest Token'</span>).item.json;
+<span class="kw">const</span> token = tokenRow.access_token;
+<span class="kw">const</span> expiry = <span class="kw">new</span> Date(tokenRow.expiry);
+<span class="kw">const</span> now = <span class="kw">new</span> Date();
+
+<span class="cm">// 만료 체크 (안전마진 5분)</span>
+<span class="kw">const</span> minutesLeft = (expiry - now) / <span class="num">60000</span>;
+<span class="kw">if</span> (minutesLeft &lt; <span class="num">5</span>) {
+  <span class="kw">throw new</span> Error(<span class="str">'KIS 토큰 만료 임박 — 재발급 워크플로 수동 실행 필요'</span>);
+}
+
+<span class="kw">return</span> {
+  authorization: <span class="str">`Bearer ${token}`</span>,
+  valid_for_minutes: Math.<span class="fn">round</span>(minutesLeft)
+};
+</pre>
+
+  <div class="ts-block">
+    <div style="font-size:11px;font-weight:700;color:#991b1b;margin-bottom:6px">🚨 SP1 자주 발생하는 오류</div>
+    <div class="ts-item">
+      <div class="ts-q">토큰 발급이 "EGW00133" 오류</div>
+      <div class="ts-a">앱키·시크릿 오타 또는 KIS Developers 신청 승인 대기 중. 포털에서 승인 상태 확인. 승인 직후 1~2분 기다렸다 재시도.</div>
+    </div>
+    <div class="ts-item">
+      <div class="ts-q">하루에 토큰을 여러 번 발급하다 차단됨</div>
+      <div class="ts-a">KIS는 과도한 토큰 발급을 제한. <strong>토큰 재사용 필수</strong>. Sheets 저장 방식이 안전. 차단 시 몇 시간 후 자동 해제되나 반복되면 장기 제한될 수 있음.</div>
+    </div>
+    <div class="ts-item">
+      <div class="ts-q">Body를 JSON이 아닌 form-data로 보내 실패</div>
+      <div class="ts-a">KIS는 엄격히 <code>Content-Type: application/json</code> + JSON body 요구. n8n HTTP Request의 Body Content Type을 "JSON"으로 명시. Send Body 옵션 체크.</div>
+    </div>
+  </div>
+
+  <h3>SP1 완료 체크리스트</h3>
+  <div class="checklist">
+    <div class="ck-title">✅ 아래 모두 체크되면 SP1 완료</div>
+    <div class="ck-item">한국투자증권 실계좌 개설 완료</div>
+    <div class="ck-item">모의투자 계좌 개설 완료 (가상 5천만원 지급 확인)</div>
+    <div class="ck-item">KIS Developers 서비스 신청 → AppKey/AppSecret 발급</div>
+    <div class="ck-item">n8n Credentials에 kis_paper 자격증명 저장 (APP_KEY, APP_SECRET, CANO, ACNT_PRDT_CD, HTS_ID)</div>
+    <div class="ck-item">토큰 발급 API 호출 성공 → access_token 획득</div>
+    <div class="ck-item">Sheets "kis_tokens" 탭 생성 + 토큰 자동 재발급 스케줄 워크플로 가동</div>
+  </div>
+</section>
+
+</div><!-- /sp1 -->
+
+
+<!-- ═══════════════ SP2 ═══════════════ -->
+<div class="sp-content" id="sp2">
+
+<section data-section="SP2: 시세 + 잔고">
+  <div class="sp-header">
+    <div class="sp-header-tag">▶ SPECIAL SESSION 2</div>
+    <div class="sp-header-title">시세 조회 + 잔고 확인 + TR_ID 체계</div>
+    <div class="sp-header-desc">주식 현재가·일자별 차트 조회 + 계좌 잔고·평가손익 조회</div>
+  </div>
+
+  <div class="lesson-meta">
+    <div class="meta-card"><div class="meta-card-lbl">세션</div><div class="meta-card-val">60분</div></div>
+    <div class="meta-card"><div class="meta-card-lbl">레벨</div><div class="meta-card-val">중급</div></div>
+    <div class="meta-card"><div class="meta-card-lbl">선수</div><div class="meta-card-val">SP1 완료</div></div>
+    <div class="meta-card"><div class="meta-card-lbl">목표</div><div class="meta-card-val">데이터 조회</div></div>
+  </div>
+
+  <h3>학습 목표</h3>
+  <div class="goals">
+    <div class="goal"><div class="goal-chk">1</div><div class="goal-text"><strong>TR_ID 체계</strong>를 이해하고 실전/모의의 T/V 접두어 규칙을 구분할 수 있다</div></div>
+    <div class="goal"><div class="goal-chk">2</div><div class="goal-text"><strong>삼성전자(005930) 현재가 + 60일 일봉 차트</strong>를 조회하는 n8n 워크플로를 구축할 수 있다</div></div>
+    <div class="goal"><div class="goal-chk">3</div><div class="goal-text">계좌 <strong>잔고·보유종목·평가손익</strong>을 조회해 Google Sheets에 자동 기록할 수 있다</div></div>
+  </div>
+</section>
+
+<!-- TR_ID 체계 -->
+<section data-section="TR_ID 체계">
+  <div class="eyebrow">Step 1 · 15min</div>
+  <h2>1단계 — KIS TR_ID 체계 이해</h2>
+
+  <p>KIS API는 <strong>TR_ID</strong>(Transaction ID)로 각 기능을 구분합니다. Alpaca처럼 URL 하나로 모든 걸 하지 않고, <strong>헤더의 TR_ID 값</strong>이 실제 동작을 결정합니다. 같은 URL이라도 TR_ID가 다르면 매수/매도/조회가 달라집니다.</p>
+
+  <h3>TR_ID 명명 규칙</h3>
+  <div class="callout blue">
+    <strong>📐 TR_ID 첫 글자:</strong><br>
+    • <code>T</code>: <strong>실전투자</strong> (T로 시작) — 예: <code>TTTC0802U</code><br>
+    • <code>V</code>: <strong>모의투자</strong> (V로 시작) — 예: <code>VTTC0802U</code><br>
+    • <code>FH</code>: 시세조회 (실전·모의 <strong>공통</strong>) — 예: <code>FHKST01010100</code><br>
+    한 글자 차이로 실전/모의가 구분되므로 <strong>매우 주의</strong>. 모의투자에서 T로 시작하는 TR_ID 쓰면 403 오류.
+  </div>
+
+  <h3>이 과정에서 사용할 핵심 TR_ID 9개</h3>
+
+  <div class="tr-cards">
+    <div class="tr-card">
+      <div>
+        <div class="tr-card-name">📊 주식 현재가</div>
+        <div class="tr-card-desc">실시간 시세 조회 — 실전/모의 공통</div>
+      </div>
+      <div class="tr-card-id">FHKST01010100</div>
+    </div>
+    <div class="tr-card">
+      <div>
+        <div class="tr-card-name">📈 일자별 시세 (일봉)</div>
+        <div class="tr-card-desc">최근 30~100일 OHLC — 실전/모의 공통</div>
+      </div>
+      <div class="tr-card-id">FHKST01010400</div>
+    </div>
+    <div class="tr-card">
+      <div>
+        <div class="tr-card-name">📉 기간별 시세 (일/주/월/년)</div>
+        <div class="tr-card-desc">커스텀 기간 OHLC — 실전/모의 공통</div>
+      </div>
+      <div class="tr-card-id">FHKST03010100</div>
+    </div>
+    <div class="tr-card">
+      <div>
+        <div class="tr-card-name">💼 계좌 잔고 조회</div>
+        <div class="tr-card-desc">보유 종목 리스트 + 평가손익</div>
+      </div>
+      <div class="tr-card-id">VTTC8434R</div>
+    </div>
+    <div class="tr-card">
+      <div>
+        <div class="tr-card-name">💰 주문가능 조회</div>
+        <div class="tr-card-desc">매수 가능 금액·수량</div>
+      </div>
+      <div class="tr-card-id">VTTC8908R</div>
+    </div>
+    <div class="tr-card buy">
+      <div>
+        <div class="tr-card-name">🟢 현금 매수</div>
+        <div class="tr-card-desc">모의 매수 주문 (SP3에서 사용)</div>
+      </div>
+      <div class="tr-card-id">VTTC0802U</div>
+    </div>
+    <div class="tr-card sell">
+      <div>
+        <div class="tr-card-name">🔴 현금 매도</div>
+        <div class="tr-card-desc">모의 매도 주문 (SP3에서 사용)</div>
+      </div>
+      <div class="tr-card-id">VTTC0801U</div>
+    </div>
+    <div class="tr-card">
+      <div>
+        <div class="tr-card-name">🔄 주문 정정/취소</div>
+        <div class="tr-card-desc">미체결 주문 변경</div>
+      </div>
+      <div class="tr-card-id">VTTC0803U</div>
+    </div>
+    <div class="tr-card">
+      <div>
+        <div class="tr-card-name">📋 일별 주문 체결 조회</div>
+        <div class="tr-card-desc">당일/과거 주문 내역</div>
+      </div>
+      <div class="tr-card-id">VTTC8001R</div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- 2단계: 현재가 조회 -->
+<section data-section="현재가 조회">
+  <div class="eyebrow">Step 2 · 20min</div>
+  <h2>2단계 — 삼성전자 현재가 조회</h2>
+
+  <div class="node-card">
+    <div class="node-head">
+      <span class="node-icon">💹</span>
+      <span class="node-name">HTTP Request — 주식 현재가</span>
+      <span class="node-tag">QUOTE</span>
+    </div>
+    <div class="node-body">
+      GET 방식 + 쿼리 파라미터로 종목코드 전달. 헤더에 token·appkey·TR_ID 필수.
+      <div class="node-config">
+        <div class="node-config-row"><span class="ncr-k">Method:</span> <span class="ncr-v">GET</span></div>
+        <div class="node-config-row"><span class="ncr-k">URL:</span> <span class="ncr-v">https://openapivts.koreainvestment.com:29443/uapi/domestic-stock/v1/quotations/inquire-price</span></div>
+        <div class="node-config-row"><span class="ncr-k">Query FID_COND_MRKT_DIV_CODE:</span> <span class="ncr-v">J (주식)</span></div>
+        <div class="node-config-row"><span class="ncr-k">Query FID_INPUT_ISCD:</span> <span class="ncr-v">005930 (삼성전자)</span></div>
+      </div>
+    </div>
+  </div>
+
+  <h3>필수 헤더 5개</h3>
+
+<pre class="code-block"><span class="cm">// KIS 시세 조회 헤더 (모든 조회 API 공통)</span>
+{
+  <span class="str">"content-type"</span>: <span class="str">"application/json"</span>,
+  <span class="str">"authorization"</span>: <span class="str">"Bearer {{ $json.access_token }}"</span>,
+  <span class="str">"appkey"</span>: <span class="str">"{{ $credentials.APP_KEY }}"</span>,
+  <span class="str">"appsecret"</span>: <span class="str">"{{ $credentials.APP_SECRET }}"</span>,
+  <span class="str">"tr_id"</span>: <span class="str">"FHKST01010100"</span>
+}
+</pre>
+
+  <h3>응답 파싱 — 핵심 필드</h3>
+
+<pre class="code-block"><span class="cm">// 응답 예시 (삼성전자 005930)</span>
+{
+  <span class="str">"rt_cd"</span>: <span class="str">"0"</span>,          <span class="cm">// 0 = 성공</span>
+  <span class="str">"msg_cd"</span>: <span class="str">"MCA00000"</span>,
+  <span class="str">"msg1"</span>: <span class="str">"정상처리 되었습니다"</span>,
+  <span class="str">"output"</span>: {
+    <span class="str">"stck_prpr"</span>: <span class="str">"72400"</span>,      <span class="cm">// 현재가</span>
+    <span class="str">"prdy_vrss"</span>: <span class="str">"-800"</span>,       <span class="cm">// 전일 대비</span>
+    <span class="str">"prdy_ctrt"</span>: <span class="str">"-1.09"</span>,      <span class="cm">// 전일 대비율 (%)</span>
+    <span class="str">"stck_oprc"</span>: <span class="str">"73000"</span>,      <span class="cm">// 시가</span>
+    <span class="str">"stck_hgpr"</span>: <span class="str">"73200"</span>,      <span class="cm">// 고가</span>
+    <span class="str">"stck_lwpr"</span>: <span class="str">"72200"</span>,      <span class="cm">// 저가</span>
+    <span class="str">"acml_vol"</span>: <span class="str">"8724563"</span>,    <span class="cm">// 누적 거래량</span>
+    <span class="str">"per"</span>: <span class="str">"15.23"</span>,          <span class="cm">// PER</span>
+    <span class="str">"pbr"</span>: <span class="str">"1.45"</span>            <span class="cm">// PBR</span>
+  }
+}
+</pre>
+
+  <div class="callout orange">
+    <strong>📌 필드명이 암호 같은 이유:</strong> KIS API는 <strong>한글 약어</strong>를 영문으로 표기.<br>
+    • <code>stck_prpr</code> = "주식 현재가" (STocK PResent PRice)<br>
+    • <code>prdy_vrss</code> = "전일 대비" (PReviouS DaY VeRSuS)<br>
+    • <code>acml_vol</code> = "누적 거래량" (ACcuMuLated VOLume)<br>
+    처음엔 낯설지만 한 번 익히면 직관적. <strong>KIS API 문서 페이지</strong>에 전체 필드 한글 설명 있음.
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- 3단계: 일봉 + 잔고 -->
+<section data-section="일봉 + 잔고 조회">
+  <div class="eyebrow">Step 3 · 25min</div>
+  <h2>3단계 — 일자별 시세 + 계좌 잔고</h2>
+
+  <h3>일자별 시세 (60일 OHLC)</h3>
+  <p>W2에서 Yahoo Finance로 미국 주식 OHLC를 가져왔습니다. 한국 주식은 KIS의 <code>FHKST01010400</code>을 씁니다.</p>
+
+  <div class="node-card">
+    <div class="node-head">
+      <span class="node-icon">📈</span>
+      <span class="node-name">HTTP Request — 일봉 60일</span>
+      <span class="node-tag">CHART</span>
+    </div>
+    <div class="node-body">
+      <div class="node-config">
+        <div class="node-config-row"><span class="ncr-k">URL Path:</span> <span class="ncr-v">/uapi/domestic-stock/v1/quotations/inquire-daily-price</span></div>
+        <div class="node-config-row"><span class="ncr-k">tr_id:</span> <span class="ncr-v">FHKST01010400</span></div>
+        <div class="node-config-row"><span class="ncr-k">FID_COND_MRKT_DIV_CODE:</span> <span class="ncr-v">J</span></div>
+        <div class="node-config-row"><span class="ncr-k">FID_INPUT_ISCD:</span> <span class="ncr-v">005930</span></div>
+        <div class="node-config-row"><span class="ncr-k">FID_PERIOD_DIV_CODE:</span> <span class="ncr-v">D (일봉)</span></div>
+        <div class="node-config-row"><span class="ncr-k">FID_ORG_ADJ_PRC:</span> <span class="ncr-v">1 (수정주가)</span></div>
+      </div>
+    </div>
+  </div>
+
+  <h3>W2 지표 계산 연결 — 한국 종목 대응</h3>
+
+<pre class="code-block"><span class="cm">// KIS 일봉 응답 → W2 RSI·MA·볼린저 계산 어댑터</span>
+<span class="kw">const</span> kisData = $input.item.json.output;
+
+<span class="cm">// output은 최근부터 과거 순 - 역순으로 변환</span>
+<span class="kw">const</span> closes = [];
+<span class="kw">for</span> (<span class="kw">let</span> i = kisData.length - <span class="num">1</span>; i &gt;= <span class="num">0</span>; i--) {
+  closes.<span class="fn">push</span>(parseFloat(kisData[i].stck_clpr));  <span class="cm">// 종가</span>
+}
+
+<span class="kw">const</span> symbol = <span class="str">'005930.KS'</span>;
+<span class="kw">const</span> currentPrice = closes[closes.length - <span class="num">1</span>];
+
+<span class="cm">// W2의 calcRSI, calcMA, calcBB 재사용 (코드 생략)</span>
+<span class="cm">// ...</span>
+
+<span class="kw">return</span> {
+  ticker: symbol,
+  ticker_name: <span class="str">'삼성전자'</span>,
+  price: currentPrice,
+  rsi14: rsi14.<span class="fn">toFixed</span>(<span class="num">2</span>),
+  ma20: ma20.<span class="fn">toFixed</span>(<span class="num">2</span>),
+  bb_upper: bb.upper.<span class="fn">toFixed</span>(<span class="num">2</span>),
+  bb_lower: bb.lower.<span class="fn">toFixed</span>(<span class="num">2</span>),
+  market: <span class="str">'KOSPI'</span>
+};
+</pre>
+
+  <h3>계좌 잔고 조회</h3>
+  <div class="node-card">
+    <div class="node-head">
+      <span class="node-icon">💼</span>
+      <span class="node-name">HTTP Request — 계좌 잔고</span>
+      <span class="node-tag">ACCOUNT</span>
+    </div>
+    <div class="node-body">
+      <div class="node-config">
+        <div class="node-config-row"><span class="ncr-k">URL Path:</span> <span class="ncr-v">/uapi/domestic-stock/v1/trading/inquire-balance</span></div>
+        <div class="node-config-row"><span class="ncr-k">tr_id:</span> <span class="ncr-v">VTTC8434R</span></div>
+        <div class="node-config-row"><span class="ncr-k">CANO:</span> <span class="ncr-v">계좌 앞 8자리</span></div>
+        <div class="node-config-row"><span class="ncr-k">ACNT_PRDT_CD:</span> <span class="ncr-v">계좌 뒤 2자리</span></div>
+        <div class="node-config-row"><span class="ncr-k">AFHR_FLPR_YN:</span> <span class="ncr-v">N</span></div>
+        <div class="node-config-row"><span class="ncr-k">INQR_DVSN:</span> <span class="ncr-v">01</span></div>
+        <div class="node-config-row"><span class="ncr-k">UNPR_DVSN:</span> <span class="ncr-v">01</span></div>
+        <div class="node-config-row"><span class="ncr-k">FUND_STTL_ICLD_YN:</span> <span class="ncr-v">N</span></div>
+        <div class="node-config-row"><span class="ncr-k">FNCG_AMT_AUTO_RDPT_YN:</span> <span class="ncr-v">N</span></div>
+        <div class="node-config-row"><span class="ncr-k">PRCS_DVSN:</span> <span class="ncr-v">01</span></div>
+        <div class="node-config-row"><span class="ncr-k">CTX_AREA_FK100:</span> <span class="ncr-v">(공란)</span></div>
+        <div class="node-config-row"><span class="ncr-k">CTX_AREA_NK100:</span> <span class="ncr-v">(공란)</span></div>
+      </div>
+    </div>
+  </div>
+
+<pre class="code-block"><span class="cm">// 잔고 조회 응답 구조</span>
+{
+  <span class="str">"rt_cd"</span>: <span class="str">"0"</span>,
+  <span class="str">"output1"</span>: [       <span class="cm">// 보유 종목 리스트</span>
+    {
+      <span class="str">"pdno"</span>: <span class="str">"005930"</span>,         <span class="cm">// 종목코드</span>
+      <span class="str">"prdt_name"</span>: <span class="str">"삼성전자"</span>,      <span class="cm">// 종목명</span>
+      <span class="str">"hldg_qty"</span>: <span class="str">"10"</span>,            <span class="cm">// 보유 수량</span>
+      <span class="str">"pchs_avg_pric"</span>: <span class="str">"71500"</span>,    <span class="cm">// 매입평균가</span>
+      <span class="str">"prpr"</span>: <span class="str">"72400"</span>,             <span class="cm">// 현재가</span>
+      <span class="str">"evlu_amt"</span>: <span class="str">"724000"</span>,         <span class="cm">// 평가금액</span>
+      <span class="str">"evlu_pfls_amt"</span>: <span class="str">"9000"</span>,      <span class="cm">// 평가손익</span>
+      <span class="str">"evlu_pfls_rt"</span>: <span class="str">"1.26"</span>        <span class="cm">// 평가손익률 %</span>
+    }
+  ],
+  <span class="str">"output2"</span>: [       <span class="cm">// 계좌 요약</span>
+    {
+      <span class="str">"dnca_tot_amt"</span>: <span class="str">"49276000"</span>,   <span class="cm">// 예수금 총액</span>
+      <span class="str">"tot_evlu_amt"</span>: <span class="str">"50000000"</span>,   <span class="cm">// 총 평가금액</span>
+      <span class="str">"asst_icdc_amt"</span>: <span class="str">"0"</span>,          <span class="cm">// 자산증감액</span>
+      <span class="str">"asst_icdc_erng_rt"</span>: <span class="str">"0"</span>        <span class="cm">// 자산증감수익률</span>
+    }
+  ]
+}
+</pre>
+
+  <h3>SP2 완료 체크리스트</h3>
+  <div class="checklist">
+    <div class="ck-title">✅ 아래 모두 체크되면 SP2 완료</div>
+    <div class="ck-item">TR_ID 체계 이해 (실전 T / 모의 V / 시세 FH)</div>
+    <div class="ck-item">삼성전자 현재가 조회 성공 + rt_cd=0 수신</div>
+    <div class="ck-item">일자별 60일 OHLC 조회 성공</div>
+    <div class="ck-item">W2 Code 노드 연결 → 한국 종목 RSI·MA·볼린저 계산 검증</div>
+    <div class="ck-item">계좌 잔고 조회 성공 + 가상 5천만원 확인</div>
+    <div class="ck-item">잔고 결과를 Sheets "kis_balance" 탭에 자동 기록</div>
+  </div>
+</section>
+
+</div><!-- /sp2 -->
+
+
+<!-- ═══════════════ SP3 ═══════════════ -->
+<div class="sp-content" id="sp3">
+
+<section data-section="SP3: 자동매매">
+  <div class="sp-header">
+    <div class="sp-header-tag">▶ SPECIAL SESSION 3</div>
+    <div class="sp-header-title">자동매매 주문 실행 + Claude 연동</div>
+    <div class="sp-header-desc">매수/매도 주문 + 해시키 생성 + 2단계 승인 시스템</div>
+  </div>
+
+  <div class="lesson-meta">
+    <div class="meta-card"><div class="meta-card-lbl">세션</div><div class="meta-card-val">60분</div></div>
+    <div class="meta-card"><div class="meta-card-lbl">레벨</div><div class="meta-card-val">고급</div></div>
+    <div class="meta-card"><div class="meta-card-lbl">선수</div><div class="meta-card-val">SP2 완료</div></div>
+    <div class="meta-card"><div class="meta-card-lbl">목표</div><div class="meta-card-val">자동매매</div></div>
+  </div>
+
+  <h3>학습 목표</h3>
+  <div class="goals">
+    <div class="goal"><div class="goal-chk">1</div><div class="goal-text"><strong>해시키(HashKey)</strong> 생성 매커니즘을 이해하고 n8n에서 자동 생성해 주문 API에 첨부할 수 있다</div></div>
+    <div class="goal"><div class="goal-chk">2</div><div class="goal-text">Claude verdict → <strong>모의 매수/매도 주문 실제 체결</strong>로 이어지는 완전한 자동매매 워크플로를 완성할 수 있다</div></div>
+    <div class="goal"><div class="goal-chk">3</div><div class="goal-text"><strong>2단계 승인 시스템</strong>(Discord 버튼·텔레그램)으로 자동 주문 전 인간 검토 단계를 구현할 수 있다</div></div>
+  </div>
+</section>
+
+<!-- 1단계: 해시키 -->
+<section data-section="해시키 생성">
+  <div class="eyebrow">Step 1 · 20min</div>
+  <h2>1단계 — 해시키(HashKey) 이해와 생성</h2>
+
+  <p>KIS의 <strong>주문 관련 API</strong>(매수/매도/정정/취소)는 Body 변조 방지를 위해 <strong>HashKey</strong>를 요구합니다. Body를 KIS 서버에 먼저 보내 해시를 발급받고, 그 해시를 실제 주문 요청의 헤더에 추가하는 2단계 구조입니다.</p>
+
+  <div class="hash-flow">
+    <div class="hash-step">
+      <div class="hash-num">1</div>
+      <div class="hash-body">
+        주문 Body JSON을 <strong>먼저 HashKey 엔드포인트</strong>에 POST<br>
+        <code>POST /uapi/hashkey</code>
+      </div>
+    </div>
+    <div class="hash-step">
+      <div class="hash-num">2</div>
+      <div class="hash-body">
+        응답에서 <code>HASH</code> 필드 추출 (40자리 문자열)
+      </div>
+    </div>
+    <div class="hash-step">
+      <div class="hash-num">3</div>
+      <div class="hash-body">
+        실제 주문 요청 헤더에 <code>hashkey: {HASH}</code> 추가해서 전송
+      </div>
+    </div>
+    <div class="hash-step">
+      <div class="hash-num">4</div>
+      <div class="hash-body">
+        KIS 서버가 <strong>Body와 HASH 일치 검증</strong> 후 주문 처리
+      </div>
+    </div>
+  </div>
+
+  <h3>해시키 생성 노드</h3>
+  <div class="node-card">
+    <div class="node-head">
+      <span class="node-icon">🔐</span>
+      <span class="node-name">HTTP Request — HashKey 생성</span>
+      <span class="node-tag">HASH</span>
+    </div>
+    <div class="node-body">
+      주문 실행 직전에 호출. Body는 실제 주문과 <strong>완전히 동일</strong>해야 함.
+      <div class="node-config">
+        <div class="node-config-row"><span class="ncr-k">Method:</span> <span class="ncr-v">POST</span></div>
+        <div class="node-config-row"><span class="ncr-k">URL Path:</span> <span class="ncr-v">/uapi/hashkey</span></div>
+        <div class="node-config-row"><span class="ncr-k">Headers:</span> <span class="ncr-v">content-type, appkey, appsecret</span></div>
+        <div class="node-config-row"><span class="ncr-k">Body:</span> <span class="ncr-v">실제 주문 Body (아래 참조)</span></div>
+      </div>
+    </div>
+  </div>
+
+<pre class="code-block"><span class="cm">// HashKey 생성 Body (실제 주문과 동일)</span>
+{
+  <span class="str">"CANO"</span>: <span class="str">"{{ $credentials.CANO }}"</span>,
+  <span class="str">"ACNT_PRDT_CD"</span>: <span class="str">"{{ $credentials.ACNT_PRDT_CD }}"</span>,
+  <span class="str">"PDNO"</span>: <span class="str">"005930"</span>,
+  <span class="str">"ORD_DVSN"</span>: <span class="str">"00"</span>,
+  <span class="str">"ORD_QTY"</span>: <span class="str">"10"</span>,
+  <span class="str">"ORD_UNPR"</span>: <span class="str">"72400"</span>
+}
+
+<span class="cm">// Response</span>
+{
+  <span class="str">"HASH"</span>: <span class="str">"1f9b2d4e8a..."</span>,      <span class="cm">// 40자리 해시</span>
+  <span class="str">"BODY"</span>: { ... }
+}
+</pre>
+
+  <div class="callout red">
+    <strong>⚠️ HashKey 주의사항:</strong><br>
+    1. Body 한 글자라도 다르면 HASH 불일치 → 주문 거부<br>
+    2. HashKey 생성 직후 바로 주문 실행 (수분 이상 지연 시 무효화 가능성)<br>
+    3. JSON 필드 순서도 영향 줄 수 있음 — 해시 생성과 실제 주문 <strong>완전 동일한 Body</strong>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- 2단계: 매수 주문 -->
+<section data-section="매수 주문">
+  <div class="eyebrow">Step 2 · 20min</div>
+  <h2>2단계 — 매수/매도 주문 실행</h2>
+
+  <h3>매수 주문 API</h3>
+  <div class="node-card">
+    <div class="node-head">
+      <span class="node-icon">🟢</span>
+      <span class="node-name">HTTP Request — 현금 매수</span>
+      <span class="node-tag">BUY</span>
+    </div>
+    <div class="node-body">
+      <div class="node-config">
+        <div class="node-config-row"><span class="ncr-k">Method:</span> <span class="ncr-v">POST</span></div>
+        <div class="node-config-row"><span class="ncr-k">URL Path:</span> <span class="ncr-v">/uapi/domestic-stock/v1/trading/order-cash</span></div>
+        <div class="node-config-row"><span class="ncr-k">tr_id:</span> <span class="ncr-v">VTTC0802U (모의 매수)</span></div>
+        <div class="node-config-row"><span class="ncr-k">hashkey:</span> <span class="ncr-v">{{ 1단계 HASH }}</span></div>
+        <div class="node-config-row"><span class="ncr-k">authorization:</span> <span class="ncr-v">Bearer {{ access_token }}</span></div>
+      </div>
+    </div>
+  </div>
+
+  <h3>주문 Body 파라미터</h3>
+
+<pre class="code-block"><span class="cm">// 삼성전자 10주 시장가 매수</span>
+{
+  <span class="str">"CANO"</span>: <span class="str">"{{ $credentials.CANO }}"</span>,
+  <span class="str">"ACNT_PRDT_CD"</span>: <span class="str">"{{ $credentials.ACNT_PRDT_CD }}"</span>,
+  <span class="str">"PDNO"</span>: <span class="str">"005930"</span>,        <span class="cm">// 종목코드</span>
+  <span class="str">"ORD_DVSN"</span>: <span class="str">"01"</span>,          <span class="cm">// 주문구분: 01=시장가, 00=지정가</span>
+  <span class="str">"ORD_QTY"</span>: <span class="str">"10"</span>,           <span class="cm">// 주문 수량</span>
+  <span class="str">"ORD_UNPR"</span>: <span class="str">"0"</span>             <span class="cm">// 시장가는 0, 지정가는 가격</span>
+}
+
+<span class="cm">// 지정가 매수 (72,000원에 10주)</span>
+{
+  <span class="str">"CANO"</span>: <span class="str">"..."</span>,
+  <span class="str">"ACNT_PRDT_CD"</span>: <span class="str">"01"</span>,
+  <span class="str">"PDNO"</span>: <span class="str">"005930"</span>,
+  <span class="str">"ORD_DVSN"</span>: <span class="str">"00"</span>,          <span class="cm">// 지정가</span>
+  <span class="str">"ORD_QTY"</span>: <span class="str">"10"</span>,
+  <span class="str">"ORD_UNPR"</span>: <span class="str">"72000"</span>
+}
+</pre>
+
+  <h3>매도는 TR_ID만 변경</h3>
+  <p>매도 주문은 <strong>TR_ID만 VTTC0801U로</strong> 바꾸면 됩니다. Body 구조·파라미터는 매수와 완전히 동일. n8n에서는 IF 노드로 side에 따라 TR_ID를 분기합니다.</p>
+
+<pre class="code-block"><span class="cm">// IF 노드에서 매수/매도 분기 후 Set 노드</span>
+<span class="kw">const</span> side = $input.item.json.side;
+
+<span class="kw">return</span> {
+  tr_id: side === <span class="str">'buy'</span> ? <span class="str">'VTTC0802U'</span> : <span class="str">'VTTC0801U'</span>,
+  action: side === <span class="str">'buy'</span> ? <span class="str">'매수'</span> : <span class="str">'매도'</span>
+};
+</pre>
+
+  <h3>성공 응답 확인</h3>
+
+<pre class="code-block">{
+  <span class="str">"rt_cd"</span>: <span class="str">"0"</span>,
+  <span class="str">"msg_cd"</span>: <span class="str">"APBK0013"</span>,
+  <span class="str">"msg1"</span>: <span class="str">"주문 전송 완료 되었습니다."</span>,
+  <span class="str">"output"</span>: {
+    <span class="str">"KRX_FWDG_ORD_ORGNO"</span>: <span class="str">"00950"</span>,  <span class="cm">// 거래소 전송 기관번호</span>
+    <span class="str">"ODNO"</span>: <span class="str">"0000117057"</span>,            <span class="cm">// 주문번호 (정정/취소에 사용)</span>
+    <span class="str">"ORD_TMD"</span>: <span class="str">"093045"</span>               <span class="cm">// 주문 시각</span>
+  }
+}
+</pre>
+</section>
+
+<div class="divider"></div>
+
+<!-- 3단계: Claude + 2단계 승인 -->
+<section data-section="Claude 연동 + 2단계 승인">
+  <div class="eyebrow">Step 3 · 20min</div>
+  <h2>3단계 — W7 Claude 에이전트 + 2단계 승인 시스템</h2>
+
+  <p>W7 Orchestrator의 verdict를 KIS 주문으로 연결하되, <strong>자동 실행 전 인간 검토</strong> 단계를 추가합니다. 모의투자라도 <strong>습관을 미리 들이는 것</strong>이 중요합니다.</p>
+
+  <div class="safety-ladder">
+    <div class="sl-title">🪜 안전 사다리 — 3단계 자동화 레벨</div>
+    <div class="sl-step"><strong>L0</strong>Manual Only: 에이전트는 조언만, 주문은 수동 (초기 학습기)</div>
+    <div class="sl-step"><strong>L1</strong>Human-in-the-Loop: 에이전트 주문 제안 → Discord 버튼 승인 → 실행 (추천)</div>
+    <div class="sl-step"><strong>L2</strong>Approved Whitelist: 특정 종목+금액 사전 승인 건만 완전 자동</div>
+    <div class="sl-step"><strong>L3</strong>Fully Autonomous: confidence 5/5 + 엄격한 Risk Guard 하에서만 자동 (실계좌 금지 권장)</div>
+  </div>
+
+  <h3>Level 1 — Discord 2단계 승인 구현</h3>
+
+  <div class="n8n-flow">
+    <div class="n8n-title">🔧 W7 Orchestrator + KIS + Discord 승인 워크플로</div>
+    <div class="n8n-steps">
+      <div class="n8n-step"><span class="n8n-node nn-t">Schedule</span><span class="n8n-edge">→</span><span class="n8n-desc">평일 오전 8시 30분 (장 개장 전)</span></div>
+      <div class="n8n-step"><span class="n8n-node nn-ai">W7 Orchestrator</span><span class="n8n-edge">→</span><span class="n8n-desc">News·Macro 에이전트 실행 → 한국 종목 verdict</span></div>
+      <div class="n8n-step"><span class="n8n-node nn-c">IF: BUY & conf ≥ 4</span><span class="n8n-edge">→</span><span class="n8n-desc">강한 신호만 승인 요청 단계로</span></div>
+      <div class="n8n-step"><span class="n8n-node nn-o">Discord 버튼 메시지</span><span class="n8n-edge">→</span><span class="n8n-desc">"삼성전자 10주 매수 승인? [✅] [❌]" 전송</span></div>
+      <div class="n8n-step"><span class="n8n-node nn-t">Webhook: 응답 대기</span><span class="n8n-edge">→</span><span class="n8n-desc">Discord Interaction 수신 (최대 30분 대기)</span></div>
+      <div class="n8n-step"><span class="n8n-node nn-c">Switch: 승인/거부</span><span class="n8n-edge">→</span><span class="n8n-desc">✅ 승인 → 주문, ❌ 거부 → 로그만</span></div>
+      <div class="n8n-step"><span class="n8n-node nn-a">HTTP: HashKey 생성</span><span class="n8n-edge">→</span><span class="n8n-desc">주문 Body로 HASH 발급</span></div>
+      <div class="n8n-step"><span class="n8n-node nn-trade">HTTP: 매수 주문</span><span class="n8n-edge">→</span><span class="n8n-desc">VTTC0802U + hashkey 헤더로 KIS 주문</span></div>
+      <div class="n8n-step"><span class="n8n-node nn-o">Sheets + Discord 완료</span><span class="n8n-edge">→</span><span class="n8n-desc">주문번호·체결가·시각 기록 + 알림</span></div>
+    </div>
+  </div>
+
+  <h3>Discord 버튼 메시지 구성</h3>
+
+<pre class="code-block"><span class="cm">// Discord Interaction 메시지 Body (Webhook 또는 Bot)</span>
+{
+  <span class="str">"content"</span>: <span class="str">"🤖 **자동매매 승인 요청**"</span>,
+  <span class="str">"embeds"</span>: [{
+    <span class="str">"title"</span>: <span class="str">"삼성전자 (005930) 매수 제안"</span>,
+    <span class="str">"color"</span>: <span class="num">3066993</span>,
+    <span class="str">"fields"</span>: [
+      { <span class="str">"name"</span>: <span class="str">"수량"</span>, <span class="str">"value"</span>: <span class="str">"10주"</span>, <span class="str">"inline"</span>: <span class="kw">true</span> },
+      { <span class="str">"name"</span>: <span class="str">"예상금액"</span>, <span class="str">"value"</span>: <span class="str">"724,000원"</span>, <span class="str">"inline"</span>: <span class="kw">true</span> },
+      { <span class="str">"name"</span>: <span class="str">"Claude 신뢰도"</span>, <span class="str">"value"</span>: <span class="str">"4/5"</span>, <span class="str">"inline"</span>: <span class="kw">true</span> },
+      { <span class="str">"name"</span>: <span class="str">"근거"</span>, <span class="str">"value"</span>: <span class="str">"HBM 수요 증가 뉴스 + RSI 과매도 반등"</span> }
+    ]
+  }],
+  <span class="str">"components"</span>: [{
+    <span class="str">"type"</span>: <span class="num">1</span>,
+    <span class="str">"components"</span>: [
+      {
+        <span class="str">"type"</span>: <span class="num">2</span>,
+        <span class="str">"style"</span>: <span class="num">3</span>,
+        <span class="str">"label"</span>: <span class="str">"✅ 승인하고 주문"</span>,
+        <span class="str">"custom_id"</span>: <span class="str">"approve_order_12345"</span>
+      },
+      {
+        <span class="str">"type"</span>: <span class="num">2</span>,
+        <span class="str">"style"</span>: <span class="num">4</span>,
+        <span class="str">"label"</span>: <span class="str">"❌ 거부"</span>,
+        <span class="str">"custom_id"</span>: <span class="str">"reject_order_12345"</span>
+      }
+    ]
+  }]
+}
+</pre>
+
+  <h3>Claude 주문 결정 프롬프트 — 한국 종목 특화</h3>
+
+  <div class="prompt-card">
+    <div class="pc-label">KIS 주문 어시스턴트 System Message</div>
+당신은 <strong>한국 주식 자동매매 어시스턴트</strong>입니다. W7 Orchestrator의 verdict와 현재 계좌 상태를 받아 <strong>구체적 주문 파라미터</strong>를 생성합니다.<br><br>
+<strong>입력:</strong><br>
+• orchestrator_verdict (BUY / AVOID / WATCH / HOLD)<br>
+• confidence (1~5)<br>
+• ticker + 현재가<br>
+• account_balance (가용 예수금)<br>
+• current_holdings (기존 보유 수량)<br><br>
+<strong>주문 규칙:</strong><br>
+• <strong>BUY & confidence ≥ 4</strong>만 주문 생성 (나머지는 SKIP)<br>
+• 한 종목에 <strong>예수금의 2%</strong> 이내<br>
+• 한국 주식 <strong>최소 단위 1주</strong>, 10주 미만 투자는 SKIP (비용 대비 비효율)<br>
+• 시장가(<code>ORD_DVSN:01</code>) 기본, 변동성 높은 종목은 지정가(<code>00</code>) 권장<br><br>
+<strong>출력 JSON:</strong><br>
+{<br>
+&nbsp;&nbsp;"action": "ORDER" | "SKIP",<br>
+&nbsp;&nbsp;"tr_id": "VTTC0802U" or "VTTC0801U",<br>
+&nbsp;&nbsp;"pdno": "종목코드",<br>
+&nbsp;&nbsp;"ord_dvsn": "00" | "01",<br>
+&nbsp;&nbsp;"ord_qty": 수량 문자열,<br>
+&nbsp;&nbsp;"ord_unpr": 가격 문자열,<br>
+&nbsp;&nbsp;"reasoning": "한 문장 근거",<br>
+&nbsp;&nbsp;"risk_note": "주의사항 한 문장"<br>
+}<br><br>
+모의투자임을 명심 — 실계좌 전환은 별도 심사 필요.
+  </div>
+
+  <div class="ts-block">
+    <div style="font-size:11px;font-weight:700;color:#991b1b;margin-bottom:6px">🚨 SP3 자주 발생하는 오류</div>
+    <div class="ts-item">
+      <div class="ts-q">"EGW00121 해시키 불일치"</div>
+      <div class="ts-a">HashKey 생성 Body와 실제 주문 Body가 다름. JSON 필드 순서·공백·타입 모두 동일해야. n8n에서는 Set 노드로 <strong>하나의 Body 객체를 만들고</strong> 두 노드에 동일 expression으로 전달.</div>
+    </div>
+    <div class="ts-item">
+      <div class="ts-q">"APBK0912 매수 가능 금액 부족"</div>
+      <div class="ts-a">모의투자 계좌도 매수 시 <strong>예수금 + 체결 대기 주문 금액</strong>이 맞아야. 이미 대기 주문이 많은지 확인. 미체결 주문 취소 후 재시도.</div>
+    </div>
+    <div class="ts-item">
+      <div class="ts-q">장외 시간 주문 거부</div>
+      <div class="ts-a">KIS 모의투자는 <strong>정규장 시간(09:00~15:30)</strong>만 체결. 단일가·시간외 주문은 별도 API. Schedule을 장 시간 내로 설정하거나, 08:30 분석 → 09:05 주문 구조.</div>
+    </div>
+    <div class="ts-item">
+      <div class="ts-q">Discord 버튼 응답이 n8n에 안 옴</div>
+      <div class="ts-a">Interactions Endpoint URL이 Discord Application Settings에 제대로 등록됐는지 + n8n Webhook이 Active 상태인지 확인. Discord 서명 검증 실패하면 Interactions 거부됨.</div>
+    </div>
+    <div class="ts-item">
+      <div class="ts-q">주문은 성공했는데 잔고에 안 보임</div>
+      <div class="ts-a">미체결 상태일 수 있음. 시장가가 아닌 지정가라면 가격이 맞지 않아 대기 중. <code>VTTC8001R</code>(주문 조회)로 상태 확인 — "접수" vs "체결".</div>
+    </div>
+  </div>
+
+  <h3>SP3 완료 체크리스트</h3>
+  <div class="checklist">
+    <div class="ck-title">✅ 아래 모두 체크되면 KIS 특별세션 전체 완료</div>
+    <div class="ck-item">HashKey 생성 워크플로 구현 + 주문 Body와 동일 유지</div>
+    <div class="ck-item">매수 주문 API 성공 — 모의계좌 잔고에 반영 확인</div>
+    <div class="ck-item">매도 주문 API 성공 — TR_ID 분기 로직 검증</div>
+    <div class="ck-item">W7 Orchestrator verdict → KIS 주문 연결 완성</div>
+    <div class="ck-item">Discord 버튼 2단계 승인 시스템 구축 + 실제 테스트</div>
+    <div class="ck-item">주문 결과(주문번호·시각·수량) Sheets "kis_orders" 탭에 자동 기록</div>
+    <div class="ck-item">에러 발생 시 Discord 관리자 채널로 자동 알림 (W5 Error Trigger 재활용)</div>
+    <div class="ck-item">1주일간 운영 후 가상 자본 수익률 측정 + 회고</div>
+  </div>
+</section>
+
+</div><!-- /sp3 -->
+
+
+<!-- 최종 통합 -->
+<section data-section="통합 요약">
+  <div class="eyebrow">Integration Summary</div>
+  <h2>KIS 특별세션 전체 통합</h2>
+
+  <div class="callout green">
+    <strong>🎯 이제 여러분이 가진 것:</strong><br>
+    • Alpaca Paper Trading (미국 주식) — W8에서 완성<br>
+    • KIS 모의투자 (한국 주식) — SP1~3에서 완성<br>
+    • Binance Testnet (암호화폐) — 과제로 확장 가능<br>
+    <strong>3대 시장을 모두 자동매매할 수 있는 통합 에이전트 시스템</strong>을 갖추게 됐습니다. 이 수준의 포트폴리오는 대학생뿐 아니라 주니어 퀀트 경력자에게도 강한 차별점입니다.
+  </div>
+
+  <h3>이력서/지원서 한 줄 추가 문구</h3>
+  <div class="prompt-card">
+    <div class="pc-label">KIS 경험 이력서 Bullet</div>
+• 한국투자증권 Open API (KIS Developers) 연동 자동매매 시스템 구축 — OAuth2 토큰 자동 재발급, HashKey 생성, TR_ID 체계 이해<br>
+• W7 멀티 에이전트 시스템과 통합해 국내 주식(KOSPI/KOSDAQ) 대상 자동 매수/매도 실행, Discord 2단계 승인 시스템 구현<br>
+• 모의투자 환경에서 1주일간 운영, 가상 자본 수익률 +X.X% 달성
+  </div>
+
+  <h3>다음 단계 — 실계좌 전환 전 체크리스트</h3>
+  <div class="checklist">
+    <div class="ck-title">🔍 실계좌 연동을 <strong>고려</strong>한다면 (필수 검증)</div>
+    <div class="ck-item">모의투자에서 <strong>최소 3개월</strong> 안정 운영 (월별 수익률 양의 값)</div>
+    <div class="ck-item">Risk Guards 4단계 모두 실제 발동 경험 + 로그 확인</div>
+    <div class="ck-item">에이전트 판단 오류 발견 시 <strong>즉시 중단 버튼</strong> 구현</div>
+    <div class="ck-item">KIS Developers <strong>실계좌 별도 신청</strong> (모의와 별개)</div>
+    <div class="ck-item"><strong>URL과 TR_ID</strong>를 전환하기 전 100번 이상 재확인</div>
+    <div class="ck-item">처음에는 <strong>소액 (1종목 10만원 이내)</strong> 단일 매수로 검증</div>
+    <div class="ck-item">세금 신고 대비 <strong>매매 기록 백업</strong> 시스템 구축</div>
+  </div>
+
+  <div class="warning-box">
+    <div class="wb-title">🚨 실계좌 전환에 대한 최종 조언</div>
+    <div class="wb-body">
+      이 과정은 <strong>교육 목적</strong>입니다. AI 에이전트가 아무리 정확해도 시장은 예측 불가능하고, 시스템 오류로 대규모 손실이 발생할 수 있습니다. 실계좌 전환은 반드시 <strong>소액부터 + 엄격한 손실 한도 + 수동 모니터링</strong> 하에서만. 대학생 여러분은 <strong>이 8주+특별세션 기록을 포트폴리오로</strong> 활용해 금융 IT·퀀트 인턴십에 도전하는 것이 최고의 다음 단계입니다. 돈은 커리어로 훨씬 더 크게 벌 수 있습니다.
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- 참고 자료 -->
+<section data-section="참고 자료">
+  <div class="eyebrow">References</div>
+  <h2>참고 자료</h2>
+  <table class="dtable">
+    <thead><tr><th>자료</th><th>용도</th></tr></thead>
+    <tbody>
+      <tr><td><strong>KIS Developers 공식 포털</strong><br><code>apiportal.koreainvestment.com</code></td><td>모든 API 문서·TR_ID·파라미터 상세</td></tr>
+      <tr><td><strong>KIS Developers GitHub 샘플</strong><br><code>github.com/koreainvestment/open-trading-api</code></td><td>Python 공식 샘플 코드 (참고용)</td></tr>
+      <tr><td><strong>python-kis 라이브러리</strong><br><code>pypi.org/project/python-kis</code></td><td>(선택) Python으로 확장할 때 커뮤니티 라이브러리</td></tr>
+      <tr><td><strong>위키독스 KIS 초급 예제</strong><br><code>wikidocs.net/159296</code></td><td>한글 튜토리얼 (초보 친화적)</td></tr>
+      <tr><td><strong>Discord Interactions Docs</strong><br><code>discord.com/developers/docs/interactions</code></td><td>2단계 승인 버튼 메시지 구조</td></tr>
+      <tr><td><strong>DART 공시 API</strong><br><code>opendart.fss.or.kr</code></td><td>(선택) 한국 기업 공시 데이터로 News Agent 확장</td></tr>
+      <tr><td><strong>네이버 금융 / 토스 증권 UI</strong></td><td>주문 실행 확인용 참고 (수동 크로스체크)</td></tr>
+    </tbody>
+  </table>
+</section>
+
+</div>
+
+<div style="background:linear-gradient(135deg,#0056a5,#0d0d0d);color:#fff;text-align:center;padding:32px 20px;margin-bottom:var(--fh)">
+  <div style="font-size:10px;letter-spacing:2px;color:#7dd3fc;margin-bottom:8px;font-weight:700">⭐ SPECIAL SESSION COMPLETE</div>
+  <div style="font-size:14px;font-weight:700;margin-bottom:5px">KIS Developers 모의투자 완전정복</div>
+  <div style="font-size:11px;color:rgba(255,255,255,.7);line-height:1.7">한국투자증권 Open API × n8n × Claude<br>2026 · ZeroOneAI Education</div>
+</div>
+
+<script>
+// Tab switching
+document.querySelectorAll('.sp-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    const target = tab.dataset.tab;
+    document.querySelectorAll('.sp-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.sp-content').forEach(c => c.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById(target).classList.add('active');
+    window.scrollTo({top: document.querySelector('.sp-tabs').offsetTop - 20, behavior:'smooth'});
+  });
+});
+
+// Progress tracker
+const sections = document.querySelectorAll('[data-section]');
+const sfT = document.getElementById('sf-t');
+const sfP = document.getElementById('sf-p');
+function update(){
+  const sy = window.scrollY;
+  const dh = document.documentElement.scrollHeight - window.innerHeight;
+  sfP.textContent = Math.round((sy / Math.max(dh, 1)) * 100) + '%';
+  let cur = sections[0]?.dataset.section || '';
+  sections.forEach(s => {
+    const el = s.closest('section, div');
+    if(el && el.offsetParent !== null && sy >= s.getBoundingClientRect().top + sy - 110) {
+      cur = s.dataset.section;
+    }
+  });
+  if(sfT.textContent !== cur) sfT.textContent = cur;
+}
+window.addEventListener('scroll', update, {passive:true});
+update();
+</script>
+</body>
+</html>

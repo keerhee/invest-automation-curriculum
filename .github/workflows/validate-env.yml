@@ -1,0 +1,70 @@
+name: 🔍 Validate Env Template
+
+on:
+  push:
+    paths:
+      - 'templates/env/.env.example'
+      - 'scripts/verify_env.py'
+  pull_request:
+    paths:
+      - 'templates/env/.env.example'
+      - 'scripts/verify_env.py'
+
+jobs:
+  validate-env-template:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Validate .env.example structure
+        run: |
+          # 필수 키가 모두 .env.example에 있는지 확인
+          REQUIRED_KEYS=(
+            "ANTHROPIC_API_KEY"
+            "OPENAI_API_KEY"
+            "FRED_API_KEY"
+            "ALPHA_VANTAGE_API_KEY"
+            "COHERE_API_KEY"
+            "SUPABASE_URL"
+            "SUPABASE_SERVICE_ROLE_KEY"
+            "ALPACA_PAPER_API_KEY"
+            "KIS_APP_KEY"
+            "DISCORD_WEBHOOK_GENERAL"
+          )
+          
+          MISSING=0
+          for key in "${REQUIRED_KEYS[@]}"; do
+            if ! grep -q "^${key}=" templates/env/.env.example; then
+              echo "❌ Missing key: $key"
+              MISSING=$((MISSING + 1))
+            else
+              echo "✅ Found: $key"
+            fi
+          done
+          
+          if [ $MISSING -gt 0 ]; then
+            echo "::error::$MISSING required keys missing from .env.example"
+            exit 1
+          fi
+          
+          echo "✅ All required keys present in .env.example"
+      
+      - name: Check for leaked secrets
+        run: |
+          # 실제 API 키가 실수로 커밋되었는지 확인
+          if grep -rE "sk-ant-api[0-9]+-[a-zA-Z0-9_-]{40,}" --include="*.py" --include="*.md" --include="*.html" --include="*.ipynb" .; then
+            echo "::error::Real Anthropic API key detected!"
+            exit 1
+          fi
+          
+          if grep -rE "sk-proj-[a-zA-Z0-9_-]{40,}" --include="*.py" --include="*.md" --include="*.html" --include="*.ipynb" .; then
+            echo "::error::Real OpenAI API key detected!"
+            exit 1
+          fi
+          
+          echo "✅ No leaked API keys detected"

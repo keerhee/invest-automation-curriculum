@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>W3 — 뉴스 센티먼트 2차원 + AI Agent 입문</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;600&display=swap');
+:root{
+  --black:#0d0d0d;--gray:#6b6b6b;--light:#f3f3f3;--border:#e6e6e6;--white:#fff;
+  --fh:46px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Noto Sans KR',-apple-system,sans-serif;background:#fff;color:var(--black);font-size:14px;line-height:1.75;padding-bottom:var(--fh)}
+
+#sf{position:fixed;bottom:0;left:0;right:0;height:var(--fh);background:var(--black);display:flex;align-items:center;justify-content:space-between;padding:0 16px;z-index:999}
+#sf .lbl{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:#555}
+#sf .ttl{font-size:12px;font-weight:700;color:#fff;max-width:60%;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#sf .pct{font-size:10px;color:#555;white-space:nowrap}
+
+.hero{background:var(--black);color:#fff;padding:48px 20px 40px;text-align:center;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;top:-80px;right:-80px;width:260px;height:260px;border:1px solid rgba(255,255,255,.05);border-radius:50%}
+.hero-badge{display:inline-block;border:1px solid rgba(255,255,255,.18);border-radius:20px;padding:4px 14px;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#aaa;margin-bottom:14px}
+.hero h1{font-size:22px;font-weight:900;line-height:1.35;margin-bottom:8px;letter-spacing:-.5px}
+.hero-sub{font-size:12px;color:#777;margin-bottom:22px}
+.hero-meta{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:rgba(255,255,255,.07);border-radius:10px;overflow:hidden;margin-top:18px}
+.hero-meta-item{background:rgba(255,255,255,.04);padding:12px 5px;text-align:center}
+.hero-meta-num{font-size:15px;font-weight:900;color:#fff;display:block}
+.hero-meta-lbl{font-size:9px;color:#555;margin-top:2px;line-height:1.3}
+
+.container{max-width:720px;margin:0 auto;padding:0 15px}
+section{padding:36px 0 0}
+.divider{height:1px;background:var(--border);margin:34px 0 0}
+.eyebrow{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--gray);margin-bottom:5px}
+h2{font-size:19px;font-weight:900;letter-spacing:-.3px;margin-bottom:12px;line-height:1.3}
+h3{font-size:14px;font-weight:700;margin:20px 0 8px}
+h4{font-size:12px;font-weight:700;margin:14px 0 6px;color:#333}
+p{color:#333;margin-bottom:8px;font-size:13px}
+strong{color:var(--black);font-weight:700}
+code{font-family:'JetBrains Mono','Courier New',monospace;background:#eef;padding:1px 5px;border-radius:3px;font-size:11px;color:#1d4ed8}
+
+.callout{background:var(--light);border-left:3px solid var(--black);padding:13px 15px;border-radius:0 8px 8px 0;margin:10px 0;font-size:13px;line-height:1.65}
+.callout.orange{background:#fff8ed;border-left-color:#d97706}
+.callout.blue{background:#eff6ff;border-left-color:#1d4ed8}
+.callout.green{background:#f0fdf4;border-left-color:#15803d}
+.callout.purple{background:#faf5ff;border-left-color:#7c3aed}
+.callout.red{background:#fef2f2;border-left-color:#dc2626}
+
+.lesson-meta{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:14px 0 4px}
+.meta-card{background:var(--light);border:1px solid var(--border);border-radius:8px;padding:10px 8px;text-align:center}
+.meta-card-lbl{font-size:9px;font-weight:700;letter-spacing:1px;color:#aaa;text-transform:uppercase;margin-bottom:3px}
+.meta-card-val{font-size:12px;font-weight:700;color:var(--black);line-height:1.3}
+
+.goals{display:flex;flex-direction:column;gap:7px;margin:12px 0}
+.goal{display:flex;gap:11px;align-items:flex-start;background:var(--light);border-radius:9px;padding:11px 13px;border:1px solid var(--border)}
+.goal-chk{width:20px;height:20px;background:var(--black);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;flex-shrink:0}
+.goal-text{font-size:12px;line-height:1.55}
+
+/* ── 3D DIMENSION CARDS ── */
+.dim-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:14px 0}
+.dim-card{border:1px solid var(--border);border-radius:10px;padding:12px 11px;background:#fff;opacity:.55;transition:opacity .2s}
+.dim-card.active{opacity:1;border-color:var(--black);box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.dim-card.done{opacity:.85}
+.dim-icon{font-size:22px;margin-bottom:5px}
+.dim-label{font-size:11px;font-weight:700;margin-bottom:5px;line-height:1.3}
+.dim-desc{font-size:10px;color:var(--gray);line-height:1.5}
+.dim-card.d-price.done{background:#eff6ff;border-color:#93c5fd}
+.dim-card.d-news.active{background:#fff8ed;border-color:#d97706}
+.dim-card.d-chart{background:#faf5ff}
+
+/* ── CODE BLOCK (표준 적용) ── */
+.code-block{background:#0d1117;color:#e6edf3;border-radius:9px;padding:14px 16px;margin:10px 0;font-family:'JetBrains Mono','Courier New',monospace;font-size:11px;line-height:1.7;overflow-x:auto;white-space:pre;tab-size:2;-moz-tab-size:2;word-wrap:normal}
+.code-block code{background:transparent;padding:0;color:inherit;font-size:inherit}
+.code-block .cm{color:#8b949e;font-style:italic}
+.code-block .kw{color:#ff7b72}
+.code-block .str{color:#a5d6ff}
+.code-block .num{color:#79c0ff}
+.code-block .fn{color:#d2a8ff}
+
+.step-block{background:#fffbeb;border:1px solid #fcd34d;border-radius:11px;padding:14px 15px;margin:12px 0}
+.step-title{font-size:11px;font-weight:700;color:#92400e;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.step-title::before{content:'▶';font-size:9px}
+.step-list{counter-reset:s;list-style:none;padding:0}
+.step-list li{counter-increment:s;position:relative;padding:6px 0 6px 30px;font-size:12px;line-height:1.65;color:#78350f;border-bottom:1px dashed #fcd34d}
+.step-list li:last-child{border-bottom:none}
+.step-list li::before{content:counter(s);position:absolute;left:0;top:8px;width:20px;height:20px;background:#d97706;color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:900}
+
+.node-card{border:1px solid var(--border);border-radius:10px;margin:10px 0;overflow:hidden}
+.node-head{background:var(--black);color:#fff;padding:10px 14px;display:flex;align-items:center;gap:9px}
+.node-icon{font-size:16px}
+.node-name{font-size:12px;font-weight:700}
+.node-tag{background:rgba(255,255,255,.15);border-radius:3px;padding:2px 7px;font-size:9px;font-weight:700;margin-left:auto;letter-spacing:.5px}
+.node-body{padding:12px 14px;background:var(--light);font-size:12px;line-height:1.6}
+.node-config{background:#fff;border:1px solid var(--border);border-radius:6px;padding:10px 12px;margin-top:8px;font-size:11px;font-family:'JetBrains Mono','Courier New',monospace}
+.node-config-row{padding:3px 0;border-bottom:1px dashed #eee}
+.node-config-row:last-child{border-bottom:none}
+.ncr-k{color:#6b6b6b;display:inline-block;min-width:130px}
+.ncr-v{color:#1d4ed8;font-weight:600}
+
+.n8n-flow{background:#fffbeb;border:1px solid #fcd34d;border-radius:11px;padding:14px;margin:14px 0}
+.n8n-title{font-size:11px;font-weight:700;color:#92400e;margin-bottom:10px}
+.n8n-steps{display:flex;flex-direction:column;gap:4px}
+.n8n-step{display:flex;align-items:flex-start;gap:8px;padding:4px 0}
+.n8n-node{border-radius:5px;padding:3px 9px;font-size:10px;font-weight:700;white-space:nowrap;flex-shrink:0;margin-top:1px}
+.nn-t{background:#dc2626;color:#fff}
+.nn-a{background:#2563eb;color:#fff}
+.nn-ai{background:#7c3aed;color:#fff}
+.nn-o{background:#059669;color:#fff}
+.nn-c{background:#374151;color:#fff}
+.n8n-edge{font-size:10px;color:#bbb;padding-top:5px;flex-shrink:0}
+.n8n-desc{font-size:11px;color:#78350f;flex:1;line-height:1.6;padding-top:3px}
+
+.dtable{width:100%;border-collapse:collapse;margin:10px 0;font-size:11px}
+.dtable th{background:var(--black);color:#fff;padding:8px 10px;text-align:left;font-size:10px;font-weight:700}
+.dtable td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.5}
+.dtable tr:nth-child(even) td{background:var(--light)}
+.dtable code{font-size:10px}
+
+/* ── SENTIMENT BAR ── */
+.sent-scale{margin:12px 0;background:var(--light);border-radius:10px;padding:14px;border:1px solid var(--border)}
+.sent-bar{height:32px;border-radius:6px;background:linear-gradient(90deg,#dc2626 0%,#f59e0b 25%,#eab308 50%,#84cc16 75%,#15803d 100%);position:relative;margin:8px 0}
+.sent-ticks{display:grid;grid-template-columns:repeat(5,1fr);font-size:9px;font-weight:700;color:#666;text-align:center;margin-top:4px}
+.sent-ticks span{padding-top:3px;border-top:1px dashed #ccc}
+.sent-vals{display:grid;grid-template-columns:repeat(5,1fr);font-family:'JetBrains Mono',monospace;font-size:10px;color:#333;text-align:center;margin-top:8px}
+
+/* ── AGENT BOX ── */
+.agent-box{background:#faf5ff;border:1px solid #e9d5ff;border-radius:10px;padding:13px 15px;margin:10px 0}
+.ag-title{font-size:11px;font-weight:700;color:#5b21b6;margin-bottom:6px;display:flex;align-items:center;gap:5px}
+.ag-body{font-size:12px;color:#5b21b6;line-height:1.65}
+
+/* ── AGENT ARCHITECTURE ── */
+.arch-diagram{background:var(--light);border:1px solid var(--border);border-radius:10px;padding:16px;margin:12px 0}
+.arch-center{background:#7c3aed;color:#fff;border-radius:8px;padding:12px;text-align:center;font-size:12px;font-weight:700;margin:10px auto;max-width:260px}
+.arch-around{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 0}
+.arch-sub{background:#fff;border:1px solid var(--border);border-radius:6px;padding:8px 10px;text-align:center;font-size:10px}
+.arch-sub-label{font-size:8px;font-weight:700;color:#999;letter-spacing:.8px;margin-bottom:2px;text-transform:uppercase}
+.arch-sub-name{font-size:11px;font-weight:700;color:#333}
+
+/* ── PROMPT CARD ── */
+.prompt-card{background:#1e293b;color:#e2e8f0;border-radius:10px;padding:14px 16px;margin:10px 0;font-size:12px;line-height:1.7}
+.pc-label{font-size:9px;font-weight:700;color:#94a3b8;letter-spacing:1px;margin-bottom:6px}
+.prompt-card strong{color:#fbbf24}
+
+.ts-block{background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:13px 15px;margin:10px 0}
+.ts-item{padding:8px 0;border-bottom:1px dashed #fecaca}
+.ts-item:last-child{border-bottom:none}
+.ts-q{font-size:12px;font-weight:700;color:#991b1b;margin-bottom:4px}
+.ts-q::before{content:'Q. ';color:#dc2626}
+.ts-a{font-size:11px;color:#7f1d1d;line-height:1.6;padding-left:14px}
+.ts-a::before{content:'A. ';font-weight:700}
+
+.checklist{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:13px 15px;margin:12px 0}
+.ck-title{font-size:11px;font-weight:700;color:#14532d;margin-bottom:8px}
+.ck-item{padding:5px 0 5px 22px;font-size:12px;line-height:1.5;color:#166534;position:relative}
+.ck-item::before{content:'☐';position:absolute;left:0;top:3px;font-size:14px;color:#15803d}
+
+.hw-block{background:linear-gradient(135deg,#7c3aed,#1d4ed8);color:#fff;border-radius:11px;padding:16px;margin:14px 0}
+.hw-tag{display:inline-block;background:rgba(255,255,255,.2);border-radius:4px;padding:2px 8px;font-size:9px;font-weight:900;letter-spacing:1.5px;margin-bottom:8px}
+.hw-title{font-size:14px;font-weight:700;margin-bottom:8px}
+.hw-list{list-style:none;padding:0}
+.hw-list li{padding:5px 0 5px 16px;font-size:12px;line-height:1.55;position:relative;color:rgba(255,255,255,.9)}
+.hw-list li::before{content:'▸';position:absolute;left:0;color:#c4b5fd}
+
+/* ── COMPARISON 2-COL ── */
+.compare-2col{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}
+.cc-card{border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.cc-head{padding:9px 12px;font-size:11px;font-weight:700;color:#fff}
+.cc-head.bad{background:#991b1b}
+.cc-head.good{background:#14532d}
+.cc-body{padding:11px 12px;background:var(--light);font-size:11px;line-height:1.6}
+
+@media(max-width:400px){
+  .lesson-meta{grid-template-columns:repeat(2,1fr)}
+  .dim-grid{grid-template-columns:1fr}
+  .compare-2col{grid-template-columns:1fr}
+  .arch-around{grid-template-columns:1fr}
+  .hero h1{font-size:19px}
+}
+</style>
+</head>
+<body>
+
+<div id="sf">
+  <span class="lbl">W3 강의노트</span>
+  <span class="ttl" id="sf-t">뉴스 센티먼트 + AI Agent 입문</span>
+  <span class="pct" id="sf-p">0%</span>
+</div>
+
+<!-- HERO -->
+<div class="hero" data-section="W3 강의노트">
+  <div class="hero-badge">Week 03 · Phase 2 · 3D 분석</div>
+  <h1>뉴스 센티먼트 2차원 추가 + AI Agent 입문</h1>
+  <p class="hero-sub">가격 + "왜" — Claude가 매일 한 줄 코멘트를 써주는 에이전트 만들기</p>
+  <div class="hero-meta">
+    <div class="hero-meta-item"><span class="hero-meta-num">3시간</span><span class="hero-meta-lbl">수업<br>시간</span></div>
+    <div class="hero-meta-item"><span class="hero-meta-num">2D</span><span class="hero-meta-lbl">가격+뉴스<br>통합</span></div>
+    <div class="hero-meta-item"><span class="hero-meta-num">Claude</span><span class="hero-meta-lbl">첫 AI 에이전트<br>연결</span></div>
+  </div>
+</div>
+
+<div class="container">
+
+<!-- 학습 목표 -->
+<section data-section="학습 목표">
+  <div class="eyebrow">Learning Objectives</div>
+  <h2>이번 주 학습 목표</h2>
+
+  <div class="lesson-meta">
+    <div class="meta-card"><div class="meta-card-lbl">레벨</div><div class="meta-card-val">중급</div></div>
+    <div class="meta-card"><div class="meta-card-lbl">선수지식</div><div class="meta-card-val">W1~W2</div></div>
+    <div class="meta-card"><div class="meta-card-lbl">실습</div><div class="meta-card-val">120분</div></div>
+    <div class="meta-card"><div class="meta-card-lbl">과제</div><div class="meta-card-val">확장 1개</div></div>
+  </div>
+
+  <div class="goals">
+    <div class="goal"><div class="goal-chk">1</div><div class="goal-text"><strong>Alpha Vantage NEWS_SENTIMENT API</strong>로 종목별 뉴스와 -0.35~0.35 센티먼트 스코어를 수집할 수 있다</div></div>
+    <div class="goal"><div class="goal-chk">2</div><div class="goal-text"><strong>n8n AI Agent 노드 + Anthropic Chat Model</strong>의 관계를 이해하고 Claude API 자격증명을 설정할 수 있다</div></div>
+    <div class="goal"><div class="goal-chk">3</div><div class="goal-text">System Message 엔지니어링으로 <strong>구조화된 JSON 응답</strong>을 받는 에이전트를 설계할 수 있다</div></div>
+    <div class="goal"><div class="goal-chk">4</div><div class="goal-text">가격·지표(W2) + 뉴스 센티먼트를 한 컨텍스트에 넣어 <strong>매일 한 줄 투자 코멘트</strong>를 자동 생성할 수 있다</div></div>
+  </div>
+
+  <div class="callout green">
+    <strong>이번 주의 한 문장:</strong> "가격은 무엇이 일어났는지, 뉴스는 왜 일어났는지 알려준다." 이번 주는 AI에게 두 가지를 함께 주면 판단의 질이 어떻게 달라지는지 직접 확인합니다.
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- 3D 진행도 -->
+<section data-section="3D 진행도">
+  <div class="eyebrow">Progress · 3D Framework</div>
+  <h2>지금 어디에 있는가 — 2차원 추가 단계</h2>
+  <p>W1~W2에서 가격 1차원을 완성했습니다. 이제 <strong>뉴스 센티먼트 2차원</strong>을 추가해 AI에게 "가격이 이렇게 움직였고, 그 배경은 이런 뉴스"라고 동시에 알려줍니다. 판단의 질이 비약적으로 달라집니다.</p>
+
+  <div class="dim-grid">
+    <div class="dim-card d-price done">
+      <div class="dim-icon">📊</div>
+      <div class="dim-label">1차원 — 가격 + 지표 ✓</div>
+      <div class="dim-desc">W1~W2 완료. indicators 시트에 RSI·MA·볼린저 자동 누적 중.</div>
+    </div>
+    <div class="dim-card d-news active">
+      <div class="dim-icon">📰</div>
+      <div class="dim-label">2차원 — 뉴스 센티먼트 ⚡</div>
+      <div class="dim-desc"><strong>이번 주에 추가</strong>. Alpha Vantage로 종목별 뉴스 스코어 수집 → AI가 가격과 함께 해석.</div>
+    </div>
+    <div class="dim-card d-chart">
+      <div class="dim-icon">📈</div>
+      <div class="dim-label">3차원 — 차트 Vision</div>
+      <div class="dim-desc"><strong>W4에서 추가</strong>. Chart-IMG + Claude Vision으로 시각 패턴 판독.</div>
+    </div>
+  </div>
+
+  <div class="agent-box">
+    <div class="ag-title">🤖 에이전트 관점에서 본 이번 주</div>
+    <div class="ag-body">이번 주부터 드디어 <strong>"에이전트"</strong>를 만듭니다. W1~W2는 단순 자동화(규칙대로 수집·기록)였지만, 이번 주는 Claude가 <strong>컨텍스트를 보고 판단을 생성</strong>합니다. 여전히 기본형이지만 "데이터 → 판단 → 기록"의 완전한 고리가 처음으로 돕니다.</div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- 1교시: 왜 뉴스인가 -->
+<section data-section="왜 뉴스 센티먼트인가">
+  <div class="eyebrow">Session 1 · 30min</div>
+  <h2>1교시 — 왜 뉴스 센티먼트를 추가하는가</h2>
+
+  <p>RSI 30 이하 = 과매도 = 매수 신호? <strong>반드시 그렇지 않습니다.</strong> 기업이 회계 부정으로 상장폐지 위기면 RSI 10도 추가 하락합니다. 반대로 RSI 80이어도 획기적 신제품 발표라면 추가 상승합니다. <strong>가격은 결과고 뉴스는 원인</strong>입니다.</p>
+
+  <div class="compare-2col">
+    <div class="cc-card">
+      <div class="cc-head bad">❌ 가격만 볼 때</div>
+      <div class="cc-body">
+        <strong>사례:</strong> AAPL RSI 28, 볼린저 하단 돌파. 시스템이 "BUY_STRONG" 신호 발송 → 매수<br><br>
+        <strong>실제:</strong> 중국 판매 금지령 발표로 -15% 추가 하락. 뉴스를 보지 못한 시스템은 계속 "과매도 = 매수" 반복.
+      </div>
+    </div>
+    <div class="cc-card">
+      <div class="cc-head good">✅ 가격 + 뉴스</div>
+      <div class="cc-body">
+        <strong>사례:</strong> AAPL RSI 28, 볼린저 하단 돌파, <strong>센티먼트 -0.32 (매우 부정)</strong><br><br>
+        <strong>AI 판단:</strong> "기술적으로는 과매도이나 중국 리스크가 지배적. 추가 하락 여지가 커 매수 보류 권장. 뉴스 진정 확인 후 재검토."
+      </div>
+    </div>
+  </div>
+
+  <h3>Alpha Vantage NEWS_SENTIMENT — 왜 이게 강력한가</h3>
+  <p>Alpha Vantage는 단순히 뉴스 기사 목록만 주지 않습니다. <strong>각 기사에 대해 AI/ML로 사전 계산된 센티먼트 스코어</strong>를 함께 제공합니다. 즉, NLP 모델을 직접 학습시킬 필요 없이 숫자로 바로 사용 가능합니다.</p>
+
+  <div class="sent-scale">
+    <div style="font-size:11px;font-weight:700;margin-bottom:6px">Alpha Vantage 센티먼트 스코어 스케일</div>
+    <div class="sent-bar"></div>
+    <div class="sent-ticks">
+      <span>Bearish</span>
+      <span>Some Bear</span>
+      <span>Neutral</span>
+      <span>Some Bull</span>
+      <span>Bullish</span>
+    </div>
+    <div class="sent-vals">
+      <span>≤ -0.35</span>
+      <span>-0.35 ~ -0.15</span>
+      <span>-0.15 ~ 0.15</span>
+      <span>0.15 ~ 0.35</span>
+      <span>≥ 0.35</span>
+    </div>
+  </div>
+
+  <div class="callout blue">
+    <strong>💡 기사별 vs 종목별 스코어:</strong> 각 기사에는 <code>overall_sentiment_score</code>(기사 전체)와 <code>ticker_sentiment</code>(종목별 관련도·스코어)가 따로 있습니다. 한 기사가 AAPL·GOOG를 같이 다뤄도 각 종목에 대한 영향도는 다를 수 있어 <strong>ticker_sentiment를 사용</strong>합니다.
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- 2교시: Alpha Vantage 연동 -->
+<section data-section="2교시: Alpha Vantage 연동">
+  <div class="eyebrow">Session 2 · 45min</div>
+  <h2>2교시 — Alpha Vantage API 연동</h2>
+
+  <h3>API 키 발급 (무료)</h3>
+  <div class="step-block">
+    <div class="step-title">Alpha Vantage 가입 + 키 발급 (2분)</div>
+    <ol class="step-list">
+      <li><code>https://www.alphavantage.co/support/#api-key</code> 접속</li>
+      <li>이메일, 기관(학생이면 <code>University Student</code>), 용도 기입 → <strong>GET FREE API KEY</strong></li>
+      <li>즉시 화면에 16자리 키 표시 — 복사해 안전한 곳에 저장</li>
+      <li>n8n Credentials 메뉴 → Header Auth 또는 쿼리 파라미터로 저장</li>
+    </ol>
+  </div>
+
+  <div class="callout orange">
+    <strong>⚠️ 무료 티어 한계:</strong> <strong>25 requests/day</strong>. 대학생 과정 범위에는 충분하지만 남발하지 말 것. 종목 5개 × 하루 1회 = 5 req/day 권장. 한도 초과 시 메시지 <code>"Note: API rate limit"</code>이 응답에 포함.
+  </div>
+
+  <h3>NEWS_SENTIMENT API 호출</h3>
+  <div class="node-card">
+    <div class="node-head">
+      <span class="node-icon">📰</span>
+      <span class="node-name">HTTP Request — Alpha Vantage 뉴스</span>
+      <span class="node-tag">ACTION</span>
+    </div>
+    <div class="node-body">
+      AAPL에 대한 최근 50개 뉴스와 센티먼트를 한 번에 가져오기.
+      <div class="node-config">
+        <div class="node-config-row"><span class="ncr-k">Method:</span> <span class="ncr-v">GET</span></div>
+        <div class="node-config-row"><span class="ncr-k">URL:</span> <span class="ncr-v">https://www.alphavantage.co/query</span></div>
+        <div class="node-config-row"><span class="ncr-k">Query Param 1:</span> <span class="ncr-v">function = NEWS_SENTIMENT</span></div>
+        <div class="node-config-row"><span class="ncr-k">Query Param 2:</span> <span class="ncr-v">tickers = AAPL</span></div>
+        <div class="node-config-row"><span class="ncr-k">Query Param 3:</span> <span class="ncr-v">limit = 50</span></div>
+        <div class="node-config-row"><span class="ncr-k">Query Param 4:</span> <span class="ncr-v">sort = LATEST</span></div>
+        <div class="node-config-row"><span class="ncr-k">Query Param 5:</span> <span class="ncr-v">apikey = {{ 여러분의 키 }}</span></div>
+      </div>
+    </div>
+  </div>
+
+  <h4>응답 구조 (요약)</h4>
+<pre class="code-block">{
+  <span class="str">"items"</span>: <span class="str">"50"</span>,
+  <span class="str">"sentiment_score_definition"</span>: <span class="str">"x &lt;= -0.35: Bearish; ..."</span>,
+  <span class="str">"feed"</span>: [
+    {
+      <span class="str">"title"</span>: <span class="str">"Apple unveils new AI chip at WWDC"</span>,
+      <span class="str">"url"</span>: <span class="str">"https://..."</span>,
+      <span class="str">"time_published"</span>: <span class="str">"20260420T143000"</span>,
+      <span class="str">"summary"</span>: <span class="str">"Apple announced ..."</span>,
+      <span class="str">"source"</span>: <span class="str">"Reuters"</span>,
+      <span class="str">"overall_sentiment_score"</span>: <span class="num">0.24</span>,
+      <span class="str">"overall_sentiment_label"</span>: <span class="str">"Somewhat-Bullish"</span>,
+      <span class="str">"ticker_sentiment"</span>: [
+        {
+          <span class="str">"ticker"</span>: <span class="str">"AAPL"</span>,
+          <span class="str">"relevance_score"</span>: <span class="str">"0.891"</span>,
+          <span class="str">"ticker_sentiment_score"</span>: <span class="str">"0.287"</span>,
+          <span class="str">"ticker_sentiment_label"</span>: <span class="str">"Somewhat-Bullish"</span>
+        }
+      ]
+    }
+  ]
+}
+</pre>
+
+  <h3>Code 노드 — 집계 로직</h3>
+  <p>50개 기사를 그대로 Claude에게 보내면 토큰 낭비입니다. <strong>요약·집계</strong>해서 핵심만 전달합니다.</p>
+
+<pre class="code-block"><span class="cm">// 입력: Alpha Vantage NEWS_SENTIMENT 응답</span>
+<span class="kw">const</span> feed = $input.item.json.feed || [];
+<span class="kw">const</span> targetTicker = <span class="str">'AAPL'</span>;
+
+<span class="cm">// 1. 해당 티커의 sentiment만 필터링</span>
+<span class="kw">const</span> relevant = [];
+<span class="kw">for</span> (<span class="kw">let</span> i = <span class="num">0</span>; i &lt; feed.length; i++) {
+  <span class="kw">const</span> article = feed[i];
+  <span class="kw">const</span> ts = article.ticker_sentiment || [];
+  <span class="kw">for</span> (<span class="kw">let</span> j = <span class="num">0</span>; j &lt; ts.length; j++) {
+    <span class="kw">if</span> (ts[j].ticker === targetTicker) {
+      <span class="kw">const</span> relevance = parseFloat(ts[j].relevance_score);
+      <span class="kw">const</span> score = parseFloat(ts[j].ticker_sentiment_score);
+      <span class="cm">// 관련도 0.3 이상만 채택</span>
+      <span class="kw">if</span> (relevance &gt;= <span class="num">0.3</span>) {
+        relevant.<span class="fn">push</span>({
+          title: article.title,
+          source: article.source,
+          time: article.time_published,
+          sentiment: score,
+          relevance: relevance,
+          summary: article.summary
+        });
+      }
+    }
+  }
+}
+
+<span class="cm">// 2. 가중평균 센티먼트 계산 (relevance 가중치)</span>
+<span class="kw">let</span> totalWeight = <span class="num">0</span>;
+<span class="kw">let</span> weightedSum = <span class="num">0</span>;
+<span class="kw">for</span> (<span class="kw">let</span> i = <span class="num">0</span>; i &lt; relevant.length; i++) {
+  weightedSum += relevant[i].sentiment * relevant[i].relevance;
+  totalWeight += relevant[i].relevance;
+}
+<span class="kw">const</span> avgSentiment = totalWeight &gt; <span class="num">0</span> ? weightedSum / totalWeight : <span class="num">0</span>;
+
+<span class="cm">// 3. 레이블 판정</span>
+<span class="kw">let</span> label = <span class="str">'Neutral'</span>;
+<span class="kw">if</span> (avgSentiment &lt;= -<span class="num">0.35</span>) label = <span class="str">'Bearish'</span>;
+<span class="kw">else if</span> (avgSentiment &lt;= -<span class="num">0.15</span>) label = <span class="str">'Somewhat-Bearish'</span>;
+<span class="kw">else if</span> (avgSentiment &gt;= <span class="num">0.35</span>) label = <span class="str">'Bullish'</span>;
+<span class="kw">else if</span> (avgSentiment &gt;= <span class="num">0.15</span>) label = <span class="str">'Somewhat-Bullish'</span>;
+
+<span class="cm">// 4. 상위 5개 기사만 반환 (Claude에게 전달할 용도)</span>
+<span class="kw">const</span> top5 = relevant.<span class="fn">slice</span>(<span class="num">0</span>, <span class="num">5</span>);
+
+<span class="kw">return</span> {
+  ticker: targetTicker,
+  article_count: relevant.length,
+  avg_sentiment: avgSentiment.<span class="fn">toFixed</span>(<span class="num">3</span>),
+  sentiment_label: label,
+  top_headlines: top5
+};
+</pre>
+
+  <div class="callout purple">
+    <strong>💡 relevance 필터링이 중요한 이유:</strong> "Apple 주식"을 검색해도 "삼성전자가 Apple 공급망에서 제외됨" 같은 기사가 함께 옵니다. 이 경우 AAPL에 대한 관련도는 낮고(예: 0.1) 삼성 관련도는 높습니다. <code>relevance &gt;= 0.3</code>으로 필터링하면 노이즈가 크게 줄어듭니다.
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- 3교시: AI Agent 이해 -->
+<section data-section="3교시: AI Agent 구조">
+  <div class="eyebrow">Session 3 · 30min</div>
+  <h2>3교시 — n8n AI Agent 노드 구조 이해</h2>
+
+  <p>n8n의 AI Agent 노드는 단독으로 작동하지 않습니다. <strong>4가지 sub-node</strong>를 주변에 연결해 완성합니다. 마치 자동차의 엔진·연료·핸들처럼 각 부품이 역할을 나눠 가집니다.</p>
+
+  <h3>AI Agent 아키텍처</h3>
+  <div class="arch-diagram">
+    <div class="arch-center">🤖 AI Agent Node<br><span style="font-size:9px;opacity:.8;font-weight:400">Tools Agent (권장)</span></div>
+    <div class="arch-around">
+      <div class="arch-sub">
+        <div class="arch-sub-label">Chat Model</div>
+        <div class="arch-sub-name">🧠 Anthropic<br>(Claude)</div>
+      </div>
+      <div class="arch-sub">
+        <div class="arch-sub-label">Memory</div>
+        <div class="arch-sub-name">💾 Simple<br>Memory</div>
+      </div>
+      <div class="arch-sub">
+        <div class="arch-sub-label">Tool (선택)</div>
+        <div class="arch-sub-name">🛠️ HTTP / Code /<br>Sheets</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="callout blue">
+    <strong>🧩 각 sub-node의 역할:</strong><br>
+    <strong>Chat Model (필수):</strong> "뇌" — 실제 LLM. Claude·GPT·Gemini 선택.<br>
+    <strong>Memory (선택):</strong> "기억" — 이전 대화 내용 유지. 이번 주는 단일 호출이라 생략.<br>
+    <strong>Tool (선택):</strong> "손" — 에이전트가 외부 작업 수행. 이번 주는 사용 X, W7에서 본격 도입.<br>
+    <strong>System Message:</strong> "성격·역할 설정" — 에이전트에 들어가는 지침.
+  </div>
+
+  <h3>Anthropic API 키 준비</h3>
+  <div class="step-block">
+    <div class="step-title">Claude API 키 발급 (5분)</div>
+    <ol class="step-list">
+      <li><code>https://console.anthropic.com</code> 접속 → 구글 계정으로 가입</li>
+      <li>좌측 메뉴 <strong>API Keys</strong> → <strong>Create Key</strong></li>
+      <li>이름 입력 (예: <code>n8n-invest-w3</code>) → 키 생성 → <strong>한 번만 표시되므로 즉시 복사</strong></li>
+      <li>Billing 메뉴에서 $5~10 충전 (종량제, 수업 전체에 $5면 충분)</li>
+      <li>n8n Credentials → <strong>Anthropic API</strong> 선택 → Key 붙여넣기</li>
+    </ol>
+  </div>
+
+  <div class="callout red">
+    <strong>⚠️ 비용 관리:</strong> Claude Haiku 4.5 기준 요약 1회당 약 $0.001~0.003. 하루 5종목 × 30일 = 월 $1 미만. 하지만 실수로 반복 실행되면 빠르게 누적될 수 있으므로 <strong>초기엔 Schedule Trigger를 수동으로 해제</strong>하고 Manual Trigger로 테스트.
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- 4교시: 실제 에이전트 만들기 -->
+<section data-section="4교시: 에이전트 구축">
+  <div class="eyebrow">Session 4 · 75min</div>
+  <h2>4교시 — 일일 투자 코멘트 에이전트 구축</h2>
+
+  <h3>노드 배치 순서</h3>
+
+  <div class="node-card">
+    <div class="node-head">
+      <span class="node-icon">🧠</span>
+      <span class="node-name">Anthropic Chat Model (sub-node)</span>
+      <span class="node-tag">MODEL</span>
+    </div>
+    <div class="node-body">
+      AI Agent의 Chat Model 입력에 연결. Expression 모드로 최신 모델 문자열 입력.
+      <div class="node-config">
+        <div class="node-config-row"><span class="ncr-k">Credential:</span> <span class="ncr-v">Anthropic API (앞서 만든 것)</span></div>
+        <div class="node-config-row"><span class="ncr-k">Model:</span> <span class="ncr-v">claude-haiku-4-5-20251001</span></div>
+        <div class="node-config-row"><span class="ncr-k">Max Tokens:</span> <span class="ncr-v">1024</span></div>
+        <div class="node-config-row"><span class="ncr-k">Temperature:</span> <span class="ncr-v">0.3 (판단의 일관성 중시)</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="callout orange">
+    <strong>💡 왜 Haiku인가:</strong> 이번 주 작업(뉴스 요약 + 판단 한 줄)은 Haiku로 충분. <strong>Opus 대비 1/10 비용, 3배 빠름</strong>. 복잡한 리서치(W7)에서만 Sonnet/Opus 사용. Temperature 0.3은 매일 비슷한 판단 구조를 유지하되 약간의 유연성 허용.
+  </div>
+
+  <div class="node-card">
+    <div class="node-head">
+      <span class="node-icon">🤖</span>
+      <span class="node-name">AI Agent (root node)</span>
+      <span class="node-tag">AGENT</span>
+    </div>
+    <div class="node-body">
+      Tools Agent 타입. 이전 Code 노드의 출력을 prompt로 받음.
+      <div class="node-config">
+        <div class="node-config-row"><span class="ncr-k">Agent Type:</span> <span class="ncr-v">Tools Agent</span></div>
+        <div class="node-config-row"><span class="ncr-k">Prompt Source:</span> <span class="ncr-v">Define Below</span></div>
+        <div class="node-config-row"><span class="ncr-k">Prompt (User):</span> <span class="ncr-v">{{ JSON.stringify($json) }}</span></div>
+        <div class="node-config-row"><span class="ncr-k">System Message:</span> <span class="ncr-v">(아래 프롬프트 참조)</span></div>
+      </div>
+    </div>
+  </div>
+
+  <h3>System Message — 핵심 프롬프트 엔지니어링</h3>
+  <p>에이전트의 "성격·역할·출력 규칙"을 정의합니다. 이 프롬프트의 질이 결과의 질을 결정합니다.</p>
+
+  <div class="prompt-card">
+    <div class="pc-label">SYSTEM MESSAGE (System Prompt)</div>
+당신은 <strong>대학생 투자자를 돕는 시장 분석 보조 에이전트</strong>입니다.<br><br>
+입력으로 다음 두 가지가 JSON으로 들어옵니다:<br>
+1. <strong>price_data</strong>: 현재가, RSI(14), MA20, 볼린저밴드, 기술적 신호(signal)<br>
+2. <strong>news_data</strong>: 24시간 내 주요 뉴스 5개, 가중평균 센티먼트, 레이블<br><br>
+당신의 임무:<br>
+(1) 가격 기술적 신호와 뉴스 센티먼트가 <strong>일치하는지 충돌하는지</strong> 먼저 판단<br>
+(2) 충돌 시 뉴스 쪽에 더 무게를 두고 해석 (뉴스가 원인, 가격이 결과)<br>
+(3) 대학생 수준에서 이해 가능한 <strong>2문장 이내</strong> 코멘트 작성<br>
+(4) 반드시 아래 JSON 형식으로만 응답. 다른 텍스트 금지.<br><br>
+<strong>출력 스키마:</strong><br>
+{<br>
+&nbsp;&nbsp;"verdict": "BUY" | "WATCH" | "HOLD" | "AVOID",<br>
+&nbsp;&nbsp;"confidence": 1~5,<br>
+&nbsp;&nbsp;"rationale": "2문장 이내 한국어 코멘트",<br>
+&nbsp;&nbsp;"risk_flag": "주의할 리스크 한 줄"<br>
+}<br><br>
+<strong>투자 권유가 아닌 교육 목적 분석</strong>임을 내부적으로 기억. 과도한 확신은 피하고 중립적 표현 사용.
+  </div>
+
+  <h3>입력 조합 — Code 노드로 price + news 합치기</h3>
+  <p>AI Agent에 보내기 전에 W2의 가격·지표 결과와 이번 주 뉴스 결과를 하나의 JSON으로 합칩니다.</p>
+
+<pre class="code-block"><span class="cm">// W2 Code(지표) 출력 + W3 Code(뉴스 집계) 출력을 병합</span>
+<span class="kw">const</span> priceNode = $(<span class="str">'Indicators'</span>).item.json;
+<span class="kw">const</span> newsNode = $(<span class="str">'NewsAggregate'</span>).item.json;
+
+<span class="kw">return</span> {
+  ticker: priceNode.ticker,
+  price_data: {
+    current_price: priceNode.price,
+    rsi14: priceNode.rsi14,
+    ma20: priceNode.ma20,
+    bb_upper: priceNode.bb_upper,
+    bb_lower: priceNode.bb_lower,
+    technical_signal: priceNode.signal
+  },
+  news_data: {
+    article_count: newsNode.article_count,
+    avg_sentiment: newsNode.avg_sentiment,
+    sentiment_label: newsNode.sentiment_label,
+    top_headlines: newsNode.top_headlines
+  }
+};
+</pre>
+
+  <h3>전체 워크플로</h3>
+  <div class="n8n-flow">
+    <div class="n8n-title">🔧 W3 실습 워크플로 — 일일 투자 코멘트 에이전트</div>
+    <div class="n8n-steps">
+      <div class="n8n-step"><span class="n8n-node nn-t">Schedule</span><span class="n8n-edge">→</span><span class="n8n-desc">매일 오전 8시 30분 (한국장 개장 전)</span></div>
+      <div class="n8n-step"><span class="n8n-node nn-a">Yahoo HTTP</span><span class="n8n-edge">→</span><span class="n8n-desc">관심종목 60일 가격 데이터</span></div>
+      <div class="n8n-step"><span class="n8n-node nn-c">Code (Indicators)</span><span class="n8n-edge">→</span><span class="n8n-desc">W2 RSI·MA·볼린저 계산 (재사용)</span></div>
+      <div class="n8n-step"><span class="n8n-node nn-a">Alpha Vantage HTTP</span><span class="n8n-edge">→</span><span class="n8n-desc">24시간 내 뉴스·센티먼트 조회</span></div>
+      <div class="n8n-step"><span class="n8n-node nn-c">Code (NewsAgg)</span><span class="n8n-edge">→</span><span class="n8n-desc">relevance 필터 + 가중평균 + 상위 5건 요약</span></div>
+      <div class="n8n-step"><span class="n8n-node nn-c">Code (Merge)</span><span class="n8n-edge">→</span><span class="n8n-desc">price_data + news_data 통합 JSON 생성</span></div>
+      <div class="n8n-step"><span class="n8n-node nn-ai">AI Agent</span><span class="n8n-edge">→</span><span class="n8n-desc">Claude Haiku가 System Message 따라 판단 JSON 생성</span></div>
+      <div class="n8n-step"><span class="n8n-node nn-o">Sheets (verdicts)</span><span class="n8n-edge">→</span><span class="n8n-desc">새 탭에 verdict·rationale·risk_flag 자동 기록</span></div>
+      <div class="n8n-step"><span class="n8n-node nn-o">Gmail (옵션)</span><span class="n8n-edge">→</span><span class="n8n-desc">매일 아침 본인 이메일로 요약 발송</span></div>
+    </div>
+  </div>
+
+  <h3>예상 AI 응답 (실제 예시)</h3>
+
+<pre class="code-block">{
+  <span class="str">"verdict"</span>: <span class="str">"WATCH"</span>,
+  <span class="str">"confidence"</span>: <span class="num">3</span>,
+  <span class="str">"rationale"</span>: <span class="str">"RSI 62로 중립 상단이나 WWDC AI 칩 발표로 뉴스 센티먼트 +0.29(약세 매수세). 단기 모멘텀 긍정적이나 이미 상승분 일부 반영."</span>,
+  <span class="str">"risk_flag"</span>: <span class="str">"지수 과열(VIX 12) — 시장 전체 조정 시 동반 하락 가능"</span>
+}
+</pre>
+
+  <div class="callout green">
+    <strong>✨ 여기서 "에이전트스러운" 순간:</strong> 같은 입력이어도 상황마다 다르게 판단합니다. RSI 62가 항상 WATCH가 아닙니다 — 뉴스가 나쁘면 AVOID, 뉴스가 훌륭하면 BUY. <strong>규칙이 아닌 맥락 기반 판단</strong>이 에이전트의 본질입니다.
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- 테스트 -->
+<section data-section="테스트와 디버깅">
+  <div class="eyebrow">Test &amp; Debug</div>
+  <h2>실행 테스트와 디버깅</h2>
+
+  <div class="ts-block">
+    <div style="font-size:11px;font-weight:700;color:#991b1b;margin-bottom:6px">🚨 이번 주 자주 발생하는 오류</div>
+    <div class="ts-item">
+      <div class="ts-q">Alpha Vantage가 빈 feed 배열을 반환</div>
+      <div class="ts-a">티커가 지원 대상인지 확인. 미국 상장 종목(AAPL, TSLA)은 잘 되지만 한국 종목(005930.KS)은 뉴스가 드뭅니다. 한국 종목은 DART 공시 API를 별도로 추가해야 합니다(과제 아이디어).</div>
+    </div>
+    <div class="ts-item">
+      <div class="ts-q">AI Agent가 JSON이 아닌 자연어로 응답</div>
+      <div class="ts-a">System Message 맨 마지막에 <strong>"반드시 JSON만 출력. 설명 금지."</strong>를 한 번 더 명시. Temperature 0.1로 낮추거나 Require Specific Output Format을 켜고 Structured Output Parser 연결.</div>
+    </div>
+    <div class="ts-item">
+      <div class="ts-q">"Invalid API key" 또는 401 에러</div>
+      <div class="ts-a">Anthropic Credentials 다시 확인. API 키가 <code>sk-ant-</code>로 시작하는지 검증. Billing 잔액 0이면 호출 자체가 차단되므로 Console에서 확인.</div>
+    </div>
+    <div class="ts-item">
+      <div class="ts-q">비용이 예상보다 많이 나옴</div>
+      <div class="ts-a">top_headlines의 summary를 무작정 긴 채로 보내면 토큰 낭비. Code 노드에서 <code>summary.slice(0, 200)</code>로 기사당 200자 제한 권장. 모델을 Haiku로 고정.</div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- 체크리스트 -->
+<section data-section="완료 체크리스트">
+  <div class="eyebrow">Completion Checklist</div>
+  <h2>이번 주 완료 체크리스트</h2>
+
+  <div class="checklist">
+    <div class="ck-title">✅ 아래 항목이 모두 체크되면 W3 완료</div>
+    <div class="ck-item">Alpha Vantage API 키 발급 + n8n Credentials 저장</div>
+    <div class="ck-item">Anthropic API 키 발급 + 빌링 $5 이상 충전 + n8n 등록</div>
+    <div class="ck-item">NEWS_SENTIMENT API 호출 성공 (feed 배열에 기사 포함)</div>
+    <div class="ck-item">Code 노드로 relevance 필터 + 가중평균 센티먼트 계산 검증</div>
+    <div class="ck-item">AI Agent + Anthropic Chat Model + System Message 연결</div>
+    <div class="ck-item">AI가 JSON 형식으로만 응답 (verdict·confidence·rationale·risk_flag)</div>
+    <div class="ck-item">verdicts 시트 탭에 결과 자동 Append 확인</div>
+    <div class="ck-item">다른 티커 3개 이상으로 테스트 — 판단이 합리적으로 달라지는지 확인</div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- 과제 -->
+<section data-section="이번 주 과제">
+  <div class="eyebrow">Homework</div>
+  <h2>이번 주 과제</h2>
+
+  <div class="hw-block">
+    <span class="hw-tag">📝 HOMEWORK · W3</span>
+    <div class="hw-title">프롬프트 엔지니어링 대결</div>
+    <ul class="hw-list">
+      <li>동일한 입력(가격+뉴스)에 대해 <strong>System Message 3버전</strong> 작성: ① 초보자용(쉬운 언어) ② 기관투자자용(전문 용어) ③ 본인이 자유롭게 설계</li>
+      <li>같은 종목에 대해 3번 실행 → verdict·rationale 비교 → <strong>"어느 버전이 가장 유용한가"</strong> 짧은 에세이 (1페이지) 작성</li>
+      <li><strong>선택 챌린지 A:</strong> Gmail 노드 추가 — 매일 아침 본인 이메일로 HTML 포맷 "오늘의 투자 브리핑" 자동 발송</li>
+      <li><strong>선택 챌린지 B:</strong> verdict가 BUY 또는 AVOID인 경우에만 별도 "alerts" 탭에 기록하도록 IF 노드로 필터 추가</li>
+    </ul>
+  </div>
+
+  <div class="callout green" style="margin-top:12px">
+    <strong>💡 W4 미리보기:</strong> 다음 주에는 드디어 <strong>3차원(차트 이미지)</strong>을 추가합니다. Chart-IMG API로 TradingView 스타일의 캔들차트를 PNG로 자동 생성하고, <strong>Claude Vision</strong>이 "볼린저 상단 돌파 시도 중, MACD 골든크로스 근접"처럼 패턴을 자연어로 판독합니다. 숫자 지표만으로는 볼 수 없던 <strong>삼각수렴·쌍봉·헤드앤숄더</strong> 같은 시각적 패턴을 AI가 인식하게 됩니다.
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- 참고 자료 -->
+<section data-section="참고 자료">
+  <div class="eyebrow">References</div>
+  <h2>참고 자료</h2>
+  <table class="dtable">
+    <thead><tr><th>자료</th><th>용도</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Alpha Vantage NEWS_SENTIMENT Docs</strong><br><code>alphavantage.co/documentation/#news-sentiment</code></td><td>파라미터, topics 필터, 응답 스키마 전체</td></tr>
+      <tr><td><strong>n8n AI Agent Docs</strong><br><code>docs.n8n.io/advanced-ai</code></td><td>Tools Agent, Conversational Agent 타입별 차이</td></tr>
+      <tr><td><strong>Anthropic Chat Model Node</strong><br><code>docs.n8n.io/integrations/builtin/cluster-nodes/sub-nodes/n8n-nodes-langchain.lmchatanthropic</code></td><td>모델 선택, Expression 모드, 옵션</td></tr>
+      <tr><td><strong>Anthropic API Console</strong><br><code>console.anthropic.com</code></td><td>API 키 발급, 사용량 모니터링, 빌링</td></tr>
+      <tr><td><strong>Claude 모델 가격</strong><br><code>anthropic.com/pricing</code></td><td>Haiku/Sonnet/Opus 입출력 토큰 단가 비교</td></tr>
+      <tr><td><strong>Nate Herk — n8n AI Agent Tutorials</strong> (YouTube)</td><td>영상으로 전체 흐름 복습용 — Technical Analyst Agent 영상 추천</td></tr>
+    </tbody>
+  </table>
+</section>
+
+</div>
+
+<div style="background:var(--black);color:#888;text-align:center;padding:24px 20px;font-size:11px;line-height:2;margin-bottom:var(--fh)">
+  W3 강의노트 · 뉴스 센티먼트 + AI Agent 입문 · 대학생 투자 자동화 과정 · 2026
+</div>
+
+<script>
+const sections = document.querySelectorAll('[data-section]');
+const sfT = document.getElementById('sf-t');
+const sfP = document.getElementById('sf-p');
+function update(){
+  const sy = window.scrollY;
+  const dh = document.documentElement.scrollHeight - window.innerHeight;
+  sfP.textContent = Math.round((sy / Math.max(dh, 1)) * 100) + '%';
+  let cur = sections[0]?.dataset.section || '';
+  sections.forEach(s => {
+    if(sy >= s.getBoundingClientRect().top + sy - 110) cur = s.dataset.section;
+  });
+  if(sfT.textContent !== cur) sfT.textContent = cur;
+}
+window.addEventListener('scroll', update, {passive:true});
+update();
+</script>
+</body>
+</html>

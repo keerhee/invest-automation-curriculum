@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>W5 과제 워크북 — 멀티 스케줄 + Vector DB 24/7 자동 운영</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;600&display=swap');
+:root{--black:#0d0d0d;--gray:#6b6b6b;--light:#f3f3f3;--border:#e6e6e6;--hw-orange:#f97316;--hw-dark:#431407;--hw-amber:#fbbf24;--required:#ef4444;--advanced:#8b5cf6;--fh:46px}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Noto Sans KR',sans-serif;background:#fff;color:var(--black);font-size:14px;line-height:1.75;padding-bottom:var(--fh)}
+#sf{position:fixed;bottom:0;left:0;right:0;height:var(--fh);background:var(--hw-dark);display:flex;align-items:center;justify-content:space-between;padding:0 16px;z-index:999}
+#sf .lbl{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:#fed7aa}
+#sf .ttl{font-size:12px;font-weight:700;color:#fff;max-width:50%;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#sf .score{font-size:11px;color:var(--hw-amber);white-space:nowrap;font-weight:700}
+.hero{background:linear-gradient(135deg,#f97316,#431407);color:#fff;padding:40px 20px 36px;text-align:center;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;top:-80px;right:-80px;width:260px;height:260px;border:1px solid rgba(255,255,255,.08);border-radius:50%}
+.hero-badge{display:inline-block;border:1px solid rgba(255,255,255,.25);border-radius:20px;padding:4px 14px;font-size:10px;letter-spacing:2px;color:#fed7aa;margin-bottom:10px;font-weight:700}
+.hero-week{font-size:13px;color:rgba(255,255,255,.7);margin-bottom:4px;letter-spacing:3px;font-weight:700}
+.hero h1{font-size:20px;font-weight:900;line-height:1.35;margin-bottom:12px;letter-spacing:-.5px}
+.hero-score-box{display:inline-flex;align-items:center;gap:8px;background:rgba(0,0,0,.2);border:1px solid rgba(255,255,255,.2);border-radius:30px;padding:6px 16px;margin-top:8px}
+.hero-score-box strong{color:var(--hw-amber);font-weight:900;font-size:14px}
+.container{max-width:720px;margin:0 auto;padding:0 15px}
+section{padding:30px 0 0}
+.divider{height:1px;background:var(--border);margin:28px 0 0}
+.eyebrow{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--gray);margin-bottom:5px}
+h2{font-size:18px;font-weight:900;letter-spacing:-.3px;margin-bottom:10px;line-height:1.3}
+h3{font-size:13px;font-weight:700;margin:16px 0 6px}
+h4{font-size:12px;font-weight:700;margin:12px 0 6px;color:#333}
+p{color:#333;margin-bottom:8px;font-size:13px}
+strong{color:var(--black);font-weight:700}
+code{font-family:'JetBrains Mono',monospace;background:#fff7ed;padding:1px 5px;border-radius:3px;font-size:11px;color:var(--hw-orange)}
+.overview{background:linear-gradient(135deg,#fff7ed,#ffedd5);border:1px solid var(--hw-orange);border-radius:12px;padding:14px 16px;margin:14px 0}
+.ov-title{font-size:11px;font-weight:700;color:var(--hw-dark);letter-spacing:1px;margin-bottom:8px}
+.ov-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.ov-item{background:#fff;border-radius:6px;padding:6px 10px;font-size:11px}
+.ov-label{font-size:9px;color:var(--hw-orange);font-weight:700;text-transform:uppercase;margin-bottom:2px}
+.ov-value{font-weight:600;color:#333}
+.score-summary{background:#0d1117;color:#fff;border-radius:12px;padding:16px;margin:12px 0}
+.ss-title{font-size:10px;color:var(--hw-amber);letter-spacing:2px;font-weight:700;margin-bottom:10px}
+.ss-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:8px}
+.ss-item{background:rgba(255,255,255,.08);border-radius:6px;padding:8px 4px;text-align:center}
+.ss-num{font-size:10px;color:#94a3b8;margin-bottom:2px}
+.ss-pts{font-size:14px;font-weight:900;color:#fff}
+.ss-pts-amber{color:var(--hw-amber)}
+.ss-pts-purple{color:#c4b5fd}
+.ss-total{text-align:center;margin-top:12px;padding-top:12px;border-top:1px dashed rgba(255,255,255,.2);font-size:13px;color:#fff}
+.ss-total strong{color:var(--hw-amber);font-size:18px}
+.task-card{background:#fff;border:2px solid var(--border);border-radius:12px;margin:14px 0;overflow:hidden;position:relative}
+.task-card.required{border-color:var(--required)}
+.task-card.advanced{border-color:var(--advanced)}
+.task-head{padding:12px 14px;display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap;border-bottom:1px solid var(--border)}
+.required .task-head{background:#fef2f2}
+.advanced .task-head{background:#f5f3ff}
+.task-title-wrap{flex:1;min-width:0}
+.task-level{font-size:9px;letter-spacing:2px;font-weight:700;margin-bottom:3px}
+.required .task-level{color:var(--required)}
+.advanced .task-level{color:var(--advanced)}
+.task-title{font-size:13px;font-weight:700;line-height:1.35;color:#333}
+.task-points{display:flex;align-items:center;gap:6px;background:#fff;border:1px solid var(--border);border-radius:20px;padding:4px 12px;font-size:11px;font-weight:700;white-space:nowrap}
+.task-points strong{font-size:14px;color:var(--hw-orange)}
+.task-body{padding:14px}
+.task-desc{font-size:12px;line-height:1.7;color:#333;margin-bottom:10px}
+.task-requirements{background:var(--light);border-left:3px solid var(--hw-orange);border-radius:0 8px 8px 0;padding:10px 14px;margin:10px 0;font-size:12px;line-height:1.65}
+.tr-title{font-size:10px;color:var(--hw-orange);font-weight:700;margin-bottom:5px;letter-spacing:1px}
+.tr-list{margin:0;padding-left:16px}
+.tr-list li{margin-bottom:4px;color:#333}
+.code-block{background:#0d1117;color:#e6edf3;border-radius:9px;padding:12px 14px;margin:10px 0;font-family:'JetBrains Mono',monospace;font-size:11px;line-height:1.7;overflow-x:auto;white-space:pre;tab-size:2;-moz-tab-size:2;word-wrap:normal}
+.code-block .cm{color:#8b949e;font-style:italic}
+.code-block .kw{color:#ff7b72}
+.code-block .str{color:#a5d6ff}
+.code-block .num{color:#79c0ff}
+.code-block .fn{color:#d2a8ff}
+.rubric{margin:12px 0}
+.rubric-title{font-size:10px;color:var(--hw-orange);font-weight:700;letter-spacing:1px;margin-bottom:6px;display:flex;align-items:center;gap:5px}
+.rubric-title::before{content:'📊';font-size:13px}
+.rubric-table{width:100%;border-collapse:collapse;font-size:11px}
+.rubric-table th{background:var(--hw-dark);color:#fff;padding:7px 8px;text-align:left;font-size:10px;font-weight:700}
+.rubric-table td{padding:7px 8px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.5}
+.rubric-table tr:nth-child(even) td{background:var(--light)}
+.rubric-table td:first-child{font-weight:700;color:var(--hw-orange);white-space:nowrap;font-family:'JetBrains Mono',monospace;font-size:10px}
+.rubric-table td:last-child{text-align:right;font-weight:700;color:#333;white-space:nowrap}
+.hint-block{background:#eff6ff;border:1px solid #93c5fd;border-radius:8px;margin:10px 0;overflow:hidden}
+.hint-summary{padding:10px 12px;cursor:pointer;font-size:11px;font-weight:700;color:#1e40af;display:flex;align-items:center;gap:6px;user-select:none;list-style:none}
+.hint-summary::before{content:'💡';font-size:13px}
+.hint-summary::after{content:'▼';font-size:10px;margin-left:auto;transition:transform .2s}
+.hint-block[open] .hint-summary::after{transform:rotate(180deg)}
+.hint-content{padding:0 12px 12px;font-size:11px;color:#1e3a8a;line-height:1.7}
+.hint-content code{background:#dbeafe;color:#1e40af}
+.warning{background:#fff8ed;border-left:3px solid var(--hw-amber);padding:10px 13px;border-radius:0 8px 8px 0;margin:10px 0;font-size:12px;line-height:1.65;color:#78350f}
+.warning strong{color:#92400e}
+.deliverable{background:#fff;border:2px dashed var(--hw-orange);border-radius:10px;padding:12px;margin:10px 0}
+.dv-title{font-size:10px;color:var(--hw-orange);letter-spacing:1px;font-weight:700;margin-bottom:4px}
+.dv-desc{font-size:11px;color:#333;line-height:1.6}
+.section-nav{background:var(--light);border-radius:10px;padding:12px;margin:10px 0}
+.sn-title{font-size:10px;color:var(--gray);font-weight:700;letter-spacing:1px;margin-bottom:8px}
+.sn-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:4px}
+.sn-link{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px 4px;background:#fff;border:1px solid var(--border);border-radius:6px;font-size:10px;color:#333;text-decoration:none;text-align:center}
+.sn-link:hover{border-color:var(--hw-orange);color:var(--hw-orange)}
+.sn-link.req{border-left:3px solid var(--required)}
+.sn-link.adv{border-left:3px solid var(--advanced)}
+.sn-num{font-size:14px;font-weight:900;color:#333;font-family:'JetBrains Mono',monospace}
+.sn-pts{font-size:9px;color:var(--gray);margin-top:2px}
+@media(max-width:400px){.ov-grid{grid-template-columns:1fr}.ss-grid{grid-template-columns:repeat(5,1fr);gap:3px}.ss-pts{font-size:12px}}
+</style>
+</head>
+<body>
+
+<div id="sf">
+  <span class="lbl">W5 Homework</span>
+  <span class="ttl" id="sf-t">W5 과제 워크북</span>
+  <span class="score" id="sf-s">0 / 100 점</span>
+</div>
+
+<div class="hero" data-section="개요">
+  <div class="hero-badge">📝 HOMEWORK</div>
+  <div class="hero-week">WEEK 5</div>
+  <h1>멀티 스케줄 + Vector DB<br>24/7 자동 운영</h1>
+  <div class="hero-score-box">총점 <strong>100점</strong> · 필수 60 + 심화 40</div>
+</div>
+
+<div class="container">
+
+<section data-section="학습 목표">
+  <div class="overview">
+    <div class="ov-title">🎯 W5 학습 목표 복습</div>
+    <p style="font-size:12px;margin:4px 0 8px;color:#431407">여러 시간대 루틴 + Supabase pgvector + 에러 자동 복구. <strong>장기 안정 운영</strong>을 가능하게 하는 주차.</p>
+    <div class="ov-grid">
+      <div class="ov-item">
+        <div class="ov-label">🔧 핵심 도구</div>
+        <div class="ov-value">Supabase pgvector<br>OpenAI Embedding<br>Error Trigger</div>
+      </div>
+      <div class="ov-item">
+        <div class="ov-label">⏱ 예상 시간</div>
+        <div class="ov-value">필수 4~5시간<br>심화 +3시간</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="score-summary">
+    <div class="ss-title">📊 과제 배점표</div>
+    <div class="ss-grid"><div class="ss-item"><div class="ss-num">과제 1</div><div class="ss-pts ss-pts-amber">20</div></div><div class="ss-item"><div class="ss-num">과제 2</div><div class="ss-pts ss-pts-amber">20</div></div><div class="ss-item"><div class="ss-num">과제 3</div><div class="ss-pts ss-pts-amber">20</div></div><div class="ss-item"><div class="ss-num">과제 4</div><div class="ss-pts ss-pts-purple">20</div></div><div class="ss-item"><div class="ss-num">과제 5</div><div class="ss-pts ss-pts-purple">20</div></div></div>
+    <div class="ss-total">합계 <strong>100점</strong> · 필수 60 + 심화 40</div>
+  </div>
+
+  <div class="section-nav">
+    <div class="sn-title">📍 빠른 이동</div>
+    <div class="sn-grid"><a class="sn-link req" href="#t1"><span class="sn-num">1</span><span class="sn-pts">20pt</span></a><a class="sn-link req" href="#t2"><span class="sn-num">2</span><span class="sn-pts">20pt</span></a><a class="sn-link req" href="#t3"><span class="sn-num">3</span><span class="sn-pts">20pt</span></a><a class="sn-link adv" href="#t4"><span class="sn-num">4</span><span class="sn-pts">20pt</span></a><a class="sn-link adv" href="#t5"><span class="sn-num">5</span><span class="sn-pts">20pt</span></a></div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+
+<section id="t1" data-section="과제 1">
+  <div class="task-card required">
+    <div class="task-head">
+      <div class="task-title-wrap">
+        <div class="task-level">🔴 REQUIRED — 과제 1</div>
+        <div class="task-title">멀티 스케줄 4종 시장 시간대 자동 운영</div>
+      </div>
+      <div class="task-points">배점 <strong>20</strong> 점</div>
+    </div>
+    <div class="task-body">
+      <p class="task-desc">한국장 / 미국장 / 암호화폐 / 매크로 4개 시간대 루틴을 서로 다른 Schedule Trigger로 분리 운영.</p>
+      <div class="task-requirements">
+        <div class="tr-title">필수 요구사항</div>
+        <ul class="tr-list"><li>한국장 개장 브리핑: 평일 <strong>08:30</strong> (월~금)</li><li>한국장 마감 리포트: 평일 <strong>15:45</strong></li><li>미국장 개장 브리핑: 평일 <strong>22:30</strong></li><li>암호화폐 체크: <strong>4시간 간격 24/7</strong></li><li>모든 워크플로 Timezone = Asia/Seoul 설정</li></ul>
+      </div>
+      <h4>Cron 표현식 치트시트</h4>
+<pre class="code-block">평일 08:30       : <span class="str">30 8 * * 1-5</span>
+평일 15:45       : <span class="str">45 15 * * 1-5</span>
+평일 22:30       : <span class="str">30 22 * * 1-5</span>
+4시간마다 24/7   : <span class="str">0 */4 * * *</span>
+매 30분          : <span class="str">*/30 * * * *</span></pre>
+
+<div class="warning">
+  <strong>⚠️ 중요:</strong> n8n Cloud 기본 Timezone은 UTC입니다. <strong>워크플로 Settings → Timezone: Asia/Seoul</strong> 명시 필수. 안 하면 한국시간 기준으로 9시간 늦게 실행됩니다.
+</div>
+      <div class="rubric">
+        <div class="rubric-title">채점 기준 (20점 만점)</div>
+        <table class="rubric-table"><tbody><tr><td>A. 4개 Schedule 정확 설정</td><td>5점</td></tr><tr><td>B. 시간대별 루틴 내용 차별화</td><td>5점</td></tr><tr><td>C. Timezone 설정</td><td>3점</td></tr><tr><td>D. 3일 이상 실행 기록</td><td>4점</td></tr><tr><td>E. Sticky Note 워크플로 설명</td><td>3점</td></tr></tbody></table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="t2" data-section="과제 2">
+  <div class="task-card required">
+    <div class="task-head">
+      <div class="task-title-wrap">
+        <div class="task-level">🔴 REQUIRED — 과제 2</div>
+        <div class="task-title">Supabase pgvector 환경 구축</div>
+      </div>
+      <div class="task-points">배점 <strong>20</strong> 점</div>
+    </div>
+    <div class="task-body">
+      <p class="task-desc">Supabase 프로젝트 생성 + pgvector 활성화 + documents 테이블 + match_documents RPC 함수 배포.</p>
+      <div class="task-requirements">
+        <div class="tr-title">필수 요구사항</div>
+        <ul class="tr-list"><li>Supabase 무료 플랜 계정 + 프로젝트 생성</li><li>SQL Editor에서 <code>CREATE EXTENSION vector</code> 실행</li><li>documents 테이블 (1536차원 embedding 컬럼 포함) 생성</li><li>match_documents RPC 함수 배포</li><li>n8n Credentials에 Supabase URL + Service Role Key 등록</li></ul>
+      </div>
+      <h4>필수 SQL 스크립트</h4>
+<pre class="code-block">-- pgvector 확장
+CREATE EXTENSION IF NOT EXISTS vector;
+
+-- documents 테이블
+CREATE TABLE documents (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  content text,
+  metadata jsonb,
+  embedding vector(<span class="num">1536</span>),
+  created_at timestamptz DEFAULT now()
+);
+
+-- RPC 함수 (유사도 검색)
+CREATE OR REPLACE FUNCTION match_documents(
+  query_embedding vector(<span class="num">1536</span>),
+  match_count int DEFAULT <span class="num">5</span>
+) RETURNS TABLE (
+  id uuid, content text, metadata jsonb, similarity float
+) LANGUAGE plpgsql AS $$
+BEGIN
+  RETURN QUERY
+  SELECT d.id, d.content, d.metadata,
+         <span class="num">1</span> - (d.embedding &lt;=&gt; query_embedding) AS similarity
+  FROM documents d
+  ORDER BY d.embedding &lt;=&gt; query_embedding
+  LIMIT match_count;
+END; $$;</pre>
+
+<div class="warning">
+  <strong>🔒 Service Role Key 보안:</strong> 절대 GitHub·Discord에 공개 금지. n8n Credential에만 저장하고, 외부 공유 전 <code>anon</code> key로 교체.
+</div>
+      <div class="rubric">
+        <div class="rubric-title">채점 기준 (20점 만점)</div>
+        <table class="rubric-table"><tbody><tr><td>A. Supabase 프로젝트 + pgvector 활성화</td><td>4점</td></tr><tr><td>B. SQL 정확 실행</td><td>5점</td></tr><tr><td>C. 테이블 스키마 완성도</td><td>4점</td></tr><tr><td>D. RPC 함수 작동 확인</td><td>4점</td></tr><tr><td>E. Key 보안 관리</td><td>3점</td></tr></tbody></table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="t3" data-section="과제 3">
+  <div class="task-card required">
+    <div class="task-head">
+      <div class="task-title-wrap">
+        <div class="task-level">🔴 REQUIRED — 과제 3</div>
+        <div class="task-title">문서 10개 Vector DB 저장 + 의미 검색 검증</div>
+      </div>
+      <div class="task-points">배점 <strong>20</strong> 점</div>
+    </div>
+    <div class="task-body">
+      <p class="task-desc">관심 있는 금융 메모·뉴스·연구자료 10개를 임베딩 저장하고 의미 기반 검색이 작동하는지 실증.</p>
+      <div class="task-requirements">
+        <div class="tr-title">필수 요구사항</div>
+        <ul class="tr-list"><li>금융 관련 문서·메모·요약 <strong>10건</strong> 수집 (각 100~500자)</li><li>OpenAI Embeddings 노드(text-embedding-3-small)로 임베딩</li><li>Supabase Vector Store Insert 모드로 저장</li><li>metadata에 <strong>category, source, date</strong> 3개 태그 필수</li><li>다양한 질문 <strong>5개</strong>로 Retrieve → 유사도 점수 분석</li></ul>
+      </div>
+      
+      <div class="rubric">
+        <div class="rubric-title">채점 기준 (20점 만점)</div>
+        <table class="rubric-table"><tbody><tr><td>A. 10건 정상 저장</td><td>4점</td></tr><tr><td>B. metadata 태그 체계</td><td>4점</td></tr><tr><td>C. 5개 테스트 질문 다양성</td><td>4점</td></tr><tr><td>D. 유사도 결과 해석 리포트</td><td>5점</td></tr><tr><td>E. 부정확 케이스 개선 제안</td><td>3점</td></tr></tbody></table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="t4" data-section="과제 4">
+  <div class="task-card advanced">
+    <div class="task-head">
+      <div class="task-title-wrap">
+        <div class="task-level">🟣 ADVANCED — 과제 4</div>
+        <div class="task-title">Switch 기반 Discord 3채널 차등 발송</div>
+      </div>
+      <div class="task-points">배점 <strong>20</strong> 점</div>
+    </div>
+    <div class="task-body">
+      <p class="task-desc">verdict + confidence 기반으로 긴급/일반/로그 3개 채널을 자동 분기 발송하는 시스템.</p>
+      <div class="task-requirements">
+        <div class="tr-title">필수 요구사항</div>
+        <ul class="tr-list"><li>Discord 서로 다른 3개 채널 + Webhook 각각 설정</li><li>Switch 노드: verdict·confidence 조합으로 3분기</li><li>긴급 채널: BUY/SELL + conf≥4 → <code>@everyone</code> + 빨강 Embed</li><li>일반 채널: WATCH → 노랑 Embed + 이모지</li><li>로그 채널: HOLD + 모든 실행 기록 (성공·실패)</li></ul>
+      </div>
+      
+      <div class="rubric">
+        <div class="rubric-title">채점 기준 (20점 만점)</div>
+        <table class="rubric-table"><tbody><tr><td>A. 3채널 설계 논리</td><td>4점</td></tr><tr><td>B. Switch 분기 조건</td><td>5점</td></tr><tr><td>C. 채널별 Embed 차별화</td><td>5점</td></tr><tr><td>D. @everyone 톤 조절</td><td>3점</td></tr><tr><td>E. 로그 채널 실사용성</td><td>3점</td></tr></tbody></table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="t5" data-section="과제 5">
+  <div class="task-card advanced">
+    <div class="task-head">
+      <div class="task-title-wrap">
+        <div class="task-level">🟣 ADVANCED — 과제 5</div>
+        <div class="task-title">Error Trigger로 실패 자동 감지 + 재시도</div>
+      </div>
+      <div class="task-points">배점 <strong>20</strong> 점</div>
+    </div>
+    <div class="task-body">
+      <p class="task-desc">운영 중 발생하는 실패를 자동 감지 → 분류 → 재시도 또는 알림하는 에러 복구 시스템.</p>
+      <div class="task-requirements">
+        <div class="tr-title">필수 요구사항</div>
+        <ul class="tr-list"><li>별도 Error Workflow 생성 (첫 노드: Error Trigger)</li><li>대상 워크플로 Settings → Error Workflow 연결</li><li>에러 메시지에 '429' 또는 'EGW00201' 포함 시 Wait 5초 → Execute Workflow로 재시도</li><li>재시도성 아닌 에러는 Discord 전용 채널에 상세 알림</li><li>일부러 API Key 틀리게 해서 실제 발동 확인 + 로그 캡처</li></ul>
+      </div>
+      <h4>Error Workflow 구조</h4>
+<pre class="code-block">Error Trigger (원본 워크플로 실패 시 자동 발화)
+    ↓
+IF 노드 ($json.execution.error.message contains "429" || "EGW00201")
+    ├─ TRUE  → Wait 5s → Execute Workflow (원본 재시도)
+    └─ FALSE → Discord 긴급 알림 (@here 포함)</pre>
+
+<div class="warning">
+  <strong>⚠️ 함정:</strong> Error Workflow를 만들어도 대상 워크플로의 Settings에서 Error Workflow로 <strong>연결</strong>하지 않으면 작동 안 함. 양방향 설정 필수.
+</div>
+      <div class="rubric">
+        <div class="rubric-title">채점 기준 (20점 만점)</div>
+        <table class="rubric-table"><tbody><tr><td>A. Error Trigger 설정</td><td>3점</td></tr><tr><td>B. 워크플로 연결 완료</td><td>3점</td></tr><tr><td>C. 에러 분류 로직</td><td>5점</td></tr><tr><td>D. 재시도 구현</td><td>4점</td></tr><tr><td>E. 실제 발동 증거</td><td>5점</td></tr></tbody></table>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<div class="divider"></div>
+
+<section id="submit" data-section="제출">
+  <div class="eyebrow">Submit</div>
+  <h2>📤 제출 방법 + 기한</h2>
+  <div class="warning"><strong>⏰ 제출 기한:</strong> 다음 주 수업 시작 전까지. 지연 시 하루당 -2점.</div>
+  <div style="background:linear-gradient(135deg,#f97316,#431407);color:#fff;text-align:center;padding:24px 20px;border-radius:12px;margin:20px 0">
+    <div style="font-size:10px;letter-spacing:2px;color:#fbbf24;margin-bottom:6px;font-weight:700">📝 W5 HOMEWORK COMPLETE</div>
+    <div style="font-size:14px;font-weight:700;margin-bottom:4px">Multi-Schedule · Supabase · Error Recovery</div>
+    <div style="font-size:11px;color:rgba(255,255,255,.75);line-height:1.7">5 tasks · 100 pt · 4~8 hours</div>
+  </div>
+</section>
+
+</div>
+
+<script>
+const sections = document.querySelectorAll('[data-section]');
+const sfT = document.getElementById('sf-t');
+function update(){
+  const sy = window.scrollY;
+  let cur = sections[0]?.dataset.section || '';
+  sections.forEach(s => { if(sy >= s.getBoundingClientRect().top + sy - 110) cur = s.dataset.section; });
+  if(sfT.textContent !== cur) sfT.textContent = cur;
+}
+window.addEventListener('scroll', update, {passive:true});
+update();
+</script>
+</body>
+</html>

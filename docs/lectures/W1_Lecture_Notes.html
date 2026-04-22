@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>W1 — n8n 설치 + 첫 시세 수집 워크플로</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;600&display=swap');
+:root{
+  --black:#0d0d0d;--gray:#6b6b6b;--light:#f3f3f3;--border:#e6e6e6;--white:#fff;
+  --fh:46px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Noto Sans KR',-apple-system,sans-serif;background:#fff;color:var(--black);font-size:14px;line-height:1.75;padding-bottom:var(--fh)}
+
+/* ── STICKY FOOTER ── */
+#sf{position:fixed;bottom:0;left:0;right:0;height:var(--fh);background:var(--black);display:flex;align-items:center;justify-content:space-between;padding:0 16px;z-index:999}
+#sf .lbl{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:#555}
+#sf .ttl{font-size:12px;font-weight:700;color:#fff;max-width:60%;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#sf .pct{font-size:10px;color:#555;white-space:nowrap}
+
+/* ── HERO ── */
+.hero{background:var(--black);color:#fff;padding:48px 20px 40px;text-align:center;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;top:-80px;right:-80px;width:260px;height:260px;border:1px solid rgba(255,255,255,.05);border-radius:50%}
+.hero-badge{display:inline-block;border:1px solid rgba(255,255,255,.18);border-radius:20px;padding:4px 14px;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#aaa;margin-bottom:14px}
+.hero h1{font-size:22px;font-weight:900;line-height:1.35;margin-bottom:8px;letter-spacing:-.5px}
+.hero-sub{font-size:12px;color:#777;margin-bottom:22px}
+.hero-meta{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:rgba(255,255,255,.07);border-radius:10px;overflow:hidden;margin-top:18px}
+.hero-meta-item{background:rgba(255,255,255,.04);padding:12px 5px;text-align:center}
+.hero-meta-num{font-size:15px;font-weight:900;color:#fff;display:block}
+.hero-meta-lbl{font-size:9px;color:#555;margin-top:2px;line-height:1.3}
+
+/* ── LAYOUT ── */
+.container{max-width:720px;margin:0 auto;padding:0 15px}
+section{padding:36px 0 0}
+.divider{height:1px;background:var(--border);margin:34px 0 0}
+.eyebrow{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--gray);margin-bottom:5px}
+h2{font-size:19px;font-weight:900;letter-spacing:-.3px;margin-bottom:12px;line-height:1.3}
+h3{font-size:14px;font-weight:700;margin:20px 0 8px}
+h4{font-size:12px;font-weight:700;margin:14px 0 6px;color:#333}
+p{color:#333;margin-bottom:8px;font-size:13px}
+strong{color:var(--black);font-weight:700}
+code{font-family:'JetBrains Mono',monospace;background:#eef;padding:1px 5px;border-radius:3px;font-size:11px;color:#1d4ed8}
+
+.callout{background:var(--light);border-left:3px solid var(--black);padding:13px 15px;border-radius:0 8px 8px 0;margin:10px 0;font-size:13px;line-height:1.65}
+.callout.orange{background:#fff8ed;border-left-color:#d97706}
+.callout.blue{background:#eff6ff;border-left-color:#1d4ed8}
+.callout.green{background:#f0fdf4;border-left-color:#15803d}
+.callout.purple{background:#faf5ff;border-left-color:#7c3aed}
+.callout.red{background:#fef2f2;border-left-color:#dc2626}
+
+/* ── LESSON META ── */
+.lesson-meta{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:14px 0 4px}
+.meta-card{background:var(--light);border:1px solid var(--border);border-radius:8px;padding:10px 8px;text-align:center}
+.meta-card-lbl{font-size:9px;font-weight:700;letter-spacing:1px;color:#aaa;text-transform:uppercase;margin-bottom:3px}
+.meta-card-val{font-size:12px;font-weight:700;color:var(--black);line-height:1.3}
+
+/* ── LEARNING GOALS ── */
+.goals{display:flex;flex-direction:column;gap:7px;margin:12px 0}
+.goal{display:flex;gap:11px;align-items:flex-start;background:var(--light);border-radius:9px;padding:11px 13px;border:1px solid var(--border)}
+.goal-chk{width:20px;height:20px;background:var(--black);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;flex-shrink:0}
+.goal-text{font-size:12px;line-height:1.55}
+
+/* ── CODE BLOCK ── */
+.code-block{background:#0d1117;color:#e6edf3;border-radius:9px;padding:14px 16px;margin:10px 0;font-family:'JetBrains Mono','Courier New',monospace;font-size:11px;line-height:1.7;overflow-x:auto;white-space:pre;tab-size:2;-moz-tab-size:2;word-wrap:normal}
+.code-block code{background:transparent;padding:0;color:inherit;font-size:inherit}
+.code-block .cm{color:#8b949e;font-style:italic}
+.code-block .kw{color:#ff7b72}
+.code-block .str{color:#a5d6ff}
+.code-block .num{color:#79c0ff}
+.code-block .fn{color:#d2a8ff}
+
+/* ── STEP BOX ── */
+.step-block{background:#fffbeb;border:1px solid #fcd34d;border-radius:11px;padding:14px 15px;margin:12px 0}
+.step-title{font-size:11px;font-weight:700;color:#92400e;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.step-title::before{content:'▶';font-size:9px}
+.step-list{counter-reset:s;list-style:none;padding:0}
+.step-list li{counter-increment:s;position:relative;padding:6px 0 6px 30px;font-size:12px;line-height:1.65;color:#78350f;border-bottom:1px dashed #fcd34d}
+.step-list li:last-child{border-bottom:none}
+.step-list li::before{content:counter(s);position:absolute;left:0;top:8px;width:20px;height:20px;background:#d97706;color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:900}
+
+/* ── NODE CARD ── */
+.node-card{border:1px solid var(--border);border-radius:10px;margin:10px 0;overflow:hidden}
+.node-head{background:var(--black);color:#fff;padding:10px 14px;display:flex;align-items:center;gap:9px}
+.node-icon{font-size:16px}
+.node-name{font-size:12px;font-weight:700}
+.node-tag{background:rgba(255,255,255,.15);border-radius:3px;padding:2px 7px;font-size:9px;font-weight:700;margin-left:auto;letter-spacing:.5px}
+.node-body{padding:12px 14px;background:var(--light);font-size:12px;line-height:1.6}
+.node-config{background:#fff;border:1px solid var(--border);border-radius:6px;padding:10px 12px;margin-top:8px;font-size:11px;font-family:'JetBrains Mono',monospace}
+.node-config-row{padding:3px 0;border-bottom:1px dashed #eee}
+.node-config-row:last-child{border-bottom:none}
+.ncr-k{color:#6b6b6b;display:inline-block;min-width:110px}
+.ncr-v{color:#1d4ed8;font-weight:600}
+
+/* ── ASSET ROW ── */
+.asset-target{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin:10px 0}
+.at-card{border:1px solid var(--border);border-radius:8px;padding:10px 12px;background:var(--light)}
+.at-name{font-size:11px;font-weight:700;margin-bottom:3px;display:flex;align-items:center;gap:5px}
+.at-tick{font-family:'JetBrains Mono',monospace;font-size:10px;color:#1d4ed8}
+.at-desc{font-size:10px;color:var(--gray);line-height:1.5}
+
+/* ── N8N FLOW ── */
+.n8n-flow{background:#fffbeb;border:1px solid #fcd34d;border-radius:11px;padding:14px;margin:14px 0}
+.n8n-title{font-size:11px;font-weight:700;color:#92400e;margin-bottom:10px}
+.n8n-steps{display:flex;flex-direction:column;gap:4px}
+.n8n-step{display:flex;align-items:flex-start;gap:8px;padding:4px 0}
+.n8n-node{border-radius:5px;padding:3px 9px;font-size:10px;font-weight:700;white-space:nowrap;flex-shrink:0;margin-top:1px}
+.nn-t{background:#dc2626;color:#fff}
+.nn-a{background:#2563eb;color:#fff}
+.nn-ai{background:#7c3aed;color:#fff}
+.nn-o{background:#059669;color:#fff}
+.nn-c{background:#374151;color:#fff}
+.n8n-edge{font-size:10px;color:#bbb;padding-top:5px;flex-shrink:0}
+.n8n-desc{font-size:11px;color:#78350f;flex:1;line-height:1.6;padding-top:3px}
+
+/* ── TABLE ── */
+.dtable{width:100%;border-collapse:collapse;margin:10px 0;font-size:11px}
+.dtable th{background:var(--black);color:#fff;padding:8px 10px;text-align:left;font-size:10px;font-weight:700}
+.dtable td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.5}
+.dtable tr:nth-child(even) td{background:var(--light)}
+.dtable code{font-size:10px}
+
+/* ── TROUBLESHOOT ── */
+.ts-block{background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:13px 15px;margin:10px 0}
+.ts-item{padding:8px 0;border-bottom:1px dashed #fecaca}
+.ts-item:last-child{border-bottom:none}
+.ts-q{font-size:12px;font-weight:700;color:#991b1b;margin-bottom:4px}
+.ts-q::before{content:'Q. ';color:#dc2626}
+.ts-a{font-size:11px;color:#7f1d1d;line-height:1.6;padding-left:14px}
+.ts-a::before{content:'A. ';font-weight:700}
+
+/* ── CHECKLIST ── */
+.checklist{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:13px 15px;margin:12px 0}
+.ck-title{font-size:11px;font-weight:700;color:#14532d;margin-bottom:8px}
+.ck-item{padding:5px 0 5px 22px;font-size:12px;line-height:1.5;color:#166534;position:relative}
+.ck-item::before{content:'☐';position:absolute;left:0;top:3px;font-size:14px;color:#15803d}
+
+/* ── HOMEWORK ── */
+.hw-block{background:linear-gradient(135deg,#1e3a5f,#1d4ed8);color:#fff;border-radius:11px;padding:16px;margin:14px 0}
+.hw-tag{display:inline-block;background:rgba(255,255,255,.2);border-radius:4px;padding:2px 8px;font-size:9px;font-weight:900;letter-spacing:1.5px;margin-bottom:8px}
+.hw-title{font-size:14px;font-weight:700;margin-bottom:8px}
+.hw-list{list-style:none;padding:0}
+.hw-list li{padding:5px 0 5px 16px;font-size:12px;line-height:1.55;position:relative;color:rgba(255,255,255,.9)}
+.hw-list li::before{content:'▸';position:absolute;left:0;color:#93c5fd}
+
+/* ── 3D DIMENSION CARDS ── */
+.dim-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:14px 0}
+.dim-card{border:1px solid var(--border);border-radius:10px;padding:12px 11px;background:#fff;opacity:.55;transition:opacity .2s}
+.dim-card.active{opacity:1;border-color:var(--black);box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.dim-icon{font-size:22px;margin-bottom:5px}
+.dim-label{font-size:11px;font-weight:700;margin-bottom:5px;line-height:1.3}
+.dim-desc{font-size:10px;color:var(--gray);line-height:1.5}
+.dim-card.d-price.active{background:#eff6ff;border-color:#1d4ed8}
+.dim-card.d-news{background:#fff8ed}
+.dim-card.d-chart{background:#faf5ff}
+
+/* ── AGENT CONCEPT ── */
+.agent-box{background:#faf5ff;border:1px solid #e9d5ff;border-radius:10px;padding:13px 15px;margin:10px 0}
+.ag-title{font-size:11px;font-weight:700;color:#5b21b6;margin-bottom:6px;display:flex;align-items:center;gap:5px}
+.ag-body{font-size:12px;color:#5b21b6;line-height:1.65}
+
+@media(max-width:400px){
+  .lesson-meta{grid-template-columns:repeat(2,1fr)}
+  .asset-target{grid-template-columns:1fr}
+  .hero h1{font-size:19px}
+}
+</style>
+</head>
+<body>
+
+<div id="sf">
+  <span class="lbl">W1 강의노트</span>
+  <span class="ttl" id="sf-t">n8n 설치 + 첫 시세 수집</span>
+  <span class="pct" id="sf-p">0%</span>
+</div>
+
+<!-- ════ HERO ════ -->
+<div class="hero" data-section="W1 강의노트">
+  <div class="hero-badge">Week 01 · Phase 1 · n8n 기초</div>
+  <h1>n8n 설치 + 가격 데이터 수집 파이프</h1>
+  <p class="hero-sub">주식·코인·환율·지수 — 3D 분석의 1차원(가격) 안정화</p>
+  <div class="hero-meta">
+    <div class="hero-meta-item"><span class="hero-meta-num">3시간</span><span class="hero-meta-lbl">수업<br>시간</span></div>
+    <div class="hero-meta-item"><span class="hero-meta-num">3 API</span><span class="hero-meta-lbl">가격<br>소스</span></div>
+    <div class="hero-meta-item"><span class="hero-meta-num">0원</span><span class="hero-meta-lbl">수강 중<br>비용</span></div>
+  </div>
+</div>
+
+<div class="container">
+
+<!-- ════ 학습 목표 ════ -->
+<section data-section="학습 목표">
+  <div class="eyebrow">Learning Objectives</div>
+  <h2>이번 주 학습 목표</h2>
+
+  <div class="lesson-meta">
+    <div class="meta-card"><div class="meta-card-lbl">레벨</div><div class="meta-card-val">입문</div></div>
+    <div class="meta-card"><div class="meta-card-lbl">선수지식</div><div class="meta-card-val">없음</div></div>
+    <div class="meta-card"><div class="meta-card-lbl">실습</div><div class="meta-card-val">90분</div></div>
+    <div class="meta-card"><div class="meta-card-lbl">과제</div><div class="meta-card-val">확장 1개</div></div>
+  </div>
+
+  <div class="goals">
+    <div class="goal"><div class="goal-chk">1</div><div class="goal-text"><strong>n8n 워크스페이스 접속</strong>(초청/직접/Docker)과 첫 워크플로 생성 과정을 혼자 수행할 수 있다</div></div>
+    <div class="goal"><div class="goal-chk">2</div><div class="goal-text"><strong>HTTP Request 노드</strong>로 Yahoo Finance·CoinGecko·FRED 3개 API를 호출하고 JSON 응답을 이해할 수 있다</div></div>
+    <div class="goal"><div class="goal-chk">3</div><div class="goal-text"><strong>Set 노드 expression</strong>(<code>{{ $json.x.y }}</code>)으로 중첩 JSON에서 필요한 필드만 추출할 수 있다</div></div>
+    <div class="goal"><div class="goal-chk">4</div><div class="goal-text"><strong>4자산군 가격 통합 수집기</strong>를 완성해 이후 주차의 분석 파이프라인에 공급할 수 있다</div></div>
+  </div>
+
+  <div class="callout green">
+    <strong>이번 주의 한 문장:</strong> "좋은 판단은 좋은 데이터에서만 나온다." 이번 주는 판단의 재료가 되는 <strong>가격 데이터</strong>부터 안정적으로 수집하는 파이프를 만듭니다.
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ════ 3D 분석 프레임 (짧은 소개) ════ -->
+<section data-section="3D 분석 프레임">
+  <div class="eyebrow">The 3D Framework · Preview</div>
+  <h2>프로가 보는 세 가지 차원 — 8주간의 설계도</h2>
+  <p>아마추어는 가격만 봅니다. 프로는 <strong>가격·뉴스·차트</strong> 세 가지를 함께 봅니다. 이 과정은 8주에 걸쳐 그 세 차원을 하나씩 쌓아 올려 <strong>AI 에이전트가 3차원으로 판단하게 만드는 여정</strong>입니다. 이번 주는 그 중 <strong>1차원(가격)</strong>만 집중합니다.</p>
+
+  <div class="dim-grid">
+    <div class="dim-card d-price active">
+      <div class="dim-icon">📊</div>
+      <div class="dim-label">1차원 — 가격 (What)</div>
+      <div class="dim-desc"><strong>이번 주(W1~W2)</strong>. 시세·거래량·수익률로 "무슨 일이 일어났는가" 파악. Yahoo·CoinGecko·FRED.</div>
+    </div>
+    <div class="dim-card d-news">
+      <div class="dim-icon">📰</div>
+      <div class="dim-label">2차원 — 뉴스 센티먼트 (Why)</div>
+      <div class="dim-desc"><strong>W3에서 추가</strong>. 왜 가격이 그렇게 움직였는가. Alpha Vantage NEWS_SENTIMENT가 AI로 점수화.</div>
+    </div>
+    <div class="dim-card d-chart">
+      <div class="dim-icon">📈</div>
+      <div class="dim-label">3차원 — 차트 이미지 (How)</div>
+      <div class="dim-desc"><strong>W4에서 추가</strong>. 기술적 패턴 인식. Chart-IMG로 TradingView 차트를 만들고 Claude Vision이 판독.</div>
+    </div>
+  </div>
+
+  <div class="callout purple">
+    <strong>💡 왜 이렇게 나누는가:</strong> 한 번에 3차원을 모두 쌓으면 어디서 문제가 났는지 알기 어렵습니다. W1에서 가격 파이프를 <strong>완전히 안정화</strong>한 뒤, W3에서 뉴스 층을 얹고, W4에서 차트 판독을 추가하는 <strong>점진적 누적</strong>이 디버깅과 이해 양쪽 모두에 유리합니다.
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ════ 왜 n8n부터 시작하는가 ════ -->
+<section data-section="왜 n8n부터?">
+  <div class="eyebrow">Why n8n First?</div>
+  <h2>왜 n8n부터 시작하는가</h2>
+  <p>투자 자동화의 여정은 세 단계로 나뉩니다. <strong>①수집 → ②판단 → ③실행</strong>. 이 중 판단(AI)과 실행(주문 API)은 수집이 제대로 되어야 의미가 있습니다. n8n은 <strong>수집과 연결을 코드 없이 눈으로 보며 설계</strong>하게 해주는 도구이기 때문에 투자 자동화의 뼈대를 잡기에 가장 적합합니다.</p>
+
+  <div class="agent-box">
+    <div class="ag-title">🤖 에이전트 관점에서 본 이번 주</div>
+    <div class="ag-body">이번 주 만드는 것은 엄밀히는 <strong>"에이전트"</strong>가 아니라 <strong>"데이터 수집 봇"</strong>입니다. 정해진 시간에 정해진 데이터를 가져올 뿐 판단은 없습니다. 하지만 이 데이터가 바로 <em>W3~W4의 AI 에이전트가 먹고 자랄 양식</em>이 됩니다. 좋은 수집 없이 좋은 에이전트 없습니다.</div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ════ 1교시 ════ -->
+<section data-section="1교시: n8n 설치">
+  <div class="eyebrow">Session 1 · 45min</div>
+  <h2>1교시 — n8n 계정 개설과 첫 화면</h2>
+
+  <p>이번 과정에서는 <strong>3가지 접속 방법</strong>을 제공합니다. 본인 상황에 맞게 선택하세요.</p>
+
+  <div class="callout green">
+    <strong>🎯 어떤 옵션을 선택할까?</strong><br>
+    <strong>옵션 1 (초청 링크)</strong>은 강사 워크스페이스에 참여해 가장 빠르게 시작 — <em>권장</em>. <strong>옵션 2 (직접 가입)</strong>는 본인 워크스페이스를 소유하고 싶을 때. <strong>옵션 3 (Docker)</strong>는 개발 경험이 있고 완전 무료·영구 사용을 원할 때.
+  </div>
+
+  <h3>옵션 1: 강사 워크스페이스 초청 참여 (권장, 가장 빠름)</h3>
+  <p>강사가 운영하는 n8n Cloud 워크스페이스에 <strong>이메일 초청</strong>으로 참여합니다. 별도 결제나 14일 체험 제한 없이 <strong>과정 전체 기간 동안 안정적으로 사용</strong>할 수 있습니다.</p>
+
+  <div class="step-block">
+    <div class="step-title">초청 참여 절차</div>
+    <ol class="step-list">
+      <li>수업 시작 전 등록한 이메일로 강사가 <strong>n8n 초청 메일</strong>을 발송 (제목: <em>You have been invited to n8n</em>)</li>
+      <li>메일 내 <strong>Accept invite</strong> 버튼 클릭 → 브라우저가 강사 워크스페이스로 이동</li>
+      <li>본인 비밀번호 설정 → 이름 입력 → 가입 완료</li>
+      <li>접속 주소: <code>https://hyeok2.app.n8n.cloud/home/workflows</code></li>
+      <li>좌측 상단 <strong>+ Create Workflow</strong> 클릭 → 본인 이름으로 첫 워크플로 생성</li>
+    </ol>
+  </div>
+
+  <div class="callout blue">
+    <strong>📌 강사 워크스페이스 사용 시 주의사항:</strong><br>
+    ① 본인이 만든 워크플로·자격증명(Credentials)은 <strong>본인만 볼 수 있음</strong> (워크스페이스 소유자는 전체 조회 가능) · ② API 키는 반드시 Credentials 메뉴에 저장 — 워크플로에 직접 입력 금지 · ③ 워크플로 이름 앞에 <code>[본인이름]</code> 태그를 붙여 구분 (예: <code>[홍길동] W1-시세수집</code>)
+  </div>
+
+  <h3>옵션 2: 본인 n8n Cloud 직접 가입 (14일 무료 체험)</h3>
+  <p>본인 명의의 독립 워크스페이스를 만들고 싶다면 직접 가입할 수 있습니다. 14일 무료 체험 후 월 $20부터 유료 전환됩니다.</p>
+
+  <div class="step-block">
+    <div class="step-title">직접 가입 절차</div>
+    <ol class="step-list">
+      <li><code>https://n8n.io</code> 접속 → 우측 상단 <strong>Get started for free</strong> 클릭</li>
+      <li>구글 계정 또는 이메일로 회원가입 (대학 이메일 권장)</li>
+      <li>워크스페이스 이름 입력 → 자동으로 <code>{이름}.app.n8n.cloud</code> 주소 발급</li>
+      <li>이메일 인증 완료 후 대시보드 진입 → <strong>+ Create Workflow</strong></li>
+    </ol>
+  </div>
+
+  <h3>옵션 3: Docker 로컬 설치 (완전 무료·영구 사용)</h3>
+  <div class="callout orange">
+    <strong>개발에 관심 있는 학생만 선택:</strong> Docker Desktop이 설치돼 있어야 합니다. 어려우면 옵션 1로 진행하세요. 과정 후반부에 언제든 전환 가능합니다.
+  </div>
+
+<pre class="code-block"><span class="cm"># Docker가 설치되어 있다면 한 줄로 시작</span>
+<span class="kw">docker</span> run -it --rm \
+  --name n8n \
+  -p <span class="num">5678</span>:<span class="num">5678</span> \
+  -v ~/.n8n:/home/node/.n8n \
+  docker.n8n.io/n8nio/n8n
+
+<span class="cm"># 브라우저에서 http://localhost:5678 접속</span>
+</pre>
+
+  <h3>첫 화면 구조 이해</h3>
+  <table class="dtable">
+    <thead><tr><th>영역</th><th>역할</th></tr></thead>
+    <tbody>
+      <tr><td><strong>좌측 사이드바</strong></td><td>Workflows(내 워크플로 목록) · Credentials(API 키 보관소) · Executions(실행 이력)</td></tr>
+      <tr><td><strong>캔버스 (가운데)</strong></td><td>노드를 드래그·연결해 워크플로를 시각적으로 설계</td></tr>
+      <tr><td><strong>+ 버튼</strong></td><td>새 노드 추가 — 400개 이상 앱 통합 내장</td></tr>
+      <tr><td><strong>Execute Workflow</strong></td><td>현재 워크플로를 수동으로 1회 실행 (테스트용)</td></tr>
+    </tbody>
+  </table>
+
+  <div class="ts-block">
+    <div style="font-size:11px;font-weight:700;color:#991b1b;margin-bottom:6px">🚨 자주 겪는 문제</div>
+    <div class="ts-item">
+      <div class="ts-q">초청 메일이 안 와요</div>
+      <div class="ts-a">스팸함 확인. 발신자가 <code>noreply@n8n.io</code>인 경우가 많습니다. 여전히 없으면 강사에게 등록 이메일 주소를 다시 확인 요청.</div>
+    </div>
+    <div class="ts-item">
+      <div class="ts-q">초청 링크를 눌렀더니 "Invalid invite" 오류</div>
+      <div class="ts-a">초청 링크는 <strong>한 번만 유효</strong>합니다. 이미 사용했거나 만료됐으면 강사에게 재초청 요청. 다른 브라우저에서 시도하는 것도 도움.</div>
+    </div>
+    <div class="ts-item">
+      <div class="ts-q">가입했는데 워크플로가 안 열려요</div>
+      <div class="ts-a">브라우저 캐시·쿠키를 지우고 다시 로그인해보세요. 크롬 시크릿 모드에서 가장 안정적입니다.</div>
+    </div>
+    <div class="ts-item">
+      <div class="ts-q">Docker로 실행했는데 localhost:5678이 안 열려요</div>
+      <div class="ts-a"><code>docker ps</code>로 컨테이너가 실행 중인지 확인하세요. 5678 포트가 이미 사용 중이면 <code>-p 5679:5678</code>로 변경 후 <code>localhost:5679</code>로 접속.</div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ════ 2교시 ════ -->
+<section data-section="2교시: 단일 API 호출">
+  <div class="eyebrow">Session 2 · 60min</div>
+  <h2>2교시 — HTTP Request 노드로 첫 API 호출</h2>
+
+  <p>모든 금융 API는 <strong>REST 방식</strong>으로 작동합니다. 쉽게 말해 "특정 주소(URL)에 요청을 보내면 JSON으로 답을 준다"는 것. n8n의 <strong>HTTP Request 노드</strong>가 이 일을 해줍니다.</p>
+
+  <h3>실습 1: Bitcoin 현재가 가져오기 (CoinGecko)</h3>
+  <p>가장 쉬운 것부터 시작합니다. CoinGecko는 <strong>API 키 없이도 무료로 사용 가능</strong>하며, 분당 30회까지 호출할 수 있습니다.</p>
+
+  <div class="node-card">
+    <div class="node-head">
+      <span class="node-icon">🔌</span>
+      <span class="node-name">Manual Trigger</span>
+      <span class="node-tag">TRIGGER</span>
+    </div>
+    <div class="node-body">
+      수업 중 테스트용. "Execute Workflow" 버튼을 눌러야만 실행됩니다. 나중에 Schedule Trigger로 교체할 예정.
+    </div>
+  </div>
+
+  <div class="node-card">
+    <div class="node-head">
+      <span class="node-icon">🌐</span>
+      <span class="node-name">HTTP Request — BTC 가격 조회</span>
+      <span class="node-tag">ACTION</span>
+    </div>
+    <div class="node-body">
+      CoinGecko의 <code>/simple/price</code> 엔드포인트를 호출해 비트코인의 USD·KRW 가격과 24시간 변동률을 한 번에 가져옵니다.
+      <div class="node-config">
+        <div class="node-config-row"><span class="ncr-k">Method:</span> <span class="ncr-v">GET</span></div>
+        <div class="node-config-row"><span class="ncr-k">URL:</span> <span class="ncr-v">https://api.coingecko.com/api/v3/simple/price</span></div>
+        <div class="node-config-row"><span class="ncr-k">Query Parameter 1:</span> <span class="ncr-v">ids = bitcoin</span></div>
+        <div class="node-config-row"><span class="ncr-k">Query Parameter 2:</span> <span class="ncr-v">vs_currencies = usd,krw</span></div>
+        <div class="node-config-row"><span class="ncr-k">Query Parameter 3:</span> <span class="ncr-v">include_24hr_change = true</span></div>
+        <div class="node-config-row"><span class="ncr-k">Authentication:</span> <span class="ncr-v">None</span></div>
+      </div>
+    </div>
+  </div>
+
+  <h4>응답 결과 (JSON)</h4>
+<pre class="code-block">{
+  <span class="str">"bitcoin"</span>: {
+    <span class="str">"usd"</span>: <span class="num">67234.52</span>,
+    <span class="str">"krw"</span>: <span class="num">94521300</span>,
+    <span class="str">"usd_24h_change"</span>: <span class="num">2.31</span>
+  }
+}
+</pre>
+
+  <div class="callout blue">
+    <strong>핵심 개념 — 중첩(Nested) JSON:</strong> <code>bitcoin</code> 안에 <code>usd</code>가 들어있습니다. 다음 노드에서 이 값을 꺼낼 때는 <code>{{ $json.bitcoin.usd }}</code>처럼 <strong>점(.)으로 경로</strong>를 지정합니다.
+  </div>
+
+  <h3>실습 2: Apple 주가 가져오기 (Yahoo Finance)</h3>
+  <p>Yahoo Finance는 공식 API는 없지만 <strong>공개 엔드포인트</strong>가 무료로 열려 있어 교육·개인 프로젝트에 널리 사용됩니다.</p>
+
+  <div class="node-card">
+    <div class="node-head">
+      <span class="node-icon">🌐</span>
+      <span class="node-name">HTTP Request — AAPL 주가 조회</span>
+      <span class="node-tag">ACTION</span>
+    </div>
+    <div class="node-body">
+      <div class="node-config">
+        <div class="node-config-row"><span class="ncr-k">Method:</span> <span class="ncr-v">GET</span></div>
+        <div class="node-config-row"><span class="ncr-k">URL:</span> <span class="ncr-v">https://query1.finance.yahoo.com/v8/finance/chart/AAPL</span></div>
+        <div class="node-config-row"><span class="ncr-k">Query Parameter 1:</span> <span class="ncr-v">interval = 1d</span></div>
+        <div class="node-config-row"><span class="ncr-k">Query Parameter 2:</span> <span class="ncr-v">range = 5d</span></div>
+        <div class="node-config-row"><span class="ncr-k">Headers:</span> <span class="ncr-v">User-Agent = Mozilla/5.0</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="callout orange">
+    <strong>⚠️ User-Agent 헤더가 핵심:</strong> Yahoo는 브라우저가 아닌 요청을 차단합니다. 반드시 Headers에 <code>User-Agent: Mozilla/5.0</code>를 추가해야 정상 응답을 받습니다. (실제 많은 학생이 여기서 막힙니다)
+  </div>
+
+  <h4>응답에서 현재가 추출하기</h4>
+<pre class="code-block"><span class="cm">// Yahoo 응답의 중요 경로</span>
+<span class="fn">currentPrice</span> = $json.chart.result[<span class="num">0</span>].meta.regularMarketPrice
+<span class="fn">symbol</span>     = $json.chart.result[<span class="num">0</span>].meta.symbol
+<span class="fn">currency</span>   = $json.chart.result[<span class="num">0</span>].meta.currency
+</pre>
+
+  <h3>실습 3: 원/달러 환율 (FRED)</h3>
+  <p>FRED(Federal Reserve Economic Data)는 미국 연준 산하 세인트루이스 연준은행이 제공하는 공식 경제 데이터베이스입니다. 환율·금리·VIX·GDP 등 80만 개 시계열을 <strong>무료로 제공</strong>하며, API 키만 발급받으면 됩니다.</p>
+
+  <div class="step-block">
+    <div class="step-title">FRED API 키 발급 (3분)</div>
+    <ol class="step-list">
+      <li><code>https://fred.stlouisfed.org</code> 우측 상단 My Account → 가입</li>
+      <li>로그인 후 <strong>My Account → API Keys → Request API Key</strong></li>
+      <li>용도에 "Educational use — n8n workflow automation" 기입 → 즉시 32자리 키 발급</li>
+      <li>n8n의 Credentials 메뉴에 <strong>Header Auth</strong> 또는 쿼리 파라미터로 저장</li>
+    </ol>
+  </div>
+
+  <div class="node-card">
+    <div class="node-head">
+      <span class="node-icon">🌐</span>
+      <span class="node-name">HTTP Request — 원/달러 환율</span>
+      <span class="node-tag">ACTION</span>
+    </div>
+    <div class="node-body">
+      <code>DEXKOUS</code>는 FRED의 <strong>원/달러 일일 환율</strong> 시리즈 코드입니다.
+      <div class="node-config">
+        <div class="node-config-row"><span class="ncr-k">Method:</span> <span class="ncr-v">GET</span></div>
+        <div class="node-config-row"><span class="ncr-k">URL:</span> <span class="ncr-v">https://api.stlouisfed.org/fred/series/observations</span></div>
+        <div class="node-config-row"><span class="ncr-k">Query Param 1:</span> <span class="ncr-v">series_id = DEXKOUS</span></div>
+        <div class="node-config-row"><span class="ncr-k">Query Param 2:</span> <span class="ncr-v">api_key = {{ 여러분의 키 }}</span></div>
+        <div class="node-config-row"><span class="ncr-k">Query Param 3:</span> <span class="ncr-v">file_type = json</span></div>
+        <div class="node-config-row"><span class="ncr-k">Query Param 4:</span> <span class="ncr-v">sort_order = desc</span></div>
+        <div class="node-config-row"><span class="ncr-k">Query Param 5:</span> <span class="ncr-v">limit = 1</span></div>
+      </div>
+    </div>
+  </div>
+
+  <h4>유용한 FRED 시리즈 코드</h4>
+  <table class="dtable">
+    <thead><tr><th>코드</th><th>지표</th><th>용도</th></tr></thead>
+    <tbody>
+      <tr><td><code>DEXKOUS</code></td><td>원/달러 환율</td><td>해외 자산 원화 환산</td></tr>
+      <tr><td><code>DEXJPUS</code></td><td>엔/달러 환율</td><td>엔캐리 트레이드 모니터</td></tr>
+      <tr><td><code>VIXCLS</code></td><td>VIX 공포지수</td><td>시장 리스크 측정</td></tr>
+      <tr><td><code>DGS10</code></td><td>미 10년물 국채금리</td><td>매크로 방향성</td></tr>
+      <tr><td><code>DFF</code></td><td>연방기금 유효금리</td><td>통화정책 추적</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<div class="divider"></div>
+
+<!-- ════ 3교시 ════ -->
+<section data-section="3교시: 4자산 통합">
+  <div class="eyebrow">Session 3 · 75min</div>
+  <h2>3교시 — 4자산 통합 시세 수집 워크플로</h2>
+
+  <p>앞서 배운 3개 API에 <strong>S&P 500 지수</strong>를 추가해 완전한 투자 자동화의 첫 작품을 만듭니다. 이번 워크플로는 W2에서 Google Sheets 대시보드로 확장되고, W3~W4에서는 AI 에이전트의 입력 데이터가 됩니다.</p>
+
+  <h3>수집 대상 4자산</h3>
+  <div class="asset-target">
+    <div class="at-card">
+      <div class="at-name">📈 주식 · ETF <span class="at-tick">AAPL, SPY</span></div>
+      <div class="at-desc">Yahoo Finance — 개별 주식과 S&P 500 추종 ETF</div>
+    </div>
+    <div class="at-card">
+      <div class="at-name">🪙 암호화폐 <span class="at-tick">BTC, ETH</span></div>
+      <div class="at-desc">CoinGecko — 비트코인·이더리움 USD·KRW 동시</div>
+    </div>
+    <div class="at-card">
+      <div class="at-name">💱 외환 <span class="at-tick">DEXKOUS</span></div>
+      <div class="at-desc">FRED — 원/달러 환율 (매크로 지표)</div>
+    </div>
+    <div class="at-card">
+      <div class="at-name">📊 지수 <span class="at-tick">^GSPC, ^VIX</span></div>
+      <div class="at-desc">Yahoo Finance — S&P 500 지수와 VIX 공포지수</div>
+    </div>
+  </div>
+
+  <h3>워크플로 전체 구조</h3>
+  <div class="n8n-flow">
+    <div class="n8n-title">🔧 W1 최종 워크플로 — 4자산 시세 한 번에 수집</div>
+    <div class="n8n-steps">
+      <div class="n8n-step"><span class="n8n-node nn-t">Manual Trigger</span><span class="n8n-edge">→</span><span class="n8n-desc">Execute Workflow 버튼 (이번 주는 수동 테스트)</span></div>
+      <div class="n8n-step"><span class="n8n-node nn-a">HTTP #1</span><span class="n8n-edge">→</span><span class="n8n-desc">Yahoo — AAPL, SPY 주가 (1개 요청에 여러 티커 가능)</span></div>
+      <div class="n8n-step"><span class="n8n-node nn-a">HTTP #2</span><span class="n8n-edge">→</span><span class="n8n-desc">CoinGecko — BTC, ETH 가격 (USD + KRW 동시)</span></div>
+      <div class="n8n-step"><span class="n8n-node nn-a">HTTP #3</span><span class="n8n-edge">→</span><span class="n8n-desc">FRED — DEXKOUS 원/달러 최신값</span></div>
+      <div class="n8n-step"><span class="n8n-node nn-a">HTTP #4</span><span class="n8n-edge">→</span><span class="n8n-desc">Yahoo — ^GSPC, ^VIX 지수</span></div>
+      <div class="n8n-step"><span class="n8n-node nn-c">Merge</span><span class="n8n-edge">→</span><span class="n8n-desc">4개 응답을 하나의 JSON 객체로 병합</span></div>
+      <div class="n8n-step"><span class="n8n-node nn-c">Set (Fields)</span><span class="n8n-edge">→</span><span class="n8n-desc">필요한 필드만 추출해 깔끔한 구조로 정리</span></div>
+      <div class="n8n-step"><span class="n8n-node nn-o">(다음 주) Sheets</span><span class="n8n-edge">→</span><span class="n8n-desc">W2에서 Google Sheets에 자동 기록 예정</span></div>
+    </div>
+  </div>
+
+  <h3>병렬 처리 vs 순차 처리</h3>
+  <p>4개의 HTTP Request를 <strong>병렬로 연결</strong>하면(Manual Trigger에서 4개 노드로 분기), 총 소요시간이 <strong>가장 느린 API 1개</strong>의 응답시간과 같아집니다. 순차로 연결하면 4개 응답시간의 합이 됩니다.</p>
+
+  <div class="callout blue">
+    <strong>이번 주는 순차로 진행:</strong> 초보자에게는 Merge 노드가 복잡할 수 있어 이번 주는 4개 노드를 일직선으로 연결합니다. W2~W3에서 병렬 처리로 리팩터링할 예정.
+  </div>
+
+  <h3>Set 노드로 출력 정리</h3>
+  <p>마지막 Set 노드에서 <strong>원하는 필드만 추출</strong>해 읽기 쉬운 형태로 만듭니다.</p>
+
+<pre class="code-block"><span class="cm">// Set 노드의 Values to Set (Mode: Manual Mapping)</span>
+<span class="fn">timestamp</span>     = {{ $now.toISO() }}
+<span class="fn">aapl_price</span>    = {{ $('HTTP #1').item.json.chart.result[<span class="num">0</span>].meta.regularMarketPrice }}
+<span class="fn">btc_usd</span>       = {{ $('HTTP #2').item.json.bitcoin.usd }}
+<span class="fn">btc_krw</span>       = {{ $('HTTP #2').item.json.bitcoin.krw }}
+<span class="fn">eth_usd</span>       = {{ $('HTTP #2').item.json.ethereum.usd }}
+<span class="fn">usdkrw</span>        = {{ $('HTTP #3').item.json.observations[<span class="num">0</span>].value }}
+<span class="fn">sp500</span>         = {{ $('HTTP #4').item.json.chart.result[<span class="num">0</span>].meta.regularMarketPrice }}
+<span class="fn">vix</span>           = {{ $('HTTP #4').item.json.chart.result[<span class="num">1</span>].meta.regularMarketPrice }}
+</pre>
+
+  <div class="callout purple">
+    <strong>expression 문법 핵심:</strong> n8n에서 <code>{{ ... }}</code>는 JavaScript 표현식. <code>$('노드이름')</code>으로 특정 노드 결과 참조, <code>$json</code>은 이전 노드 결과, <code>$now</code>는 현재 시각.
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ════ 테스트와 디버깅 ════ -->
+<section data-section="테스트와 디버깅">
+  <div class="eyebrow">Test & Debug</div>
+  <h2>실행 테스트와 디버깅</h2>
+
+  <h3>Execute Workflow로 한 번 돌려보기</h3>
+  <p>상단 중앙의 <strong>Execute Workflow</strong> 버튼을 누르면 전체 워크플로가 순차 실행됩니다. 각 노드가 초록색(성공)·빨간색(실패)로 표시되고, 클릭하면 <strong>Input / Output 탭</strong>에서 실제 데이터를 확인할 수 있습니다.</p>
+
+  <div class="ts-block">
+    <div style="font-size:11px;font-weight:700;color:#991b1b;margin-bottom:6px">🚨 이번 주 자주 발생하는 오류</div>
+    <div class="ts-item">
+      <div class="ts-q">Yahoo에서 401 또는 429 에러가 뜹니다</div>
+      <div class="ts-a">User-Agent 헤더 누락이 대부분. Headers 섹션에 <code>User-Agent: Mozilla/5.0</code> 추가. 429면 잠시 대기 후 재시도 (같은 IP에서 너무 많이 호출).</div>
+    </div>
+    <div class="ts-item">
+      <div class="ts-q">CoinGecko에서 "ids" 파라미터 에러</div>
+      <div class="ts-a">반드시 <strong>coin id</strong>(예: <code>bitcoin</code>)를 사용해야 하며, 심볼(<code>BTC</code>)은 안 됩니다. 전체 id 목록은 <code>/coins/list</code> 엔드포인트로 확인.</div>
+    </div>
+    <div class="ts-item">
+      <div class="ts-q">FRED 응답이 비어있어요</div>
+      <div class="ts-a">API 키 오타 확인 + <code>file_type=json</code> 파라미터 누락 여부 확인. 기본값이 XML이라 JSON 파싱이 실패합니다.</div>
+    </div>
+    <div class="ts-item">
+      <div class="ts-q">Set 노드에서 expression이 <code>undefined</code></div>
+      <div class="ts-a">JSON 경로 오타. 이전 노드의 Output 탭에서 실제 경로를 확인한 후 복사해 쓰세요. Yahoo는 <code>chart.result[0]</code>처럼 배열 인덱스 포함.</div>
+    </div>
+  </div>
+
+  <h3>실행 로그(Executions) 활용</h3>
+  <p>좌측 메뉴의 <strong>Executions</strong>에서 과거 실행 기록을 모두 확인할 수 있습니다. 실패한 실행을 클릭하면 어느 노드에서 무슨 데이터로 실패했는지 재현 가능합니다. <strong>디버깅의 가장 강력한 도구</strong>입니다.</p>
+</section>
+
+<div class="divider"></div>
+
+<!-- ════ 체크리스트 ════ -->
+<section data-section="완료 체크리스트">
+  <div class="eyebrow">Completion Checklist</div>
+  <h2>이번 주 완료 체크리스트</h2>
+
+  <div class="checklist">
+    <div class="ck-title">✅ 아래 항목이 모두 체크되면 W1 완료</div>
+    <div class="ck-item">n8n 접속 완료 — 초청 링크(<code>hyeok2.app.n8n.cloud</code>) / 직접 가입 / Docker 중 택1</div>
+    <div class="ck-item">FRED API 키 발급 완료 — 안전한 곳에 기록</div>
+    <div class="ck-item">CoinGecko API로 BTC 가격 가져오는 워크플로 단독 실행 성공</div>
+    <div class="ck-item">Yahoo Finance로 AAPL 주가 가져오는 워크플로 단독 실행 성공</div>
+    <div class="ck-item">FRED로 원/달러 환율 가져오는 워크플로 단독 실행 성공</div>
+    <div class="ck-item">4개 API를 하나의 워크플로에 연결해 Execute Workflow 성공</div>
+    <div class="ck-item">Set 노드로 8개 필드(가격·환율·지수)를 한 번에 출력</div>
+    <div class="ck-item">Executions 메뉴에서 실행 이력 확인</div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ════ 과제 ════ -->
+<section data-section="이번 주 과제">
+  <div class="eyebrow">Homework</div>
+  <h2>이번 주 과제</h2>
+
+  <div class="hw-block">
+    <span class="hw-tag">📝 HOMEWORK · W1</span>
+    <div class="hw-title">나만의 관심종목 포트폴리오 만들기</div>
+    <ul class="hw-list">
+      <li>본인이 관심 있는 <strong>한국 주식 2종목</strong>을 Yahoo Finance 티커로 찾아 추가 (예: 삼성전자 = <code>005930.KS</code>)</li>
+      <li>본인이 관심 있는 <strong>알트코인 2종목</strong>을 CoinGecko id로 찾아 추가 (예: solana, ripple)</li>
+      <li>엔/달러 환율(<code>DEXJPUS</code>)과 나스닥 지수(<code>^IXIC</code>)를 추가</li>
+      <li>Execute Workflow 성공 화면을 캡처해 과제 제출</li>
+      <li><strong>선택 챌린지:</strong> Code 노드로 "원화 환산 BTC 가격"을 추가 필드로 계산</li>
+    </ul>
+  </div>
+
+  <div class="callout green" style="margin-top:12px">
+    <strong>💡 W2 미리보기:</strong> 다음 주에는 이번 주 수집한 데이터를 <strong>Google Sheets에 자동 기록</strong>하고 시간별 변화를 추적하는 <strong>포트폴리오 대시보드</strong>를 완성합니다. 조건부 서식으로 등락을 색상 표시하고, 수익률도 자동 계산합니다.
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ════ 참고 자료 ════ -->
+<section data-section="참고 자료">
+  <div class="eyebrow">References</div>
+  <h2>참고 자료</h2>
+  <table class="dtable">
+    <thead><tr><th>자료</th><th>용도</th></tr></thead>
+    <tbody>
+      <tr><td><strong>n8n 공식 문서</strong><br><code>docs.n8n.io</code></td><td>모든 노드의 파라미터와 예제 — 막히면 첫 번째로 볼 곳</td></tr>
+      <tr><td><strong>CoinGecko API Docs</strong><br><code>docs.coingecko.com</code></td><td>무료 30 calls/min, 전체 엔드포인트 목록</td></tr>
+      <tr><td><strong>Yahoo Finance v8 API</strong><br><code>query1.finance.yahoo.com/v8</code></td><td>비공식이지만 안정적 — 티커 검색은 finance.yahoo.com에서</td></tr>
+      <tr><td><strong>FRED API Docs</strong><br><code>fred.stlouisfed.org/docs/api</code></td><td>80만+ 경제 시계열, 완전 무료</td></tr>
+      <tr><td><strong>crontab.guru</strong></td><td>W2에서 사용할 Cron 표현식 생성기 — 예: <code>0 9 * * 1-5</code></td></tr>
+    </tbody>
+  </table>
+</section>
+
+</div><!-- /container -->
+
+<div style="background:var(--black);color:#888;text-align:center;padding:24px 20px;font-size:11px;line-height:2;margin-bottom:var(--fh)">
+  W1 강의노트 · n8n 설치 + 첫 시세 수집 · 대학생 투자 자동화 과정 · 2026
+</div>
+
+<script>
+const sections = document.querySelectorAll('[data-section]');
+const sfT = document.getElementById('sf-t');
+const sfP = document.getElementById('sf-p');
+function update(){
+  const sy = window.scrollY;
+  const dh = document.documentElement.scrollHeight - window.innerHeight;
+  sfP.textContent = Math.round((sy / Math.max(dh, 1)) * 100) + '%';
+  let cur = sections[0]?.dataset.section || '';
+  sections.forEach(s => {
+    if(sy >= s.getBoundingClientRect().top + sy - 110) cur = s.dataset.section;
+  });
+  if(sfT.textContent !== cur) sfT.textContent = cur;
+}
+window.addEventListener('scroll', update, {passive:true});
+update();
+</script>
+</body>
+</html>

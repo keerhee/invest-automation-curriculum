@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>W1 과제 워크북 — 3가지 자산 가격 수집</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;600&display=swap');
+:root{
+  --black:#0d0d0d;--gray:#6b6b6b;--light:#f3f3f3;--border:#e6e6e6;
+  --hw-orange:#f97316;--hw-dark:#431407;--hw-amber:#fbbf24;
+  --required:#ef4444;--advanced:#8b5cf6;
+  --fh:46px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Noto Sans KR',sans-serif;background:#fff;color:var(--black);font-size:14px;line-height:1.75;padding-bottom:var(--fh)}
+
+#sf{position:fixed;bottom:0;left:0;right:0;height:var(--fh);background:var(--hw-dark);display:flex;align-items:center;justify-content:space-between;padding:0 16px;z-index:999}
+#sf .lbl{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:#fed7aa}
+#sf .ttl{font-size:12px;font-weight:700;color:#fff;max-width:50%;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#sf .score{font-size:11px;color:var(--hw-amber);white-space:nowrap;font-weight:700}
+
+.hero{background:linear-gradient(135deg,#f97316,#431407);color:#fff;padding:40px 20px 36px;text-align:center;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;top:-80px;right:-80px;width:260px;height:260px;border:1px solid rgba(255,255,255,.08);border-radius:50%}
+.hero-badge{display:inline-block;border:1px solid rgba(255,255,255,.25);border-radius:20px;padding:4px 14px;font-size:10px;letter-spacing:2px;color:#fed7aa;margin-bottom:10px;font-weight:700}
+.hero-week{font-size:13px;color:rgba(255,255,255,.7);margin-bottom:4px;letter-spacing:3px;font-weight:700}
+.hero h1{font-size:20px;font-weight:900;line-height:1.35;margin-bottom:12px;letter-spacing:-.5px}
+.hero-score-box{display:inline-flex;align-items:center;gap:8px;background:rgba(0,0,0,.2);border:1px solid rgba(255,255,255,.2);border-radius:30px;padding:6px 16px;margin-top:8px}
+.hero-score-box strong{color:var(--hw-amber);font-weight:900;font-size:14px}
+
+.container{max-width:720px;margin:0 auto;padding:0 15px}
+section{padding:30px 0 0}
+.divider{height:1px;background:var(--border);margin:28px 0 0}
+.eyebrow{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--gray);margin-bottom:5px}
+h2{font-size:18px;font-weight:900;letter-spacing:-.3px;margin-bottom:10px;line-height:1.3}
+h3{font-size:13px;font-weight:700;margin:16px 0 6px}
+h4{font-size:12px;font-weight:700;margin:12px 0 6px;color:#333}
+p{color:#333;margin-bottom:8px;font-size:13px}
+strong{color:var(--black);font-weight:700}
+code{font-family:'JetBrains Mono',monospace;background:#fff7ed;padding:1px 5px;border-radius:3px;font-size:11px;color:var(--hw-orange)}
+
+/* OVERVIEW CARD */
+.overview{background:linear-gradient(135deg,#fff7ed,#ffedd5);border:1px solid var(--hw-orange);border-radius:12px;padding:14px 16px;margin:14px 0}
+.ov-title{font-size:11px;font-weight:700;color:var(--hw-dark);letter-spacing:1px;margin-bottom:8px}
+.ov-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.ov-item{background:#fff;border-radius:6px;padding:6px 10px;font-size:11px}
+.ov-label{font-size:9px;color:var(--hw-orange);font-weight:700;text-transform:uppercase;margin-bottom:2px}
+.ov-value{font-weight:600;color:#333}
+
+/* SCORE SUMMARY */
+.score-summary{background:#0d1117;color:#fff;border-radius:12px;padding:16px;margin:12px 0}
+.ss-title{font-size:10px;color:var(--hw-amber);letter-spacing:2px;font-weight:700;margin-bottom:10px}
+.ss-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:8px}
+.ss-item{background:rgba(255,255,255,.08);border-radius:6px;padding:8px 4px;text-align:center}
+.ss-num{font-size:10px;color:#94a3b8;margin-bottom:2px}
+.ss-pts{font-size:14px;font-weight:900;color:#fff}
+.ss-pts-amber{color:var(--hw-amber)}
+.ss-pts-purple{color:#c4b5fd}
+.ss-total{text-align:center;margin-top:12px;padding-top:12px;border-top:1px dashed rgba(255,255,255,.2);font-size:13px;color:#fff}
+.ss-total strong{color:var(--hw-amber);font-size:18px}
+
+/* TASK CARD */
+.task-card{background:#fff;border:2px solid var(--border);border-radius:12px;margin:14px 0;overflow:hidden;position:relative}
+.task-card.required{border-color:var(--required)}
+.task-card.advanced{border-color:var(--advanced)}
+
+.task-head{padding:12px 14px;display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap;border-bottom:1px solid var(--border)}
+.required .task-head{background:#fef2f2}
+.advanced .task-head{background:#f5f3ff}
+
+.task-title-wrap{flex:1;min-width:0}
+.task-level{font-size:9px;letter-spacing:2px;font-weight:700;margin-bottom:3px}
+.required .task-level{color:var(--required)}
+.advanced .task-level{color:var(--advanced)}
+.task-title{font-size:13px;font-weight:700;line-height:1.35;color:#333}
+
+.task-points{display:flex;align-items:center;gap:6px;background:#fff;border:1px solid var(--border);border-radius:20px;padding:4px 12px;font-size:11px;font-weight:700;white-space:nowrap}
+.task-points strong{font-size:14px;color:var(--hw-orange)}
+
+.task-body{padding:14px}
+
+.task-desc{font-size:12px;line-height:1.7;color:#333;margin-bottom:10px}
+
+.task-requirements{background:var(--light);border-left:3px solid var(--hw-orange);border-radius:0 8px 8px 0;padding:10px 14px;margin:10px 0;font-size:12px;line-height:1.65}
+.tr-title{font-size:10px;color:var(--hw-orange);font-weight:700;margin-bottom:5px;letter-spacing:1px}
+.tr-list{margin:0;padding-left:16px}
+.tr-list li{margin-bottom:4px;color:#333}
+
+/* CODE */
+.code-block{background:#0d1117;color:#e6edf3;border-radius:9px;padding:12px 14px;margin:10px 0;font-family:'JetBrains Mono',monospace;font-size:11px;line-height:1.7;overflow-x:auto;white-space:pre;tab-size:2;-moz-tab-size:2;word-wrap:normal}
+.code-block .cm{color:#8b949e;font-style:italic}
+.code-block .kw{color:#ff7b72}
+.code-block .str{color:#a5d6ff}
+.code-block .num{color:#79c0ff}
+.code-block .fn{color:#d2a8ff}
+
+/* SUBMIT CHECKLIST */
+.submit-list{background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:10px 12px;margin:10px 0}
+.sl-title{font-size:10px;color:#166534;font-weight:700;margin-bottom:6px;letter-spacing:1px}
+.sl-item{display:flex;align-items:flex-start;gap:8px;padding:4px 0;font-size:12px;color:#333;line-height:1.55;cursor:pointer;user-select:none}
+.sl-item input[type="checkbox"]{flex-shrink:0;margin-top:3px;width:14px;height:14px;accent-color:#16a34a;cursor:pointer}
+.sl-item.checked{color:#888;text-decoration:line-through}
+
+/* RUBRIC TABLE */
+.rubric{margin:12px 0}
+.rubric-title{font-size:10px;color:var(--hw-orange);font-weight:700;letter-spacing:1px;margin-bottom:6px;display:flex;align-items:center;gap:5px}
+.rubric-title::before{content:'📊';font-size:13px}
+.rubric-table{width:100%;border-collapse:collapse;font-size:11px}
+.rubric-table th{background:var(--hw-dark);color:#fff;padding:7px 8px;text-align:left;font-size:10px;font-weight:700}
+.rubric-table td{padding:7px 8px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.5}
+.rubric-table tr:nth-child(even) td{background:var(--light)}
+.rubric-table td:first-child{font-weight:700;color:var(--hw-orange);white-space:nowrap;font-family:'JetBrains Mono',monospace;font-size:10px}
+.rubric-table td:last-child{text-align:right;font-weight:700;color:#333;white-space:nowrap}
+
+/* HINT BLOCK */
+.hint-block{background:#eff6ff;border:1px solid #93c5fd;border-radius:8px;margin:10px 0;overflow:hidden}
+.hint-summary{padding:10px 12px;cursor:pointer;font-size:11px;font-weight:700;color:#1e40af;display:flex;align-items:center;gap:6px;user-select:none;list-style:none}
+.hint-summary::before{content:'💡';font-size:13px}
+.hint-summary::after{content:'▼';font-size:10px;margin-left:auto;transition:transform .2s}
+.hint-block[open] .hint-summary::after{transform:rotate(180deg)}
+.hint-content{padding:0 12px 12px;font-size:11px;color:#1e3a8a;line-height:1.7}
+.hint-content code{background:#dbeafe;color:#1e40af}
+
+/* WARNING */
+.warning{background:#fff8ed;border-left:3px solid var(--hw-amber);padding:10px 13px;border-radius:0 8px 8px 0;margin:10px 0;font-size:12px;line-height:1.65;color:#78350f}
+.warning strong{color:#92400e}
+
+/* DELIVERABLE */
+.deliverable{background:#fff;border:2px dashed var(--hw-orange);border-radius:10px;padding:12px;margin:10px 0}
+.dv-title{font-size:10px;color:var(--hw-orange);letter-spacing:1px;font-weight:700;margin-bottom:4px}
+.dv-desc{font-size:11px;color:#333;line-height:1.6}
+
+/* SECTION NAV */
+.section-nav{background:var(--light);border-radius:10px;padding:12px;margin:10px 0}
+.sn-title{font-size:10px;color:var(--gray);font-weight:700;letter-spacing:1px;margin-bottom:8px}
+.sn-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:4px}
+.sn-link{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px 4px;background:#fff;border:1px solid var(--border);border-radius:6px;font-size:10px;color:#333;text-decoration:none;transition:all .15s;text-align:center}
+.sn-link:hover{border-color:var(--hw-orange);color:var(--hw-orange)}
+.sn-link.req{border-left:3px solid var(--required)}
+.sn-link.adv{border-left:3px solid var(--advanced)}
+.sn-num{font-size:14px;font-weight:900;color:#333;font-family:'JetBrains Mono',monospace}
+.sn-pts{font-size:9px;color:var(--gray);margin-top:2px}
+
+@media(max-width:400px){
+  .ov-grid{grid-template-columns:1fr}
+  .ss-grid{grid-template-columns:repeat(5,1fr);gap:3px}
+  .ss-pts{font-size:12px}
+  .sn-grid{grid-template-columns:repeat(5,1fr)}
+  .sn-num{font-size:12px}
+}
+</style>
+</head>
+<body>
+
+<div id="sf">
+  <span class="lbl">W1 Homework</span>
+  <span class="ttl" id="sf-t">W1 과제 워크북</span>
+  <span class="score" id="sf-s">0 / 100 점</span>
+</div>
+
+<!-- HERO -->
+<div class="hero" data-section="개요">
+  <div class="hero-badge">📝 HOMEWORK</div>
+  <div class="hero-week">WEEK 1</div>
+  <h1>3가지 자산 가격 수집<br>자동화 실습</h1>
+  <div class="hero-score-box">총점 <strong>100점</strong> · 필수 60 + 심화 40</div>
+</div>
+
+<div class="container">
+
+<!-- OVERVIEW -->
+<section data-section="학습 목표">
+  <div class="overview">
+    <div class="ov-title">🎯 W1 학습 목표 복습</div>
+    <p style="font-size:12px;margin:4px 0 8px;color:#431407">n8n HTTP Request + Schedule + Google Sheets로 <strong>주식·암호화폐·금리</strong> 가격을 자동 수집하는 파이프라인 구축.</p>
+    <div class="ov-grid">
+      <div class="ov-item">
+        <div class="ov-label">🔧 사용 도구</div>
+        <div class="ov-value">n8n, Yahoo Finance, CoinGecko, FRED, Google Sheets</div>
+      </div>
+      <div class="ov-item">
+        <div class="ov-label">⏱ 예상 시간</div>
+        <div class="ov-value">필수 3~4시간<br>심화 +2~3시간</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="score-summary">
+    <div class="ss-title">📊 과제 배점표</div>
+    <div class="ss-grid">
+      <div class="ss-item">
+        <div class="ss-num">과제 1</div>
+        <div class="ss-pts ss-pts-amber">20</div>
+      </div>
+      <div class="ss-item">
+        <div class="ss-num">과제 2</div>
+        <div class="ss-pts ss-pts-amber">20</div>
+      </div>
+      <div class="ss-item">
+        <div class="ss-num">과제 3</div>
+        <div class="ss-pts ss-pts-amber">20</div>
+      </div>
+      <div class="ss-item">
+        <div class="ss-num">과제 4</div>
+        <div class="ss-pts ss-pts-purple">20</div>
+      </div>
+      <div class="ss-item">
+        <div class="ss-num">과제 5</div>
+        <div class="ss-pts ss-pts-purple">20</div>
+      </div>
+    </div>
+    <div class="ss-total">합계 <strong>100점</strong> · 필수 60 + 심화 40</div>
+  </div>
+
+  <div class="section-nav">
+    <div class="sn-title">📍 빠른 이동</div>
+    <div class="sn-grid">
+      <a class="sn-link req" href="#t1"><span class="sn-num">1</span><span class="sn-pts">20pt</span></a>
+      <a class="sn-link req" href="#t2"><span class="sn-num">2</span><span class="sn-pts">20pt</span></a>
+      <a class="sn-link req" href="#t3"><span class="sn-num">3</span><span class="sn-pts">20pt</span></a>
+      <a class="sn-link adv" href="#t4"><span class="sn-num">4</span><span class="sn-pts">20pt</span></a>
+      <a class="sn-link adv" href="#t5"><span class="sn-num">5</span><span class="sn-pts">20pt</span></a>
+    </div>
+  </div>
+
+  <div class="warning">
+    <strong>📋 제출 방법:</strong> 각 과제의 결과물(워크플로 JSON 또는 Sheets 링크)을 Discord 제출 채널에 업로드. 심화 과제는 선택이지만, 전체 점수의 40%를 차지하므로 적극 권장합니다.
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ═══ TASK 1 ═══ -->
+<section id="t1" data-section="과제 1">
+  <div class="task-card required">
+    <div class="task-head">
+      <div class="task-title-wrap">
+        <div class="task-level">🔴 REQUIRED — 과제 1</div>
+        <div class="task-title">나만의 관심 종목 5개 가격 수집 워크플로</div>
+      </div>
+      <div class="task-points">배점 <strong>20</strong> 점</div>
+    </div>
+    <div class="task-body">
+      <p class="task-desc">수업에서 만든 AAPL 단일 종목 워크플로를 확장해, <strong>본인이 관심있는 미국/한국 주식 5개</strong>의 현재가를 한 번에 수집하는 n8n 워크플로를 만듭니다.</p>
+
+      <div class="task-requirements">
+        <div class="tr-title">필수 요구사항</div>
+        <ul class="tr-list">
+          <li>Yahoo Finance API로 <strong>5개 종목</strong> 동시 조회 (국내 주식은 <code>005930.KS</code> 형태)</li>
+          <li>Schedule Trigger로 <strong>매 시간마다</strong> 자동 실행되도록 설정</li>
+          <li>Google Sheets에 <strong>ticker, price, timestamp, change_pct</strong> 4개 컬럼으로 저장</li>
+          <li>User-Agent 헤더 설정 (<code>Mozilla/5.0 ...</code>) 필수</li>
+          <li>수업에서 배운 <strong>Sticky Note</strong>로 각 노드 용도 주석</li>
+        </ul>
+      </div>
+
+      <h4>구현 힌트</h4>
+      <pre class="code-block"><span class="cm"># 관심 종목 설정 — Code 노드에서</span>
+<span class="kw">const</span> tickers = [<span class="str">'AAPL'</span>, <span class="str">'MSFT'</span>, <span class="str">'005930.KS'</span>, <span class="str">'NVDA'</span>, <span class="str">'035720.KS'</span>];
+
+<span class="cm"># 반환 형식</span>
+<span class="kw">return</span> tickers.<span class="fn">map</span>(t =&gt; ({ json: { ticker: t } }));
+
+<span class="cm"># 이후 HTTP Request 노드에서:</span>
+<span class="cm"># URL: https://query1.finance.yahoo.com/v8/finance/chart/{{ $json.ticker }}</span></pre>
+
+      <details class="hint-block">
+        <summary class="hint-summary">막혔을 때 힌트 펼치기</summary>
+        <div class="hint-content">
+          <strong>각 종목을 for-loop로 도는 방법:</strong> Code 노드에서 tickers 배열을 5개의 item으로 반환하면, 이후 HTTP Request 노드가 자동으로 5번 실행됩니다. 각 item은 <code>$json.ticker</code>로 접근.<br><br>
+          <strong>에러:</strong> Yahoo Finance가 429 에러 반환 → User-Agent 헤더 빠짐. Add Header → Name: <code>User-Agent</code>, Value: <code>Mozilla/5.0</code>.<br><br>
+          <strong>한국 주식 티커:</strong> 삼성전자 = <code>005930.KS</code>, 카카오 = <code>035720.KS</code>. 뒤에 <code>.KS</code> 붙이기.
+        </div>
+      </details>
+
+      <div class="rubric">
+        <div class="rubric-title">채점 기준 (20점 만점)</div>
+        <table class="rubric-table">
+          <tbody>
+            <tr><td>A. 5개 종목 정상 수집</td><td>7점</td></tr>
+            <tr><td>B. Schedule 트리거 작동 확인</td><td>4점</td></tr>
+            <tr><td>C. Google Sheets 기록 정확성</td><td>4점</td></tr>
+            <tr><td>D. User-Agent 헤더 포함</td><td>3점</td></tr>
+            <tr><td>E. Sticky Note 주석 충실도</td><td>2점</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="deliverable">
+        <div class="dv-title">📦 제출물</div>
+        <div class="dv-desc">
+          1. n8n 워크플로 Export JSON 파일<br>
+          2. Google Sheets 공유 링크 (보기 권한)<br>
+          3. 1주일 실행 후 축적된 데이터 스크린샷 1장
+        </div>
+      </div>
+
+      <div class="submit-list">
+        <div class="sl-title">✓ 제출 전 체크</div>
+        <label class="sl-item"><input type="checkbox"> <span>5개 종목 모두 가격이 제대로 수집되는지 확인</span></label>
+        <label class="sl-item"><input type="checkbox"> <span>Schedule이 "Every 1 Hour"로 설정되었는지 확인</span></label>
+        <label class="sl-item"><input type="checkbox"> <span>Active 토글 ON 상태로 배포</span></label>
+        <label class="sl-item"><input type="checkbox"> <span>Discord에 결과물 3종 업로드</span></label>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ TASK 2 ═══ -->
+<section id="t2" data-section="과제 2">
+  <div class="task-card required">
+    <div class="task-head">
+      <div class="task-title-wrap">
+        <div class="task-level">🔴 REQUIRED — 과제 2</div>
+        <div class="task-title">암호화폐 3종 수집 + 변화율 계산</div>
+      </div>
+      <div class="task-points">배점 <strong>20</strong> 점</div>
+    </div>
+    <div class="task-body">
+      <p class="task-desc">CoinGecko API로 <strong>비트코인·이더리움·솔라나</strong> 3종의 현재가 + 24시간/7일 변화율을 수집합니다.</p>
+
+      <div class="task-requirements">
+        <div class="tr-title">필수 요구사항</div>
+        <ul class="tr-list">
+          <li>CoinGecko <code>/simple/price</code> 엔드포인트 사용</li>
+          <li><code>vs_currencies=usd,krw</code>로 <strong>달러·원화</strong> 동시 조회</li>
+          <li><code>include_24hr_change=true</code>와 <code>include_7d_change=true</code> 파라미터 사용</li>
+          <li>Google Sheets에 <strong>코인명, USD 가격, KRW 가격, 24h 변화율, 7d 변화율, 시각</strong> 6컬럼</li>
+          <li>매 <strong>30분</strong>마다 자동 실행</li>
+        </ul>
+      </div>
+
+      <div class="warning">
+        <strong>⚠️ CoinGecko Rate Limit:</strong> 무료 플랜은 <strong>분당 30회</strong> 제한. 30분마다 호출하면 여유 있음. Free Demo API 키를 <strong>x-cg-demo-api-key</strong> 헤더로 전달하면 안정성 향상.
+      </div>
+
+      <details class="hint-block">
+        <summary class="hint-summary">URL 구성 예시</summary>
+        <div class="hint-content">
+          <code>https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,solana&amp;vs_currencies=usd,krw&amp;include_24hr_change=true&amp;include_7d_change=true</code><br><br>
+          응답 구조가 중첩 JSON이므로 Code 노드에서 파싱 필요:
+          <pre style="margin-top:6px;background:#1e293b;color:#e6edf3;padding:8px;border-radius:4px;font-size:10px">const data = $input.first().json;
+const rows = Object.entries(data).map(([coin, prices]) => ({
+  json: {
+    coin,
+    usd: prices.usd,
+    krw: prices.krw,
+    change_24h: prices.usd_24h_change,
+    timestamp: new Date().toISOString()
+  }
+}));
+return rows;</pre>
+        </div>
+      </details>
+
+      <div class="rubric">
+        <div class="rubric-title">채점 기준 (20점 만점)</div>
+        <table class="rubric-table">
+          <tbody>
+            <tr><td>A. 3종 코인 USD+KRW 동시 수집</td><td>6점</td></tr>
+            <tr><td>B. 변화율 2종(24h/7d) 정확 저장</td><td>5점</td></tr>
+            <tr><td>C. JSON 파싱 Code 노드 품질</td><td>4점</td></tr>
+            <tr><td>D. Schedule 30분 간격 작동</td><td>3점</td></tr>
+            <tr><td>E. Rate Limit 대응 (Demo API Key 등)</td><td>2점</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="deliverable">
+        <div class="dv-title">📦 제출물</div>
+        <div class="dv-desc">
+          1. 워크플로 JSON<br>
+          2. 24시간 이상 수집된 Sheets 링크<br>
+          3. 비트코인 24h 변화율이 가장 큰 순간의 스크린샷
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ TASK 3 ═══ -->
+<section id="t3" data-section="과제 3">
+  <div class="task-card required">
+    <div class="task-head">
+      <div class="task-title-wrap">
+        <div class="task-level">🔴 REQUIRED — 과제 3</div>
+        <div class="task-title">FRED 거시경제 지표 대시보드</div>
+      </div>
+      <div class="task-points">배점 <strong>20</strong> 점</div>
+    </div>
+    <div class="task-body">
+      <p class="task-desc">미국 연준의 FRED API로 <strong>금리·인플레이션·실업률·VIX</strong> 4개 거시 지표를 매일 아침 수집합니다.</p>
+
+      <div class="task-requirements">
+        <div class="tr-title">필수 요구사항</div>
+        <ul class="tr-list">
+          <li>FRED API Key 발급 (공식 사이트 무료)</li>
+          <li>4개 시리즈 ID 수집: <code>DFF</code>(연방기금금리), <code>CPIAUCSL</code>(CPI), <code>UNRATE</code>(실업률), <code>VIXCLS</code>(VIX)</li>
+          <li>각 시리즈의 <strong>최신 1개 값</strong>만 저장 (limit=1, sort_order=desc)</li>
+          <li>매일 오전 <strong>08:00</strong>에 자동 실행</li>
+          <li>Google Sheets에 <strong>날짜별 가로 누적</strong> (날짜|금리|CPI|실업률|VIX)</li>
+        </ul>
+      </div>
+
+      <h4>FRED API 구조</h4>
+      <pre class="code-block"><span class="cm"># URL 템플릿</span>
+https://api.stlouisfed.org/fred/series/observations
+  ?series_id={series_id}
+  &amp;api_key={your_key}
+  &amp;file_type=json
+  &amp;sort_order=desc
+  &amp;limit=1
+
+<span class="cm"># 응답 예시</span>
+{
+  <span class="str">"observations"</span>: [
+    {<span class="str">"date"</span>: <span class="str">"2026-04-15"</span>, <span class="str">"value"</span>: <span class="str">"5.33"</span>}
+  ]
+}</pre>
+
+      <details class="hint-block">
+        <summary class="hint-summary">4개 시리즈를 한 번에 합치는 방법</summary>
+        <div class="hint-content">
+          <strong>방법 1 (간단):</strong> Code 노드에 4개 시리즈 ID 배열 정의 → for-loop로 각각 조회 → 결과를 한 객체로 합침.<br><br>
+          <strong>방법 2 (병렬):</strong> 4개 HTTP Request 노드를 병렬로 배치 → Merge 노드(Merge By Position)로 합침. 실행 시간 1/4로 단축.<br><br>
+          <strong>Google Sheets 저장 시</strong>: 컬럼명을 정확히 <code>date, dff, cpi, unrate, vix</code>로 통일. Auto-map 모드에서 자동 매칭됨.
+        </div>
+      </details>
+
+      <div class="rubric">
+        <div class="rubric-title">채점 기준 (20점 만점)</div>
+        <table class="rubric-table">
+          <tbody>
+            <tr><td>A. 4개 시리즈 모두 수집 성공</td><td>6점</td></tr>
+            <tr><td>B. 매일 08:00 정확 실행</td><td>4점</td></tr>
+            <tr><td>C. 가로 누적 저장 구조 구현</td><td>4점</td></tr>
+            <tr><td>D. FRED Key .env/Credential 관리</td><td>3점</td></tr>
+            <tr><td>E. 에러 처리 (시리즈 값 없을 때)</td><td>3점</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="deliverable">
+        <div class="dv-title">📦 제출물</div>
+        <div class="dv-desc">
+          1. 워크플로 JSON<br>
+          2. 3일 이상 누적된 거시지표 Sheets 링크<br>
+          3. 다른 시리즈 2개를 추가로 실험해본 기록 (예: <code>GDPC1</code>, <code>PAYEMS</code>)
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ═══ TASK 4 (심화) ═══ -->
+<section id="t4" data-section="과제 4 (심화)">
+  <div class="task-card advanced">
+    <div class="task-head">
+      <div class="task-title-wrap">
+        <div class="task-level">🟣 ADVANCED — 과제 4</div>
+        <div class="task-title">3가지 자산 통합 일일 스냅샷 워크플로</div>
+      </div>
+      <div class="task-points">배점 <strong>20</strong> 점</div>
+    </div>
+    <div class="task-body">
+      <p class="task-desc">과제 1~3에서 만든 <strong>3개 워크플로를 하나로 통합</strong>해, 매일 아침 08:30에 모든 자산의 스냅샷을 한 번에 찍는 마스터 워크플로를 만듭니다.</p>
+
+      <div class="task-requirements">
+        <div class="tr-title">필수 요구사항</div>
+        <ul class="tr-list">
+          <li>하나의 Schedule Trigger → 3개 병렬 브랜치 (Stock / Crypto / Macro)</li>
+          <li><strong>Merge 노드</strong>로 3개 결과 합치기 (Merge By Position)</li>
+          <li>합쳐진 결과를 하나의 <strong>통합 Sheets 탭</strong> (daily_snapshot)에 저장</li>
+          <li>실행 실패 시 <strong>Error Trigger</strong> 워크플로로 Discord 알림</li>
+          <li>통합 스냅샷을 기반으로 Claude에게 "오늘 시장 한 줄 요약"을 생성시키기 (Anthropic Chat Model 노드)</li>
+        </ul>
+      </div>
+
+      <h4>워크플로 구조 (텍스트 다이어그램)</h4>
+      <pre class="code-block">Schedule (매일 08:30)
+  ├──&gt; [Branch A] Yahoo Finance 5 stocks
+  ├──&gt; [Branch B] CoinGecko 3 coins
+  └──&gt; [Branch C] FRED 4 macro indicators
+            ↓
+        Merge Node (By Position)
+            ↓
+        AI Agent (Claude)
+          "3가지 데이터를 보고 시장 한 줄 요약"
+            ↓
+        ┌───────┴────────┐
+        ↓                ↓
+   Google Sheets      Discord
+   (snapshot 탭)      (요약 발송)</pre>
+
+      <div class="warning">
+        <strong>⚠️ 심화 과제 난이도:</strong> Merge 노드의 동작 방식, 3개 브랜치 병렬 처리, AI Agent 연결 등 여러 개념이 결합됩니다. 예상 소요시간 <strong>2~3시간</strong>.
+      </div>
+
+      <details class="hint-block">
+        <summary class="hint-summary">Claude 요약 프롬프트 템플릿</summary>
+        <div class="hint-content">
+          <strong>AI Agent 노드의 System Message:</strong><br>
+          <pre style="margin-top:6px;background:#1e293b;color:#e6edf3;padding:8px;border-radius:4px;font-size:10px">당신은 금융 브리퍼입니다. 주식/암호화폐/거시지표 스냅샷을 보고
+오늘의 시장 분위기를 **한 문장**으로 요약하세요.
+
+규칙:
+- 50자 이내
+- "위험선호(Risk-On)" 또는 "위험회피(Risk-Off)" 판정
+- 숫자는 데이터에 있는 것만 인용
+- 추측·예측 금지
+
+입력 데이터: {{ $json }}
+
+출력 예시:
+"Risk-Off 분위기 — 금리 상승 + BTC 하락 + VIX 급등"</pre>
+        </div>
+      </details>
+
+      <div class="rubric">
+        <div class="rubric-title">채점 기준 (20점 만점)</div>
+        <table class="rubric-table">
+          <tbody>
+            <tr><td>A. 3브랜치 병렬 구조</td><td>5점</td></tr>
+            <tr><td>B. Merge 노드 정확 사용</td><td>4점</td></tr>
+            <tr><td>C. Claude 요약 품질 (한 문장, 근거)</td><td>4점</td></tr>
+            <tr><td>D. Discord 발송 성공</td><td>3점</td></tr>
+            <tr><td>E. Error Trigger 연결</td><td>2점</td></tr>
+            <tr><td>F. 워크플로 가독성 (이름·주석)</td><td>2점</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="deliverable">
+        <div class="dv-title">📦 제출물</div>
+        <div class="dv-desc">
+          1. 통합 마스터 워크플로 JSON<br>
+          2. 3일 이상의 Claude 요약 기록 (Discord 캡처)<br>
+          3. 실제 Error Trigger 발동 시나리오 테스트 결과 (일부러 API Key 틀려서 발생시켜 보기)
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ TASK 5 (심화) ═══ -->
+<section id="t5" data-section="과제 5 (심화)">
+  <div class="task-card advanced">
+    <div class="task-head">
+      <div class="task-title-wrap">
+        <div class="task-level">🟣 ADVANCED — 과제 5</div>
+        <div class="task-title">나만의 "아침 브리핑 봇" 개인화</div>
+      </div>
+      <div class="task-points">배점 <strong>20</strong> 점</div>
+    </div>
+    <div class="task-body">
+      <p class="task-desc">과제 1~4를 기반으로, <strong>본인의 투자 성향·관심사를 반영한 개인 맞춤 아침 브리핑</strong> 시스템을 설계하고 구현합니다. 자유도가 높은 과제로, 창의력과 실무 감각을 평가합니다.</p>
+
+      <div class="task-requirements">
+        <div class="tr-title">최소 요구사항 (하나 이상 선택)</div>
+        <ul class="tr-list">
+          <li><strong>옵션 A — 내 테마:</strong> 특정 섹터(반도체/바이오/AI 등) 5개 종목 + 해당 섹터 대표 ETF 1개 수집</li>
+          <li><strong>옵션 B — 환율 반영:</strong> USD/KRW, USD/JPY, USD/EUR 3개 환율 + 내 해외 주식 포지션의 원화 평가액 자동 계산</li>
+          <li><strong>옵션 C — 포트폴리오 트래커:</strong> 자신의 모의 포트폴리오 10종목 + 수량을 등록해 일일 전체 평가액 추적</li>
+          <li><strong>옵션 D — 자유 설계:</strong> 본인만의 아이디어로 새로운 브리핑 시스템 (사전에 강사와 상의)</li>
+        </ul>
+      </div>
+
+      <div class="task-requirements" style="border-left-color:var(--advanced);background:#f5f3ff">
+        <div class="tr-title" style="color:var(--advanced)">공통 조건</div>
+        <ul class="tr-list">
+          <li>과제 4의 통합 워크플로 구조 활용 (병렬 + Merge)</li>
+          <li>Claude에게 개인화 프롬프트 전달 (본인의 투자 스타일·관심사 System Message로)</li>
+          <li>Discord Embed로 <strong>시각적으로 예쁘게</strong> 발송 (색상·이모지·필드 구분)</li>
+          <li>README.md 작성: 어떤 문제를 해결하고자 했는지, 어떤 선택을 했는지 서술</li>
+        </ul>
+      </div>
+
+      <h4>Discord Embed 예시 Payload</h4>
+      <pre class="code-block">{
+  <span class="str">"embeds"</span>: [{
+    <span class="str">"title"</span>: <span class="str">"🌅 Ryan의 모닝 브리핑 · 2026-04-22"</span>,
+    <span class="str">"color"</span>: <span class="num">15158332</span>,   <span class="cm">// 빨강 (Risk-Off일 때)</span>
+    <span class="str">"fields"</span>: [
+      {<span class="str">"name"</span>: <span class="str">"📈 AI 섹터"</span>, <span class="str">"value"</span>: <span class="str">"NVDA +2.1%"</span>, <span class="str">"inline"</span>: <span class="kw">true</span>},
+      {<span class="str">"name"</span>: <span class="str">"🪙 BTC"</span>, <span class="str">"value"</span>: <span class="str">"$67,200 -1.3%"</span>, <span class="str">"inline"</span>: <span class="kw">true</span>},
+      {<span class="str">"name"</span>: <span class="str">"🌍 FRED"</span>, <span class="str">"value"</span>: <span class="str">"금리 5.33% · VIX 18.5"</span>, <span class="str">"inline"</span>: <span class="kw">false</span>},
+      {<span class="str">"name"</span>: <span class="str">"💬 Claude 한줄 요약"</span>, <span class="str">"value"</span>: <span class="str">"AI 섹터 강세 지속..."</span>}
+    ],
+    <span class="str">"footer"</span>: {<span class="str">"text"</span>: <span class="str">"교육 목적 · 투자 권유 아님"</span>}
+  }]
+}</pre>
+
+      <div class="rubric">
+        <div class="rubric-title">채점 기준 (20점 만점)</div>
+        <table class="rubric-table">
+          <tbody>
+            <tr><td>A. 개인화 컨셉의 독창성</td><td>5점</td></tr>
+            <tr><td>B. 기술 구현 완성도</td><td>5점</td></tr>
+            <tr><td>C. Discord Embed 시각 품질</td><td>4점</td></tr>
+            <tr><td>D. Claude 프롬프트 개인화</td><td>3점</td></tr>
+            <tr><td>E. README 문서화 수준</td><td>3점</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="deliverable">
+        <div class="dv-title">📦 제출물</div>
+        <div class="dv-desc">
+          1. 개인화된 마스터 워크플로 JSON<br>
+          2. 3~5일 Discord 발송 기록 스크린샷<br>
+          3. README.md 문서<br>
+          4. <strong>1분 이내 자기 소개 영상</strong> (본인 시스템을 간단 설명)
+        </div>
+      </div>
+
+      <div class="warning">
+        <strong>💡 창의성 보너스:</strong> 기대 이상의 아이디어·구현이면 최대 <strong>+5점 보너스</strong>. 예: 날씨 연동, 본인의 캘린더 연결, 다국어 발송 등.
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- 제출 가이드 -->
+<section id="submit" data-section="제출 가이드">
+  <div class="eyebrow">Submit Guide</div>
+  <h2>📤 제출 방법</h2>
+
+  <div class="task-requirements" style="margin:14px 0">
+    <div class="tr-title">제출 절차 5단계</div>
+    <ol style="margin-left:18px;font-size:12px;line-height:1.8">
+      <li>GitHub 리포지토리 생성 (Private 권장): <code>zerone-ai-invest-w1</code></li>
+      <li>폴더 구조: <code>task1/</code>, <code>task2/</code>, ..., <code>task5/</code></li>
+      <li>각 폴더에 워크플로 JSON + README + 스크린샷 업로드</li>
+      <li>루트에 전체 요약 README.md 작성 (과제별 Sheets 링크 목록)</li>
+      <li>Discord <code>#w1-submit</code> 채널에 리포지토리 링크 + 요약 3줄 게시</li>
+    </ol>
+  </div>
+
+  <div class="warning">
+    <strong>⏰ 제출 기한:</strong> W2 수업 시작 전까지 (1주일). 지연 시 하루당 -2점. 심화 과제는 2주까지 연장 가능.
+  </div>
+
+  <div style="background:linear-gradient(135deg,#f97316,#431407);color:#fff;text-align:center;padding:24px 20px;border-radius:12px;margin:20px 0">
+    <div style="font-size:10px;letter-spacing:2px;color:#fbbf24;margin-bottom:6px;font-weight:700">📝 W1 HOMEWORK COMPLETE</div>
+    <div style="font-size:14px;font-weight:700;margin-bottom:4px">3가지 자산 가격 수집 자동화</div>
+    <div style="font-size:11px;color:rgba(255,255,255,.75);line-height:1.7">5 tasks · 100 pt · 3~6 hours<br>이 과제를 완수하면 n8n + API + Sheets의 뼈대가 잡힙니다</div>
+  </div>
+</section>
+
+</div>
+
+<script>
+// Checkbox 스타일 변화
+document.querySelectorAll('.sl-item input[type="checkbox"]').forEach(cb => {
+  cb.addEventListener('change', () => {
+    cb.parentElement.classList.toggle('checked', cb.checked);
+    updateScore();
+  });
+});
+
+// 체크박스 기반 점수 계산 (간이)
+function updateScore(){
+  // 현재는 placeholder. 실제로는 각 과제의 '제출 전 체크' 체크박스 개수로 점수 시각화
+  const total = document.querySelectorAll('.sl-item input[type="checkbox"]').length;
+  const checked = document.querySelectorAll('.sl-item input[type="checkbox"]:checked').length;
+  const pct = total ? Math.round(checked / total * 100) : 0;
+  document.getElementById('sf-s').textContent = pct + ' / 100 점';
+}
+
+// Scroll tracker
+const sections = document.querySelectorAll('[data-section]');
+const sfT = document.getElementById('sf-t');
+function update(){
+  const sy = window.scrollY;
+  const dh = document.documentElement.scrollHeight - window.innerHeight;
+  let cur = sections[0]?.dataset.section || '';
+  sections.forEach(s => {
+    if(sy >= s.getBoundingClientRect().top + sy - 110) cur = s.dataset.section;
+  });
+  if(sfT.textContent !== cur) sfT.textContent = cur;
+}
+window.addEventListener('scroll', update, {passive:true});
+update();
+</script>
+</body>
+</html>

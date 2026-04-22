@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>W8 — 페이퍼 트레이딩 + 최종 발표</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;600&display=swap');
+:root{
+  --black:#0d0d0d;--gray:#6b6b6b;--light:#f3f3f3;--border:#e6e6e6;--white:#fff;
+  --fh:46px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Noto Sans KR',-apple-system,sans-serif;background:#fff;color:var(--black);font-size:14px;line-height:1.75;padding-bottom:var(--fh)}
+
+#sf{position:fixed;bottom:0;left:0;right:0;height:var(--fh);background:var(--black);display:flex;align-items:center;justify-content:space-between;padding:0 16px;z-index:999}
+#sf .lbl{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:#555}
+#sf .ttl{font-size:12px;font-weight:700;color:#fff;max-width:60%;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#sf .pct{font-size:10px;color:#555;white-space:nowrap}
+
+.hero{background:linear-gradient(135deg,#0d0d0d,#7c3aed);color:#fff;padding:50px 20px 44px;text-align:center;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;top:-80px;right:-80px;width:260px;height:260px;border:1px solid rgba(255,255,255,.1);border-radius:50%}
+.hero-badge{display:inline-block;border:1px solid rgba(255,255,255,.25);border-radius:20px;padding:4px 14px;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#fbbf24;margin-bottom:14px;font-weight:700}
+.hero h1{font-size:23px;font-weight:900;line-height:1.35;margin-bottom:8px;letter-spacing:-.5px}
+.hero-sub{font-size:12px;color:rgba(255,255,255,.8);margin-bottom:22px}
+.hero-meta{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:rgba(255,255,255,.1);border-radius:10px;overflow:hidden;margin-top:18px}
+.hero-meta-item{background:rgba(255,255,255,.07);padding:12px 5px;text-align:center}
+.hero-meta-num{font-size:15px;font-weight:900;color:#fff;display:block}
+.hero-meta-lbl{font-size:9px;color:rgba(255,255,255,.6);margin-top:2px;line-height:1.3}
+
+.container{max-width:720px;margin:0 auto;padding:0 15px}
+section{padding:36px 0 0}
+.divider{height:1px;background:var(--border);margin:34px 0 0}
+.eyebrow{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--gray);margin-bottom:5px}
+h2{font-size:19px;font-weight:900;letter-spacing:-.3px;margin-bottom:12px;line-height:1.3}
+h3{font-size:14px;font-weight:700;margin:20px 0 8px}
+h4{font-size:12px;font-weight:700;margin:14px 0 6px;color:#333}
+p{color:#333;margin-bottom:8px;font-size:13px}
+strong{color:var(--black);font-weight:700}
+code{font-family:'JetBrains Mono','Courier New',monospace;background:#eef;padding:1px 5px;border-radius:3px;font-size:11px;color:#1d4ed8}
+
+.callout{background:var(--light);border-left:3px solid var(--black);padding:13px 15px;border-radius:0 8px 8px 0;margin:10px 0;font-size:13px;line-height:1.65}
+.callout.orange{background:#fff8ed;border-left-color:#d97706}
+.callout.blue{background:#eff6ff;border-left-color:#1d4ed8}
+.callout.green{background:#f0fdf4;border-left-color:#15803d}
+.callout.purple{background:#faf5ff;border-left-color:#7c3aed}
+.callout.red{background:#fef2f2;border-left-color:#dc2626}
+
+.lesson-meta{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:14px 0 4px}
+.meta-card{background:var(--light);border:1px solid var(--border);border-radius:8px;padding:10px 8px;text-align:center}
+.meta-card-lbl{font-size:9px;font-weight:700;letter-spacing:1px;color:#aaa;text-transform:uppercase;margin-bottom:3px}
+.meta-card-val{font-size:12px;font-weight:700;color:var(--black);line-height:1.3}
+
+.goals{display:flex;flex-direction:column;gap:7px;margin:12px 0}
+.goal{display:flex;gap:11px;align-items:flex-start;background:var(--light);border-radius:9px;padding:11px 13px;border:1px solid var(--border)}
+.goal-chk{width:20px;height:20px;background:var(--black);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;flex-shrink:0}
+.goal-text{font-size:12px;line-height:1.55}
+
+/* CODE BLOCK */
+.code-block{background:#0d1117;color:#e6edf3;border-radius:9px;padding:14px 16px;margin:10px 0;font-family:'JetBrains Mono','Courier New',monospace;font-size:11px;line-height:1.7;overflow-x:auto;white-space:pre;tab-size:2;-moz-tab-size:2;word-wrap:normal}
+.code-block code{background:transparent;padding:0;color:inherit;font-size:inherit}
+.code-block .cm{color:#8b949e;font-style:italic}
+.code-block .kw{color:#ff7b72}
+.code-block .str{color:#a5d6ff}
+.code-block .num{color:#79c0ff}
+.code-block .fn{color:#d2a8ff}
+
+.step-block{background:#fffbeb;border:1px solid #fcd34d;border-radius:11px;padding:14px 15px;margin:12px 0}
+.step-title{font-size:11px;font-weight:700;color:#92400e;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.step-title::before{content:'▶';font-size:9px}
+.step-list{counter-reset:s;list-style:none;padding:0}
+.step-list li{counter-increment:s;position:relative;padding:6px 0 6px 30px;font-size:12px;line-height:1.65;color:#78350f;border-bottom:1px dashed #fcd34d}
+.step-list li:last-child{border-bottom:none}
+.step-list li::before{content:counter(s);position:absolute;left:0;top:8px;width:20px;height:20px;background:#d97706;color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:900}
+
+.node-card{border:1px solid var(--border);border-radius:10px;margin:10px 0;overflow:hidden}
+.node-head{background:var(--black);color:#fff;padding:10px 14px;display:flex;align-items:center;gap:9px}
+.node-icon{font-size:16px}
+.node-name{font-size:12px;font-weight:700}
+.node-tag{background:rgba(255,255,255,.15);border-radius:3px;padding:2px 7px;font-size:9px;font-weight:700;margin-left:auto;letter-spacing:.5px}
+.node-body{padding:12px 14px;background:var(--light);font-size:12px;line-height:1.6}
+.node-config{background:#fff;border:1px solid var(--border);border-radius:6px;padding:10px 12px;margin-top:8px;font-size:11px;font-family:'JetBrains Mono','Courier New',monospace}
+.node-config-row{padding:3px 0;border-bottom:1px dashed #eee}
+.node-config-row:last-child{border-bottom:none}
+.ncr-k{color:#6b6b6b;display:inline-block;min-width:130px}
+.ncr-v{color:#1d4ed8;font-weight:600}
+
+.n8n-flow{background:#fffbeb;border:1px solid #fcd34d;border-radius:11px;padding:14px;margin:14px 0}
+.n8n-title{font-size:11px;font-weight:700;color:#92400e;margin-bottom:10px}
+.n8n-steps{display:flex;flex-direction:column;gap:4px}
+.n8n-step{display:flex;align-items:flex-start;gap:8px;padding:4px 0}
+.n8n-node{border-radius:5px;padding:3px 9px;font-size:10px;font-weight:700;white-space:nowrap;flex-shrink:0;margin-top:1px}
+.nn-t{background:#dc2626;color:#fff}
+.nn-a{background:#2563eb;color:#fff}
+.nn-ai{background:#7c3aed;color:#fff}
+.nn-o{background:#059669;color:#fff}
+.nn-c{background:#374151;color:#fff}
+.nn-trade{background:#eab308;color:#000}
+.n8n-edge{font-size:10px;color:#bbb;padding-top:5px;flex-shrink:0}
+.n8n-desc{font-size:11px;color:#78350f;flex:1;line-height:1.6;padding-top:3px}
+
+.dtable{width:100%;border-collapse:collapse;margin:10px 0;font-size:11px}
+.dtable th{background:var(--black);color:#fff;padding:8px 10px;text-align:left;font-size:10px;font-weight:700}
+.dtable td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.5}
+.dtable tr:nth-child(even) td{background:var(--light)}
+.dtable code{font-size:10px}
+
+/* RISK GUARDS */
+.guard-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:9px;margin:12px 0}
+.guard-card{border:1px solid var(--border);border-radius:10px;padding:12px;background:var(--light)}
+.guard-title{font-size:11px;font-weight:700;margin-bottom:5px;display:flex;align-items:center;gap:5px}
+.guard-desc{font-size:10px;color:var(--gray);line-height:1.5;margin-bottom:6px}
+.guard-rule{background:#fff;border:1px solid var(--border);border-radius:5px;padding:5px 8px;font-family:'JetBrains Mono',monospace;font-size:10px;color:#1d4ed8}
+
+/* SHOWCASE */
+.showcase-block{background:linear-gradient(135deg,#fef3c7,#fde68a);border-radius:12px;padding:16px;margin:12px 0;border:2px solid #fbbf24}
+.showcase-title{font-size:13px;font-weight:900;color:#78350f;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.showcase-list{list-style:none;padding:0}
+.showcase-list li{padding:7px 0 7px 22px;font-size:12px;line-height:1.6;color:#78350f;position:relative;border-bottom:1px dashed #fbbf24}
+.showcase-list li:last-child{border-bottom:none}
+.showcase-list li::before{content:'🏆';position:absolute;left:0;top:7px;font-size:12px}
+
+/* TRADE RECORD */
+.trade-record{background:#fff;border:2px solid var(--border);border-radius:10px;padding:14px;margin:10px 0}
+.tr-row{display:grid;grid-template-columns:70px 1fr 90px;gap:8px;padding:6px 0;border-bottom:1px dashed #eee;font-size:11px;align-items:center}
+.tr-row:last-child{border-bottom:none}
+.tr-time{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--gray)}
+.tr-action{display:flex;flex-direction:column}
+.tr-verdict{font-weight:700;font-size:11px}
+.tr-verdict.buy{color:#15803d}
+.tr-verdict.sell{color:#dc2626}
+.tr-detail{font-size:10px;color:var(--gray)}
+.tr-price{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;text-align:right}
+.tr-price.profit{color:#15803d}
+.tr-price.loss{color:#dc2626}
+
+/* FINAL DEMO */
+.demo-block{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:16px;margin:12px 0}
+.demo-title{font-size:12px;font-weight:700;color:#14532d;margin-bottom:8px}
+.demo-slide{background:#fff;border:1px solid #bbf7d0;border-radius:8px;padding:11px;margin:6px 0;font-size:11px;line-height:1.6}
+.demo-slide-num{font-size:9px;font-weight:700;color:#15803d;letter-spacing:1px;margin-bottom:3px}
+
+/* PROMPT CARD */
+.prompt-card{background:#1e293b;color:#e2e8f0;border-radius:10px;padding:14px 16px;margin:10px 0;font-size:12px;line-height:1.7}
+.pc-label{font-size:9px;font-weight:700;color:#94a3b8;letter-spacing:1px;margin-bottom:6px}
+.prompt-card strong{color:#fbbf24}
+
+.ts-block{background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:13px 15px;margin:10px 0}
+.ts-item{padding:8px 0;border-bottom:1px dashed #fecaca}
+.ts-item:last-child{border-bottom:none}
+.ts-q{font-size:12px;font-weight:700;color:#991b1b;margin-bottom:4px}
+.ts-q::before{content:'Q. ';color:#dc2626}
+.ts-a{font-size:11px;color:#7f1d1d;line-height:1.6;padding-left:14px}
+.ts-a::before{content:'A. ';font-weight:700}
+
+.checklist{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:13px 15px;margin:12px 0}
+.ck-title{font-size:11px;font-weight:700;color:#14532d;margin-bottom:8px}
+.ck-item{padding:5px 0 5px 22px;font-size:12px;line-height:1.5;color:#166534;position:relative}
+.ck-item::before{content:'☐';position:absolute;left:0;top:3px;font-size:14px;color:#15803d}
+
+.hw-block{background:linear-gradient(135deg,#fbbf24,#dc2626);color:#fff;border-radius:11px;padding:18px;margin:14px 0}
+.hw-tag{display:inline-block;background:rgba(255,255,255,.25);border-radius:4px;padding:2px 8px;font-size:9px;font-weight:900;letter-spacing:1.5px;margin-bottom:8px}
+.hw-title{font-size:15px;font-weight:700;margin-bottom:8px}
+.hw-list{list-style:none;padding:0}
+.hw-list li{padding:5px 0 5px 16px;font-size:12px;line-height:1.55;position:relative;color:#fff}
+.hw-list li::before{content:'▸';position:absolute;left:0;color:#fef3c7}
+
+/* JOURNEY MAP */
+.journey-map{background:var(--light);border:1px solid var(--border);border-radius:12px;padding:14px;margin:14px 0}
+.journey-title{font-size:12px;font-weight:700;margin-bottom:10px;text-align:center;color:var(--black)}
+.journey-timeline{position:relative;padding-left:20px;border-left:2px solid #7c3aed}
+.journey-item{position:relative;padding:7px 0 7px 8px;font-size:11px;line-height:1.5}
+.journey-item::before{content:'';position:absolute;left:-25px;top:11px;width:10px;height:10px;background:#7c3aed;border-radius:50%;border:2px solid #fff;box-shadow:0 0 0 1px #7c3aed}
+.journey-week{font-weight:700;color:#5b21b6;margin-right:5px}
+
+@media(max-width:400px){
+  .lesson-meta{grid-template-columns:repeat(2,1fr)}
+  .guard-grid{grid-template-columns:1fr}
+  .tr-row{grid-template-columns:1fr}
+  .hero h1{font-size:20px}
+}
+</style>
+</head>
+<body>
+
+<div id="sf">
+  <span class="lbl">W8 최종 주차</span>
+  <span class="ttl" id="sf-t">페이퍼 트레이딩 + 최종 발표</span>
+  <span class="pct" id="sf-p">0%</span>
+</div>
+
+<!-- HERO -->
+<div class="hero" data-section="W8 강의노트">
+  <div class="hero-badge">🏆 Week 08 · Phase 4 · Final Week</div>
+  <h1>페이퍼 트레이딩 연동 + 최종 발표</h1>
+  <p class="hero-sub">8주 여정의 정점 — AI 에이전트가 실제 가상 주문을 낸다</p>
+  <div class="hero-meta">
+    <div class="hero-meta-item"><span class="hero-meta-num">3시간</span><span class="hero-meta-lbl">수업<br>시간</span></div>
+    <div class="hero-meta-item"><span class="hero-meta-num">$100K</span><span class="hero-meta-lbl">Alpaca<br>가상 자본</span></div>
+    <div class="hero-meta-item"><span class="hero-meta-num">Demo</span><span class="hero-meta-lbl">최종 발표<br>포트폴리오화</span></div>
+  </div>
+</div>
+
+<div class="container">
+
+<!-- 학습 목표 -->
+<section data-section="학습 목표">
+  <div class="eyebrow">Learning Objectives</div>
+  <h2>이번 주 학습 목표</h2>
+
+  <div class="lesson-meta">
+    <div class="meta-card"><div class="meta-card-lbl">레벨</div><div class="meta-card-val">완성</div></div>
+    <div class="meta-card"><div class="meta-card-lbl">선수지식</div><div class="meta-card-val">W1~W7</div></div>
+    <div class="meta-card"><div class="meta-card-lbl">실습</div><div class="meta-card-val">100분</div></div>
+    <div class="meta-card"><div class="meta-card-lbl">발표</div><div class="meta-card-val">1인 5분</div></div>
+  </div>
+
+  <div class="goals">
+    <div class="goal"><div class="goal-chk">1</div><div class="goal-text"><strong>Alpaca Paper Trading API</strong>에 연동해 AI verdict를 가상 매수/매도 주문으로 실제 체결시킬 수 있다</div></div>
+    <div class="goal"><div class="goal-chk">2</div><div class="goal-text"><strong>Risk Guards (포지션 크기·손절·익절·일일 손실 한도)</strong> 4단계 안전장치를 Code 노드로 구현할 수 있다</div></div>
+    <div class="goal"><div class="goal-chk">3</div><div class="goal-text"><strong>성과 추적 대시보드</strong>를 구축해 일일/주간 수익률·승률·샤프 비율 자동 계산할 수 있다</div></div>
+    <div class="goal"><div class="goal-chk">4</div><div class="goal-text">8주 학습 성과를 <strong>5분 발표 + GitHub 포트폴리오 + 이력서 한 줄</strong>로 정리해 취업/진학에 활용할 수 있다</div></div>
+  </div>
+
+  <div class="callout green">
+    <strong>이번 주의 한 문장:</strong> "에이전트가 주문을 낸다." 지금까지 에이전트의 판단은 Discord 메시지로만 머물렀습니다. 이번 주 AI 판단이 <strong>실제 주문 체결</strong>로 이어지는 완전한 고리를 완성합니다. 그리고 이 8주 여정을 <strong>세상에 자랑</strong>하는 방법도 배웁니다.
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- 8주 여정 회고 -->
+<section data-section="8주 여정 회고">
+  <div class="eyebrow">8-Week Journey</div>
+  <h2>여러분이 지나온 8주</h2>
+
+  <div class="journey-map">
+    <div class="journey-title">🗺️ Zero에서 Agent Architect까지</div>
+    <div class="journey-timeline">
+      <div class="journey-item"><span class="journey-week">W1</span> n8n 기초 + 가격 1차원 수집 (Yahoo·CoinGecko·FRED)</div>
+      <div class="journey-item"><span class="journey-week">W2</span> Google Sheets 대시보드 + RSI·MA·볼린저 자동 계산</div>
+      <div class="journey-item"><span class="journey-week">W3</span> 뉴스 센티먼트 2차원 + 첫 AI Agent (Claude 연결)</div>
+      <div class="journey-item"><span class="journey-week">W4</span> 차트 Vision 3차원 + Switch 분기 + Discord 알림</div>
+      <div class="journey-item"><span class="journey-week">W5</span> 24/7 멀티 스케줄 + 멀티채널 + Vector DB 기초</div>
+      <div class="journey-item"><span class="journey-week">W6</span> Hybrid RAG + Cohere Reranker + 출처 인용 Q&amp;A</div>
+      <div class="journey-item"><span class="journey-week">W7</span> 멀티 에이전트 오케스트레이션 (Orchestrator + 3 Specialist)</div>
+      <div class="journey-item" style="color:#7c3aed;font-weight:700"><span class="journey-week">W8</span> 페이퍼 트레이딩 + 최종 발표 ⬅️ <strong>지금 여기</strong></div>
+    </div>
+  </div>
+
+  <div class="callout purple">
+    <strong>💡 여러분은 이제 어떤 사람인가:</strong> 7주 전 n8n이 뭔지 몰랐던 대학생이 지금은 <strong>기관 리서치팀 구조를 AI로 복제</strong>했습니다. 이건 대학생 수준 프로젝트가 아닙니다. 실리콘밸리 스타트업·월스트리트 퀀트팀에서 실제로 쓰는 아키텍처입니다. 이 여정을 <strong>어떻게 보여주는지</strong>가 이번 주의 절반입니다.
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- 1교시: Alpaca Paper 연동 -->
+<section data-section="1교시: Alpaca 연동">
+  <div class="eyebrow">Session 1 · 40min</div>
+  <h2>1교시 — Alpaca Paper Trading API 연동</h2>
+
+  <p>Alpaca는 <strong>미국 주식 + 암호화폐</strong> 전용 브로커 API입니다. Paper Trading은 완전 무료이며, 가입 직후 <strong>$100,000 가상 자본</strong>이 자동 지급됩니다. 실제 시장 데이터로 실시간 주문 시뮬레이션이 가능합니다.</p>
+
+  <h3>Alpaca 가입 + Paper API 키 발급</h3>
+  <div class="step-block">
+    <div class="step-title">Alpaca Paper 계정 5분 세팅</div>
+    <ol class="step-list">
+      <li><code>https://alpaca.markets</code> 접속 → Sign up (이메일만 필요)</li>
+      <li>가입 후 자동으로 <strong>Paper Trading Dashboard</strong> 진입 (실계좌 X)</li>
+      <li>우측 상단 <strong>Your API Keys</strong> → <strong>Generate New Key</strong></li>
+      <li><code>APCA-API-KEY-ID</code>와 <code>APCA-API-SECRET-KEY</code> 발급 (<strong>즉시 한 번만 표시</strong>)</li>
+      <li>n8n Credentials → <strong>Header Auth</strong> 생성 → 아래 2개 헤더 등록</li>
+    </ol>
+  </div>
+
+<pre class="code-block"><span class="cm">// n8n Credentials (Header Auth) 2개 설정</span>
+Name: <span class="str">APCA-API-KEY-ID</span>
+Value: <span class="str">여러분의_KEY_ID</span>
+
+Name: <span class="str">APCA-API-SECRET-KEY</span>
+Value: <span class="str">여러분의_SECRET</span>
+
+<span class="cm">// 또는 Generic Credential 방식으로 2개 헤더 동시 전송</span>
+</pre>
+
+  <h3>핵심 엔드포인트 3개</h3>
+  <table class="dtable">
+    <thead><tr><th>엔드포인트</th><th>Method</th><th>용도</th></tr></thead>
+    <tbody>
+      <tr><td><code>/v2/account</code></td><td>GET</td><td>현재 잔고·포지션 전체 조회</td></tr>
+      <tr><td><code>/v2/positions</code></td><td>GET</td><td>보유 중인 종목 리스트</td></tr>
+      <tr><td><code>/v2/orders</code></td><td>POST</td><td>신규 주문 제출 (매수/매도)</td></tr>
+      <tr><td><code>/v2/orders/{id}</code></td><td>GET</td><td>특정 주문 상태 조회</td></tr>
+      <tr><td><code>/v2/orders/{id}</code></td><td>DELETE</td><td>대기 중 주문 취소</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout blue">
+    <strong>💡 Base URL 주의:</strong><br>
+    • Paper (무료): <code>https://paper-api.alpaca.markets</code><br>
+    • Live (실계좌): <code>https://api.alpaca.markets</code><br>
+    이번 주에는 <strong>paper-api</strong>만 사용. URL을 잘못 설정하면 라이브 계좌에 연결될 수 있으니 <strong>절대로 confuse하지 말 것</strong>.
+  </div>
+
+  <h3>매수 주문 예시</h3>
+  <div class="node-card">
+    <div class="node-head">
+      <span class="node-icon">💰</span>
+      <span class="node-name">HTTP Request — Alpaca 매수</span>
+      <span class="node-tag">TRADE</span>
+    </div>
+    <div class="node-body">
+      W7 Orchestrator의 verdict가 "BUY"이고 confidence ≥ 4일 때만 이 노드 실행.
+      <div class="node-config">
+        <div class="node-config-row"><span class="ncr-k">Method:</span> <span class="ncr-v">POST</span></div>
+        <div class="node-config-row"><span class="ncr-k">URL:</span> <span class="ncr-v">https://paper-api.alpaca.markets/v2/orders</span></div>
+        <div class="node-config-row"><span class="ncr-k">Authentication:</span> <span class="ncr-v">Header Auth (2 헤더)</span></div>
+        <div class="node-config-row"><span class="ncr-k">Send Body:</span> <span class="ncr-v">JSON (아래)</span></div>
+      </div>
+    </div>
+  </div>
+
+<pre class="code-block"><span class="cm">// POST Body - 시장가 매수 예시</span>
+{
+  <span class="str">"symbol"</span>: <span class="str">"AAPL"</span>,
+  <span class="str">"qty"</span>: <span class="str">"1"</span>,
+  <span class="str">"side"</span>: <span class="str">"buy"</span>,
+  <span class="str">"type"</span>: <span class="str">"market"</span>,
+  <span class="str">"time_in_force"</span>: <span class="str">"day"</span>
+}
+
+<span class="cm">// 응답 (성공)</span>
+{
+  <span class="str">"id"</span>: <span class="str">"9d4e1d7f-..."</span>,
+  <span class="str">"status"</span>: <span class="str">"accepted"</span>,
+  <span class="str">"symbol"</span>: <span class="str">"AAPL"</span>,
+  <span class="str">"qty"</span>: <span class="str">"1"</span>,
+  <span class="str">"filled_qty"</span>: <span class="str">"0"</span>,
+  <span class="str">"limit_price"</span>: <span class="kw">null</span>
+}
+</pre>
+
+  <h3>포지션 사이징 Code 노드</h3>
+  <p>Claude verdict가 와도 <strong>얼마나 살지</strong>는 별도 규칙. 무작정 몰빵 금지. 계좌 자본의 몇 %만 사용하는 규칙을 Code 노드로 구현합니다.</p>
+
+<pre class="code-block"><span class="cm">// 포지션 사이징 - 계좌 자본의 2%만 사용 (Kelly Criterion 단순화)</span>
+<span class="kw">const</span> verdict = $input.item.json;
+<span class="kw">const</span> account = $(<span class="str">'GetAccount'</span>).item.json;
+
+<span class="cm">// 기본 자본의 2%를 한 포지션에 할당</span>
+<span class="kw">const</span> equity = parseFloat(account.equity);
+<span class="kw">const</span> positionBudget = equity * <span class="num">0.02</span>;  <span class="cm">// 2%</span>
+
+<span class="cm">// confidence에 따라 가중치 (3/5 → 1배, 4/5 → 1.5배, 5/5 → 2배)</span>
+<span class="kw">let</span> sizeMultiplier = <span class="num">1</span>;
+<span class="kw">if</span> (verdict.confidence === <span class="num">4</span>) sizeMultiplier = <span class="num">1.5</span>;
+<span class="kw">else if</span> (verdict.confidence === <span class="num">5</span>) sizeMultiplier = <span class="num">2</span>;
+
+<span class="kw">const</span> finalBudget = positionBudget * sizeMultiplier;
+
+<span class="cm">// 현재 가격 기준으로 수량 계산</span>
+<span class="kw">const</span> currentPrice = parseFloat(verdict.current_price);
+<span class="kw">const</span> qty = Math.<span class="fn">floor</span>(finalBudget / currentPrice);
+
+<span class="cm">// 최소 1주, 최대 자본의 5% 제한</span>
+<span class="kw">const</span> maxQty = Math.<span class="fn">floor</span>((equity * <span class="num">0.05</span>) / currentPrice);
+<span class="kw">const</span> safeQty = Math.<span class="fn">min</span>(Math.<span class="fn">max</span>(qty, <span class="num">1</span>), maxQty);
+
+<span class="kw">return</span> {
+  symbol: verdict.ticker,
+  qty: safeQty.<span class="fn">toString</span>(),
+  side: <span class="str">'buy'</span>,
+  type: <span class="str">'market'</span>,
+  time_in_force: <span class="str">'day'</span>,
+  budget_used: finalBudget.<span class="fn">toFixed</span>(<span class="num">2</span>),
+  equity_pct: ((finalBudget / equity) * <span class="num">100</span>).<span class="fn">toFixed</span>(<span class="num">2</span>)
+};
+</pre>
+</section>
+
+<div class="divider"></div>
+
+<!-- 2교시: Risk Guards -->
+<section data-section="2교시: Risk Guards">
+  <div class="eyebrow">Session 2 · 30min</div>
+  <h2>2교시 — Risk Guards 4단계 안전장치</h2>
+
+  <p>AI 에이전트의 판단을 무조건 실행하면 사고가 납니다. 프로 트레이딩 시스템의 핵심은 <strong>"잘 사는 법"이 아니라 "크게 안 잃는 법"</strong>입니다. 4가지 필수 안전장치를 구현합니다.</p>
+
+  <div class="guard-grid">
+    <div class="guard-card">
+      <div class="guard-title">🛡️ Guard 1 — Position Sizing</div>
+      <div class="guard-desc">한 종목에 전체 자본의 일정 비율 이상 투입 금지.</div>
+      <div class="guard-rule">maxPerPosition = equity * 0.05</div>
+    </div>
+    <div class="guard-card">
+      <div class="guard-title">🛑 Guard 2 — Stop Loss</div>
+      <div class="guard-desc">매수가 대비 -5% 이탈 시 자동 청산.</div>
+      <div class="guard-rule">stopLossPrice = entry * 0.95</div>
+    </div>
+    <div class="guard-card">
+      <div class="guard-title">💰 Guard 3 — Take Profit</div>
+      <div class="guard-desc">매수가 대비 +10% 도달 시 일부 익절.</div>
+      <div class="guard-rule">takeProfitPrice = entry * 1.10</div>
+    </div>
+    <div class="guard-card">
+      <div class="guard-title">🚨 Guard 4 — Daily Loss Limit</div>
+      <div class="guard-desc">하루 손실 -2% 이상이면 당일 추가 주문 정지.</div>
+      <div class="guard-rule">if dailyPnL &lt; -2% → freeze</div>
+    </div>
+  </div>
+
+  <h3>Bracket Order — Alpaca의 원샷 3단 주문</h3>
+  <p>Alpaca는 <strong>매수 + 익절 + 손절</strong>을 한 번의 주문으로 묶는 "Bracket Order"를 지원합니다. Risk Guard 2, 3을 <strong>한 노드로</strong> 해결.</p>
+
+<pre class="code-block"><span class="cm">// Bracket Order - 매수와 동시에 익절·손절 주문 예약</span>
+{
+  <span class="str">"symbol"</span>: <span class="str">"AAPL"</span>,
+  <span class="str">"qty"</span>: <span class="str">"10"</span>,
+  <span class="str">"side"</span>: <span class="str">"buy"</span>,
+  <span class="str">"type"</span>: <span class="str">"market"</span>,
+  <span class="str">"time_in_force"</span>: <span class="str">"day"</span>,
+  <span class="str">"order_class"</span>: <span class="str">"bracket"</span>,
+  <span class="str">"take_profit"</span>: {
+    <span class="str">"limit_price"</span>: <span class="str">"198.00"</span>    <span class="cm">// 매수가 180 × 1.10</span>
+  },
+  <span class="str">"stop_loss"</span>: {
+    <span class="str">"stop_price"</span>: <span class="str">"171.00"</span>,    <span class="cm">// 매수가 180 × 0.95</span>
+    <span class="str">"limit_price"</span>: <span class="str">"170.50"</span>     <span class="cm">// slippage 보호</span>
+  }
+}
+</pre>
+
+  <div class="callout green">
+    <strong>✨ Bracket Order의 위력:</strong> 일반 주문이면 매수 후 손절·익절 로직을 24시간 감시해야 합니다. Bracket은 Alpaca가 <strong>자동으로 대기</strong>해줍니다. 여러분이 잠자는 동안에도 안전. 프로 퀀트 시스템의 표준 패턴입니다.
+  </div>
+
+  <h3>Guard 4 — Daily Loss Limit 구현</h3>
+  <p>매 주문 전에 <strong>당일 손실이 한도 초과인지</strong> 체크. 초과하면 주문 스킵.</p>
+
+<pre class="code-block"><span class="cm">// Daily Loss Limit Guard</span>
+<span class="kw">const</span> account = $input.item.json;
+<span class="kw">const</span> equity = parseFloat(account.equity);
+<span class="kw">const</span> lastEquity = parseFloat(account.last_equity);
+
+<span class="cm">// 당일 수익률 계산</span>
+<span class="kw">const</span> dailyPnLPct = ((equity - lastEquity) / lastEquity) * <span class="num">100</span>;
+
+<span class="kw">const</span> DAILY_LOSS_LIMIT = -<span class="num">2.0</span>;  <span class="cm">// -2%</span>
+
+<span class="kw">if</span> (dailyPnLPct &lt; DAILY_LOSS_LIMIT) {
+  <span class="kw">return</span> {
+    should_trade: <span class="kw">false</span>,
+    reason: <span class="str">`Daily loss limit hit: ${dailyPnLPct.toFixed(2)}%`</span>,
+    daily_pnl_pct: dailyPnLPct,
+    equity: equity
+  };
+}
+
+<span class="kw">return</span> {
+  should_trade: <span class="kw">true</span>,
+  daily_pnl_pct: dailyPnLPct,
+  equity: equity,
+  remaining_budget: equity * <span class="num">0.05</span>
+};
+</pre>
+
+  <h3>전체 트레이딩 워크플로</h3>
+  <div class="n8n-flow">
+    <div class="n8n-title">🔧 W8 최종 워크플로 — 4 Agent + Risk Guards + Paper Trading</div>
+    <div class="n8n-steps">
+      <div class="n8n-step"><span class="n8n-node nn-t">Schedule</span><span class="n8n-edge">→</span><span class="n8n-desc">평일 오전 8시 30분 (장 개장 전)</span></div>
+      <div class="n8n-step"><span class="n8n-node nn-ai">Orchestrator (W7)</span><span class="n8n-edge">→</span><span class="n8n-desc">4 에이전트 실행 → 최종 verdict + confidence</span></div>
+      <div class="n8n-step"><span class="n8n-node nn-c">IF: verdict = BUY & conf ≥ 4</span><span class="n8n-edge">→</span><span class="n8n-desc">강한 신호만 진행, 나머지는 로깅만</span></div>
+      <div class="n8n-step"><span class="n8n-node nn-a">Get Account</span><span class="n8n-edge">→</span><span class="n8n-desc">현재 잔고·당일 수익률 조회</span></div>
+      <div class="n8n-step"><span class="n8n-node nn-c">Guard 4 Check</span><span class="n8n-edge">→</span><span class="n8n-desc">Daily Loss Limit 검증 (통과 시만 진행)</span></div>
+      <div class="n8n-step"><span class="n8n-node nn-c">Position Sizing</span><span class="n8n-edge">→</span><span class="n8n-desc">Guard 1 적용 수량 계산</span></div>
+      <div class="n8n-step"><span class="n8n-node nn-trade">Alpaca Bracket Order</span><span class="n8n-edge">→</span><span class="n8n-desc">Guard 2+3 포함 매수 주문 제출</span></div>
+      <div class="n8n-step"><span class="n8n-node nn-o">Sheets + Discord</span><span class="n8n-edge">→</span><span class="n8n-desc">거래 로그 + 알림 (차트 이미지 포함)</span></div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- 3교시: 성과 추적 대시보드 -->
+<section data-section="3교시: 성과 추적">
+  <div class="eyebrow">Session 3 · 30min</div>
+  <h2>3교시 — 성과 추적 대시보드</h2>
+
+  <p>투자 시스템에서 가장 중요한 것은 <strong>기록</strong>입니다. 어제 왜 샀고 오늘 얼마가 됐는지 추적 안 하면 개선 못 합니다.</p>
+
+  <h3>거래 로그 — Sheets "trades" 탭</h3>
+  <table class="dtable">
+    <thead><tr><th>컬럼</th><th>예시</th><th>설명</th></tr></thead>
+    <tbody>
+      <tr><td><code>timestamp</code></td><td>2026-04-22 08:32</td><td>주문 제출 시각</td></tr>
+      <tr><td><code>ticker</code></td><td>AAPL</td><td>종목</td></tr>
+      <tr><td><code>side</code></td><td>buy</td><td>매수/매도</td></tr>
+      <tr><td><code>qty</code></td><td>5</td><td>수량</td></tr>
+      <tr><td><code>entry_price</code></td><td>178.42</td><td>체결가</td></tr>
+      <tr><td><code>verdict</code></td><td>BUY</td><td>에이전트 판단</td></tr>
+      <tr><td><code>confidence</code></td><td>4</td><td>신뢰도</td></tr>
+      <tr><td><code>agents_used</code></td><td>news,macro</td><td>호출된 에이전트</td></tr>
+      <tr><td><code>reasoning</code></td><td>"WWDC 호재..."</td><td>요약 근거</td></tr>
+      <tr><td><code>stop_loss</code></td><td>169.50</td><td>손절가</td></tr>
+      <tr><td><code>take_profit</code></td><td>196.26</td><td>익절가</td></tr>
+      <tr><td><code>alpaca_order_id</code></td><td>9d4e1d...</td><td>Alpaca 주문 ID</td></tr>
+    </tbody>
+  </table>
+
+  <h3>일일 성과 계산 — 저녁 자동 실행</h3>
+  <p>장 마감 후 <strong>당일 성과를 자동 집계</strong>하는 별도 워크플로. 매일 저녁 8시 실행.</p>
+
+<pre class="code-block"><span class="cm">// 일일 성과 요약 계산</span>
+<span class="kw">const</span> trades = $input.all();
+<span class="kw">const</span> account = $(<span class="str">'GetAccount'</span>).item.json;
+
+<span class="kw">const</span> today = <span class="kw">new</span> Date().<span class="fn">toISOString</span>().<span class="fn">slice</span>(<span class="num">0</span>, <span class="num">10</span>);
+<span class="kw">const</span> todayTrades = trades.<span class="fn">filter</span>(t =&gt; 
+  t.json.timestamp.<span class="fn">startsWith</span>(today)
+);
+
+<span class="kw">const</span> buyCount = todayTrades.<span class="fn">filter</span>(t =&gt; t.json.side === <span class="str">'buy'</span>).length;
+<span class="kw">const</span> sellCount = todayTrades.<span class="fn">filter</span>(t =&gt; t.json.side === <span class="str">'sell'</span>).length;
+
+<span class="kw">const</span> equity = parseFloat(account.equity);
+<span class="kw">const</span> lastEquity = parseFloat(account.last_equity);
+<span class="kw">const</span> dailyReturn = ((equity - lastEquity) / lastEquity) * <span class="num">100</span>;
+
+<span class="cm">// 누적 수익률 (시작 자본 $100,000 기준)</span>
+<span class="kw">const</span> INITIAL_CAPITAL = <span class="num">100000</span>;
+<span class="kw">const</span> totalReturn = ((equity - INITIAL_CAPITAL) / INITIAL_CAPITAL) * <span class="num">100</span>;
+
+<span class="kw">return</span> {
+  date: today,
+  trades_count: todayTrades.length,
+  buy_orders: buyCount,
+  sell_orders: sellCount,
+  daily_return_pct: dailyReturn.<span class="fn">toFixed</span>(<span class="num">3</span>),
+  total_return_pct: totalReturn.<span class="fn">toFixed</span>(<span class="num">3</span>),
+  equity: equity.<span class="fn">toFixed</span>(<span class="num">2</span>),
+  status: dailyReturn &gt;= <span class="num">0</span> ? <span class="str">'🟢 profit'</span> : <span class="str">'🔴 loss'</span>
+};
+</pre>
+
+  <h3>성과 예시 — 1주일 시뮬레이션 결과</h3>
+  <div class="trade-record">
+    <div class="tr-row">
+      <div class="tr-time">Day 1</div>
+      <div class="tr-action">
+        <div class="tr-verdict buy">BUY AAPL × 5</div>
+        <div class="tr-detail">News+Macro: WWDC 호재 (conf 4)</div>
+      </div>
+      <div class="tr-price">$892.10</div>
+    </div>
+    <div class="tr-row">
+      <div class="tr-time">Day 2</div>
+      <div class="tr-action">
+        <div class="tr-verdict buy">BUY MSFT × 3</div>
+        <div class="tr-detail">News: AI 파트너십 발표 (conf 4)</div>
+      </div>
+      <div class="tr-price">$1,248.60</div>
+    </div>
+    <div class="tr-row">
+      <div class="tr-time">Day 3</div>
+      <div class="tr-action">
+        <div class="tr-verdict sell">Stop Loss TSLA × 2</div>
+        <div class="tr-detail">자동 청산 (-5% 도달)</div>
+      </div>
+      <div class="tr-price loss">-$46.20</div>
+    </div>
+    <div class="tr-row">
+      <div class="tr-time">Day 5</div>
+      <div class="tr-action">
+        <div class="tr-verdict sell">Take Profit AAPL × 5</div>
+        <div class="tr-detail">자동 익절 (+10% 도달)</div>
+      </div>
+      <div class="tr-price profit">+$89.20</div>
+    </div>
+    <div class="tr-row" style="background:#f0fdf4;border-radius:6px;padding:8px">
+      <div class="tr-time"><strong>Week 1</strong></div>
+      <div class="tr-action"><strong>순이익</strong> · 승률 3/4 · 최대 손실 -5%</div>
+      <div class="tr-price profit"><strong>+$43.00 (+0.04%)</strong></div>
+    </div>
+  </div>
+
+  <div class="callout orange">
+    <strong>⚠️ 현실 체크:</strong> 일주일 수익률이 크지 않아 보여도 괜찮습니다. Paper Trading의 목적은 <strong>"안 망하는 시스템"</strong> 검증이지 일확천금이 아닙니다. <strong>승률 70% + 최대 드로다운 -5% 이내</strong>면 훌륭한 성적. 프로 헤지펀드 연 수익률도 10~20% 수준입니다.
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- 4교시: 최종 발표 -->
+<section data-section="4교시: 최종 발표">
+  <div class="eyebrow">Session 4 · 80min</div>
+  <h2>4교시 — 최종 발표 + 포트폴리오화</h2>
+
+  <p>이제 여러분이 만든 것을 <strong>세상에 보여줄 시간</strong>입니다. 아무리 대단한 프로젝트도 <strong>설명 못하면 없는 것</strong>입니다. 5분 발표 + GitHub + 이력서 한 줄로 정리합니다.</p>
+
+  <h3>5분 발표 구조 — 3단계</h3>
+
+  <div class="demo-block">
+    <div class="demo-title">🎤 Presentation Template — 5분 구조</div>
+
+    <div class="demo-slide">
+      <div class="demo-slide-num">1분 · PROBLEM</div>
+      "대학생이 주식·암호화폐를 공부하고 싶어도 전업 투자자처럼 24시간 시장을 모니터링할 시간이 없습니다. 특히 <strong>뉴스·차트·거시경제</strong>를 동시에 봐야 하는데, 한 사람이 모든 걸 보긴 불가능합니다."
+    </div>
+
+    <div class="demo-slide">
+      <div class="demo-slide-num">3분 · SOLUTION (데모 포함)</div>
+      "저는 <strong>4명의 AI 에이전트로 구성된 리서치팀</strong>을 만들었습니다. (화면에 Discord /ask 데모) Orchestrator가 질문을 받으면 News Agent·OnChain Agent·Macro Agent를 전문 분야별로 호출하고, 결과를 종합해 <strong>Alpaca Paper Trading으로 실제 가상 주문</strong>까지 제출합니다. (실제 동작 시연 30초)"
+    </div>
+
+    <div class="demo-slide">
+      <div class="demo-slide-num">1분 · IMPACT</div>
+      "1주일 운영 결과: 승률 75%, 누적 수익률 +1.3%, 최대 드로다운 -2.1%. 평균 응답 시간 8초. 더 중요한 것은 — 이 과정에서 <strong>n8n, Claude API, RAG, Vector DB, Discord Bot, 페이퍼 트레이딩 API</strong>를 모두 다루게 됐다는 점입니다. 이 기술 스택은 금융 IT·핀테크·퀀트 인턴십에 바로 활용 가능합니다."
+    </div>
+  </div>
+
+  <h3>발표 시 꼭 보여줄 3가지</h3>
+  <div class="step-block">
+    <div class="step-title">Live Demo 필수 요소</div>
+    <ol class="step-list">
+      <li><strong>Discord /ask 질문</strong> → 실시간 Orchestrator 호출 → 출처 인용 답변 (30초)</li>
+      <li><strong>Sheets 대시보드 공유 화면</strong> — 지난 1주일 거래 로그·수익률 그래프 (20초)</li>
+      <li><strong>n8n Canvas</strong> — 전체 워크플로 시각화. "이 모든 게 노코드로 작동합니다" (20초)</li>
+    </ol>
+  </div>
+
+  <h3>GitHub 포트폴리오 만들기</h3>
+  <p>프로젝트를 <strong>GitHub에 공개</strong>해야 진짜 포트폴리오가 됩니다. 면접관이 "코드 보여주세요"라고 할 때 바로 링크 줄 수 있어야 합니다.</p>
+
+  <div class="step-block">
+    <div class="step-title">GitHub 레포지토리 구성</div>
+    <ol class="step-list">
+      <li><code>invest-ai-agent</code> 레포지토리 생성 (공개)</li>
+      <li><code>README.md</code>: 프로젝트 개요 + 아키텍처 다이어그램 + 데모 GIF</li>
+      <li><code>workflows/</code>: n8n JSON 내보내기 (.json 파일들)</li>
+      <li><code>docs/</code>: 각 에이전트 System Message, 주요 프롬프트</li>
+      <li><code>screenshots/</code>: Discord 답변·n8n canvas·Sheets 대시보드 스크린샷</li>
+      <li><code>.env.example</code>: 필요한 API 키 목록 (실제 키는 절대 커밋 X)</li>
+    </ol>
+  </div>
+
+  <div class="prompt-card">
+    <div class="pc-label">README.md 핵심 섹션</div>
+<strong># 🤖 Invest AI Agent — Multi-Agent Research System</strong><br><br>
+4명의 AI 에이전트가 협력하는 가상투자 자동화 시스템.<br>
+n8n + Claude API + RAG + Paper Trading으로 구축.<br><br>
+<strong>## 🎯 What it does</strong><br>
+• Orchestrator가 News·OnChain·Macro 3 전문 에이전트 조율<br>
+• Hybrid RAG로 FOMC 의사록·증권사 리포트 검색<br>
+• Claude Vision으로 차트 패턴 자동 판독<br>
+• Alpaca Paper API로 실제 가상 주문 자동 체결<br>
+• Risk Guards 4단계 안전장치<br><br>
+<strong>## 🏗️ Architecture</strong> (이미지)<br>
+<strong>## 📊 Performance (1-week backtest)</strong><br>
+<strong>## 🚀 Tech Stack</strong><br>
+<strong>## 📖 Setup Guide</strong>
+  </div>
+
+  <h3>이력서/자소서 한 줄 문구</h3>
+  <p>이 8주 프로젝트를 이력서 한 줄로 압축합니다. 모호한 "AI 프로젝트" 말고 <strong>구체적 기술·성과</strong>로.</p>
+
+  <div class="showcase-block">
+    <div class="showcase-title">✨ 이력서 용 Bullet Points — 즉시 쓸 수 있는 표현</div>
+    <ul class="showcase-list">
+      <li>n8n + Claude API 기반 멀티 에이전트 투자 리서치 시스템 구축 — 4개 전문 에이전트 오케스트레이션 + Alpaca Paper Trading 연동</li>
+      <li>Hybrid RAG (Supabase/Qdrant + Cohere Reranker) 구축해 FOMC 의사록·증권사 리포트 자연어 질의응답 구현, 단순 Vector 대비 정답률 40%p 향상</li>
+      <li>Claude Vision을 활용해 TradingView 차트 이미지에서 헤드앤숄더·삼각수렴 등 패턴 자동 판독, 1주일 페이퍼 트레이딩에서 승률 70% 달성</li>
+      <li>Risk Guards(포지션 사이징·손절·익절·일일 손실 한도) 설계로 최대 드로다운 -2% 이내 유지</li>
+      <li>Discord 슬래시 커맨드(/ask)로 출처 인용 Q&amp;A 시스템 구현, 투자 의사결정 지원 도구로 활용</li>
+    </ul>
+  </div>
+
+  <div class="callout green">
+    <strong>💡 지원서에 이 문구 쓸 때:</strong> "AI 프로젝트를 만들었다"가 아니라 <strong>"멀티 에이전트 아키텍처를 설계하고 배포했다"</strong>. 기술 용어가 많을수록 기술 채용자에게 진지하게 보입니다. 하지만 과장 금지 — GitHub에서 검증되니 모두 <strong>진짜 구현</strong>한 것만.
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- 디버깅 -->
+<section data-section="테스트와 디버깅">
+  <div class="eyebrow">Test &amp; Debug</div>
+  <h2>이번 주 자주 발생하는 오류</h2>
+
+  <div class="ts-block">
+    <div style="font-size:11px;font-weight:700;color:#991b1b;margin-bottom:6px">🚨 Alpaca + 발표 관련 문제</div>
+    <div class="ts-item">
+      <div class="ts-q">Alpaca 주문이 403 Forbidden</div>
+      <div class="ts-a">대부분 URL 실수. <code>api.alpaca.markets</code>(라이브) 대신 <code>paper-api.alpaca.markets</code> 사용해야 Paper 키로 주문 가능. 또는 API Key/Secret이 헤더에 제대로 전달 안 됨.</div>
+    </div>
+    <div class="ts-item">
+      <div class="ts-q">매수 주문은 되는데 Bracket의 stop/take가 안 걸림</div>
+      <div class="ts-a"><code>order_class: "bracket"</code> 누락. 또는 stop_price ≥ 현재가 또는 limit_price ≤ 현재가 같은 가격 논리 오류. Alpaca는 잘못된 가격이면 주문 자체 거부.</div>
+    </div>
+    <div class="ts-item">
+      <div class="ts-q">시장 시간 외 주문 거부</div>
+      <div class="ts-a">미국 주식은 한국시간 밤 11:30~새벽 6:00만 체결. 그 외 시간에는 <code>time_in_force: "day"</code> 주문이 다음 개장까지 대기. 장외 시간 주문 원하면 <code>extended_hours: true</code> 추가.</div>
+    </div>
+    <div class="ts-item">
+      <div class="ts-q">발표 중 데모가 느려 보임</div>
+      <div class="ts-a">Orchestrator + 3 서브 에이전트 호출하면 실제 10~15초 소요. 발표 전에 <strong>미리 실행해서 응답 캐시</strong>해두거나, 녹화 영상 준비. 라이브 데모는 긴장 요인.</div>
+    </div>
+    <div class="ts-item">
+      <div class="ts-q">GitHub에 API 키가 실수로 올라감</div>
+      <div class="ts-a">즉시 모든 API 키 재발급(Alpaca, Claude, Cohere, OpenAI). Git 히스토리에서도 제거해야 함 — BFG Repo Cleaner 사용. <strong>.env를 .gitignore에 반드시 등록</strong>하고 시작.</div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- 체크리스트 -->
+<section data-section="최종 체크리스트">
+  <div class="eyebrow">Final Completion Checklist</div>
+  <h2>8주 전 과정 완료 체크리스트</h2>
+
+  <div class="checklist">
+    <div class="ck-title">✅ 아래 항목이 모두 체크되면 8주 과정 수료</div>
+    <div class="ck-item">Alpaca Paper Trading 계정 생성 + API 키 n8n 등록</div>
+    <div class="ck-item">Bracket Order로 매수 + 익절 + 손절 한 번에 제출 성공</div>
+    <div class="ck-item">Risk Guards 4가지(포지션·손절·익절·일일손실) Code 노드로 구현</div>
+    <div class="ck-item">Orchestrator verdict → Paper Trading 주문 자동 연동 검증</div>
+    <div class="ck-item">Sheets "trades" 탭에 최소 5건 이상 거래 로그 자동 기록</div>
+    <div class="ck-item">일일 성과 계산 워크플로 + 저녁 자동 실행 설정</div>
+    <div class="ck-item">GitHub 공개 레포지토리 생성 + README + 워크플로 JSON 업로드</div>
+    <div class="ck-item">5분 발표 스크립트 작성 + Live Demo 3가지 준비</div>
+    <div class="ck-item">이력서용 bullet point 5개 작성 (구체적 수치 포함)</div>
+    <div class="ck-item">최종 발표 실시 — 문제 정의·솔루션·임팩트 순</div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- 과제 = 앞으로 할 것 -->
+<section data-section="다음 단계">
+  <div class="eyebrow">Beyond W8 · Next Steps</div>
+  <h2>수료 후 다음 단계</h2>
+
+  <div class="hw-block">
+    <span class="hw-tag">🚀 AFTER GRADUATION</span>
+    <div class="hw-title">에이전트 시스템을 계속 발전시키는 방법</div>
+    <ul class="hw-list">
+      <li><strong>[다음 주]</strong> KIS 특별세션 수강 — 한국 증권사 API로 국내 주식 지원 확장</li>
+      <li><strong>[1~2개월]</strong> Backtesting 추가 — 지난 1년 historical data에 에이전트 판단 적용해 전략 검증 (yfinance + pandas로 Python 분석)</li>
+      <li><strong>[3~6개월]</strong> 본인만의 <strong>4번째 에이전트</strong> 개발 — 관심 분야(반도체·바이오·AI 섹터) 전문 에이전트 추가</li>
+      <li><strong>[6개월+]</strong> 금융 IT·핀테크 인턴 지원 — 이 포트폴리오로 KB국민은행·미래에셋·토스증권·크래프톤 퀀트팀 등 도전</li>
+      <li><strong>[장기]</strong> 친구들 / 후배들에게 이 시스템 <strong>직접 가르치기</strong> — 가르치는 것이 가장 강력한 학습법. 본인의 AI 교육 브랜드 시작 가능</li>
+    </ul>
+  </div>
+
+  <div class="callout purple" style="margin-top:12px">
+    <strong>💫 마지막 메시지:</strong> 8주 전 여러분은 n8n을 몰랐습니다. 지금은 <strong>기관급 멀티 에이전트 시스템</strong>을 혼자 만들어 운영합니다. 이 과정을 믿고 완주한 것에 대해 가장 먼저 <strong>여러분 자신을 칭찬</strong>하세요. 이 시스템은 끝이 아니라 <strong>시작</strong>입니다. AI 시대의 파도를 타는 법을 배웠습니다. 이제 각자의 해안으로 항해를 시작하세요. <strong>Good luck. 🌊</strong>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- 참고 자료 -->
+<section data-section="참고 자료">
+  <div class="eyebrow">References</div>
+  <h2>참고 자료</h2>
+  <table class="dtable">
+    <thead><tr><th>자료</th><th>용도</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Alpaca Paper Trading Docs</strong><br><code>docs.alpaca.markets/docs/trading-api</code></td><td>모든 엔드포인트, Bracket Order 파라미터</td></tr>
+      <tr><td><strong>Alpaca — How to Start Paper Trading</strong><br><code>alpaca.markets/learn/start-paper-trading</code></td><td>초보자 온보딩 공식 가이드</td></tr>
+      <tr><td><strong>Binance Testnet</strong><br><code>testnet.binance.vision</code></td><td>(선택) 암호화폐 가상 트레이딩 — HMAC 서명 필요, 중급 이상</td></tr>
+      <tr><td><strong>n8n HTTP Request 공식</strong><br><code>docs.n8n.io/integrations/builtin/core-nodes/n8n-nodes-base.httprequest</code></td><td>Header Auth, Body JSON 구성 상세</td></tr>
+      <tr><td><strong>Kelly Criterion 입문</strong> (Investopedia)</td><td>포지션 사이징 이론 배경</td></tr>
+      <tr><td><strong>Stop Loss · Take Profit 개념</strong> (Investopedia)</td><td>Risk Guard 기초 이해</td></tr>
+      <tr><td><strong>GitHub README Best Practices</strong></td><td>포트폴리오 레포지토리 작성 가이드</td></tr>
+      <tr><td><strong>n8n Community Templates</strong><br><code>n8n.io/workflows</code></td><td>다른 트레이딩 자동화 예시 참고</td></tr>
+    </tbody>
+  </table>
+</section>
+
+</div>
+
+<div style="background:linear-gradient(135deg,#0d0d0d,#7c3aed);color:#fff;text-align:center;padding:32px 20px;margin-bottom:var(--fh)">
+  <div style="font-size:10px;letter-spacing:2px;color:#fbbf24;margin-bottom:8px;font-weight:700">🎓 COURSE COMPLETE</div>
+  <div style="font-size:14px;font-weight:700;margin-bottom:5px">대학생 투자 자동화 8주 과정</div>
+  <div style="font-size:11px;color:rgba(255,255,255,.7);line-height:1.7">n8n × Claude × RAG × Paper Trading<br>2026 · ZeroOneAI Education</div>
+</div>
+
+<script>
+const sections = document.querySelectorAll('[data-section]');
+const sfT = document.getElementById('sf-t');
+const sfP = document.getElementById('sf-p');
+function update(){
+  const sy = window.scrollY;
+  const dh = document.documentElement.scrollHeight - window.innerHeight;
+  sfP.textContent = Math.round((sy / Math.max(dh, 1)) * 100) + '%';
+  let cur = sections[0]?.dataset.section || '';
+  sections.forEach(s => {
+    if(sy >= s.getBoundingClientRect().top + sy - 110) cur = s.dataset.section;
+  });
+  if(sfT.textContent !== cur) sfT.textContent = cur;
+}
+window.addEventListener('scroll', update, {passive:true});
+update();
+</script>
+</body>
+</html>

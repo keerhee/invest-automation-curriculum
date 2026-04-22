@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>W7 과제 워크북 — Multi-Agent 오케스트레이션 Tool Use · 에이전트 팀</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;600&display=swap');
+:root{--black:#0d0d0d;--gray:#6b6b6b;--light:#f3f3f3;--border:#e6e6e6;--hw-orange:#f97316;--hw-dark:#431407;--hw-amber:#fbbf24;--required:#ef4444;--advanced:#8b5cf6;--fh:46px}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Noto Sans KR',sans-serif;background:#fff;color:var(--black);font-size:14px;line-height:1.75;padding-bottom:var(--fh)}
+#sf{position:fixed;bottom:0;left:0;right:0;height:var(--fh);background:var(--hw-dark);display:flex;align-items:center;justify-content:space-between;padding:0 16px;z-index:999}
+#sf .lbl{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:#fed7aa}
+#sf .ttl{font-size:12px;font-weight:700;color:#fff;max-width:50%;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#sf .score{font-size:11px;color:var(--hw-amber);white-space:nowrap;font-weight:700}
+.hero{background:linear-gradient(135deg,#f97316,#431407);color:#fff;padding:40px 20px 36px;text-align:center;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;top:-80px;right:-80px;width:260px;height:260px;border:1px solid rgba(255,255,255,.08);border-radius:50%}
+.hero-badge{display:inline-block;border:1px solid rgba(255,255,255,.25);border-radius:20px;padding:4px 14px;font-size:10px;letter-spacing:2px;color:#fed7aa;margin-bottom:10px;font-weight:700}
+.hero-week{font-size:13px;color:rgba(255,255,255,.7);margin-bottom:4px;letter-spacing:3px;font-weight:700}
+.hero h1{font-size:20px;font-weight:900;line-height:1.35;margin-bottom:12px;letter-spacing:-.5px}
+.hero-score-box{display:inline-flex;align-items:center;gap:8px;background:rgba(0,0,0,.2);border:1px solid rgba(255,255,255,.2);border-radius:30px;padding:6px 16px;margin-top:8px}
+.hero-score-box strong{color:var(--hw-amber);font-weight:900;font-size:14px}
+.container{max-width:720px;margin:0 auto;padding:0 15px}
+section{padding:30px 0 0}
+.divider{height:1px;background:var(--border);margin:28px 0 0}
+.eyebrow{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--gray);margin-bottom:5px}
+h2{font-size:18px;font-weight:900;letter-spacing:-.3px;margin-bottom:10px;line-height:1.3}
+h3{font-size:13px;font-weight:700;margin:16px 0 6px}
+h4{font-size:12px;font-weight:700;margin:12px 0 6px;color:#333}
+p{color:#333;margin-bottom:8px;font-size:13px}
+strong{color:var(--black);font-weight:700}
+code{font-family:'JetBrains Mono',monospace;background:#fff7ed;padding:1px 5px;border-radius:3px;font-size:11px;color:var(--hw-orange)}
+.overview{background:linear-gradient(135deg,#fff7ed,#ffedd5);border:1px solid var(--hw-orange);border-radius:12px;padding:14px 16px;margin:14px 0}
+.ov-title{font-size:11px;font-weight:700;color:var(--hw-dark);letter-spacing:1px;margin-bottom:8px}
+.ov-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.ov-item{background:#fff;border-radius:6px;padding:6px 10px;font-size:11px}
+.ov-label{font-size:9px;color:var(--hw-orange);font-weight:700;text-transform:uppercase;margin-bottom:2px}
+.ov-value{font-weight:600;color:#333}
+.score-summary{background:#0d1117;color:#fff;border-radius:12px;padding:16px;margin:12px 0}
+.ss-title{font-size:10px;color:var(--hw-amber);letter-spacing:2px;font-weight:700;margin-bottom:10px}
+.ss-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:8px}
+.ss-item{background:rgba(255,255,255,.08);border-radius:6px;padding:8px 4px;text-align:center}
+.ss-num{font-size:10px;color:#94a3b8;margin-bottom:2px}
+.ss-pts{font-size:14px;font-weight:900;color:#fff}
+.ss-pts-amber{color:var(--hw-amber)}
+.ss-pts-purple{color:#c4b5fd}
+.ss-total{text-align:center;margin-top:12px;padding-top:12px;border-top:1px dashed rgba(255,255,255,.2);font-size:13px;color:#fff}
+.ss-total strong{color:var(--hw-amber);font-size:18px}
+.task-card{background:#fff;border:2px solid var(--border);border-radius:12px;margin:14px 0;overflow:hidden;position:relative}
+.task-card.required{border-color:var(--required)}
+.task-card.advanced{border-color:var(--advanced)}
+.task-head{padding:12px 14px;display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap;border-bottom:1px solid var(--border)}
+.required .task-head{background:#fef2f2}
+.advanced .task-head{background:#f5f3ff}
+.task-title-wrap{flex:1;min-width:0}
+.task-level{font-size:9px;letter-spacing:2px;font-weight:700;margin-bottom:3px}
+.required .task-level{color:var(--required)}
+.advanced .task-level{color:var(--advanced)}
+.task-title{font-size:13px;font-weight:700;line-height:1.35;color:#333}
+.task-points{display:flex;align-items:center;gap:6px;background:#fff;border:1px solid var(--border);border-radius:20px;padding:4px 12px;font-size:11px;font-weight:700;white-space:nowrap}
+.task-points strong{font-size:14px;color:var(--hw-orange)}
+.task-body{padding:14px}
+.task-desc{font-size:12px;line-height:1.7;color:#333;margin-bottom:10px}
+.task-requirements{background:var(--light);border-left:3px solid var(--hw-orange);border-radius:0 8px 8px 0;padding:10px 14px;margin:10px 0;font-size:12px;line-height:1.65}
+.tr-title{font-size:10px;color:var(--hw-orange);font-weight:700;margin-bottom:5px;letter-spacing:1px}
+.tr-list{margin:0;padding-left:16px}
+.tr-list li{margin-bottom:4px;color:#333}
+.code-block{background:#0d1117;color:#e6edf3;border-radius:9px;padding:12px 14px;margin:10px 0;font-family:'JetBrains Mono',monospace;font-size:11px;line-height:1.7;overflow-x:auto;white-space:pre;tab-size:2;-moz-tab-size:2;word-wrap:normal}
+.code-block .cm{color:#8b949e;font-style:italic}
+.code-block .kw{color:#ff7b72}
+.code-block .str{color:#a5d6ff}
+.code-block .num{color:#79c0ff}
+.code-block .fn{color:#d2a8ff}
+.rubric{margin:12px 0}
+.rubric-title{font-size:10px;color:var(--hw-orange);font-weight:700;letter-spacing:1px;margin-bottom:6px;display:flex;align-items:center;gap:5px}
+.rubric-title::before{content:'📊';font-size:13px}
+.rubric-table{width:100%;border-collapse:collapse;font-size:11px}
+.rubric-table th{background:var(--hw-dark);color:#fff;padding:7px 8px;text-align:left;font-size:10px;font-weight:700}
+.rubric-table td{padding:7px 8px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.5}
+.rubric-table tr:nth-child(even) td{background:var(--light)}
+.rubric-table td:first-child{font-weight:700;color:var(--hw-orange);white-space:nowrap;font-family:'JetBrains Mono',monospace;font-size:10px}
+.rubric-table td:last-child{text-align:right;font-weight:700;color:#333;white-space:nowrap}
+.hint-block{background:#eff6ff;border:1px solid #93c5fd;border-radius:8px;margin:10px 0;overflow:hidden}
+.hint-summary{padding:10px 12px;cursor:pointer;font-size:11px;font-weight:700;color:#1e40af;display:flex;align-items:center;gap:6px;user-select:none;list-style:none}
+.hint-summary::before{content:'💡';font-size:13px}
+.hint-summary::after{content:'▼';font-size:10px;margin-left:auto;transition:transform .2s}
+.hint-block[open] .hint-summary::after{transform:rotate(180deg)}
+.hint-content{padding:0 12px 12px;font-size:11px;color:#1e3a8a;line-height:1.7}
+.hint-content code{background:#dbeafe;color:#1e40af}
+.warning{background:#fff8ed;border-left:3px solid var(--hw-amber);padding:10px 13px;border-radius:0 8px 8px 0;margin:10px 0;font-size:12px;line-height:1.65;color:#78350f}
+.warning strong{color:#92400e}
+.deliverable{background:#fff;border:2px dashed var(--hw-orange);border-radius:10px;padding:12px;margin:10px 0}
+.dv-title{font-size:10px;color:var(--hw-orange);letter-spacing:1px;font-weight:700;margin-bottom:4px}
+.dv-desc{font-size:11px;color:#333;line-height:1.6}
+.section-nav{background:var(--light);border-radius:10px;padding:12px;margin:10px 0}
+.sn-title{font-size:10px;color:var(--gray);font-weight:700;letter-spacing:1px;margin-bottom:8px}
+.sn-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:4px}
+.sn-link{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px 4px;background:#fff;border:1px solid var(--border);border-radius:6px;font-size:10px;color:#333;text-decoration:none;text-align:center}
+.sn-link:hover{border-color:var(--hw-orange);color:var(--hw-orange)}
+.sn-link.req{border-left:3px solid var(--required)}
+.sn-link.adv{border-left:3px solid var(--advanced)}
+.sn-num{font-size:14px;font-weight:900;color:#333;font-family:'JetBrains Mono',monospace}
+.sn-pts{font-size:9px;color:var(--gray);margin-top:2px}
+@media(max-width:400px){.ov-grid{grid-template-columns:1fr}.ss-grid{grid-template-columns:repeat(5,1fr);gap:3px}.ss-pts{font-size:12px}}
+</style>
+</head>
+<body>
+
+<div id="sf">
+  <span class="lbl">W7 Homework</span>
+  <span class="ttl" id="sf-t">W7 과제 워크북</span>
+  <span class="score" id="sf-s">0 / 100 점</span>
+</div>
+
+<div class="hero" data-section="개요">
+  <div class="hero-badge">📝 HOMEWORK</div>
+  <div class="hero-week">WEEK 7</div>
+  <h1>Multi-Agent 오케스트레이션<br>Tool Use · 에이전트 팀</h1>
+  <div class="hero-score-box">총점 <strong>100점</strong> · 필수 60 + 심화 40</div>
+</div>
+
+<div class="container">
+
+<section data-section="학습 목표">
+  <div class="overview">
+    <div class="ov-title">🎯 W7 학습 목표 복습</div>
+    <p style="font-size:12px;margin:4px 0 8px;color:#431407">3~4개 전문 에이전트 팀 구성 + Orchestrator 조율. <strong>복잡한 분석을 분업</strong>하는 프로 구조.</p>
+    <div class="ov-grid">
+      <div class="ov-item">
+        <div class="ov-label">🔧 핵심 도구</div>
+        <div class="ov-value">AI Agent + Tools<br>Message Bus<br>Cost Optimization</div>
+      </div>
+      <div class="ov-item">
+        <div class="ov-label">⏱ 예상 시간</div>
+        <div class="ov-value">필수 4~5시간<br>심화 +3시간</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="score-summary">
+    <div class="ss-title">📊 과제 배점표</div>
+    <div class="ss-grid"><div class="ss-item"><div class="ss-num">과제 1</div><div class="ss-pts ss-pts-amber">20</div></div><div class="ss-item"><div class="ss-num">과제 2</div><div class="ss-pts ss-pts-amber">20</div></div><div class="ss-item"><div class="ss-num">과제 3</div><div class="ss-pts ss-pts-amber">20</div></div><div class="ss-item"><div class="ss-num">과제 4</div><div class="ss-pts ss-pts-purple">20</div></div><div class="ss-item"><div class="ss-num">과제 5</div><div class="ss-pts ss-pts-purple">20</div></div></div>
+    <div class="ss-total">합계 <strong>100점</strong> · 필수 60 + 심화 40</div>
+  </div>
+
+  <div class="section-nav">
+    <div class="sn-title">📍 빠른 이동</div>
+    <div class="sn-grid"><a class="sn-link req" href="#t1"><span class="sn-num">1</span><span class="sn-pts">20pt</span></a><a class="sn-link req" href="#t2"><span class="sn-num">2</span><span class="sn-pts">20pt</span></a><a class="sn-link req" href="#t3"><span class="sn-num">3</span><span class="sn-pts">20pt</span></a><a class="sn-link adv" href="#t4"><span class="sn-num">4</span><span class="sn-pts">20pt</span></a><a class="sn-link adv" href="#t5"><span class="sn-num">5</span><span class="sn-pts">20pt</span></a></div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+
+<section id="t1" data-section="과제 1">
+  <div class="task-card required">
+    <div class="task-head">
+      <div class="task-title-wrap">
+        <div class="task-level">🔴 REQUIRED — 과제 1</div>
+        <div class="task-title">3개 서브 에이전트 독립 구현</div>
+      </div>
+      <div class="task-points">배점 <strong>20</strong> 점</div>
+    </div>
+    <div class="task-body">
+      <p class="task-desc">News / OnChain / Macro 세 전문 에이전트를 각각 AI Agent Tool로 독립 구현.</p>
+      <div class="task-requirements">
+        <div class="tr-title">필수 요구사항</div>
+        <ul class="tr-list"><li><strong>News Agent</strong>: Alpha Vantage NEWS_SENTIMENT 기반, 종목별 센티먼트 보고</li><li><strong>OnChain Agent</strong>: Blockchair/CoinGecko로 BTC/ETH 온체인 데이터</li><li><strong>Macro Agent</strong>: FRED로 금리·CPI·VIX 조회</li><li>각 에이전트는 JSON 구조화 출력 + <code>summary</code> 필드 필수</li><li>각 에이전트 단독 테스트 성공 (3개 모두)</li></ul>
+      </div>
+      <h4>Tool Description 작성 원칙</h4>
+<pre class="code-block"><span class="cm"># News Agent Description 예시:</span>
+
+"""주식/암호화폐에 대한 최근 뉴스와 센티먼트 조회.
+사용 시점: "AAPL 뉴스", "삼성 최근 이슈" 같은 뉴스 질문에만.
+사용 금지: 가격 조회, 차트 분석 (다른 에이전트 사용).
+
+Input:
+  - ticker (str): 종목 코드 (예: AAPL, 005930)
+  - hours_back (int, 기본 24): 몇 시간 전까지의 뉴스
+
+Output: JSON {sentiment_overall, top_themes, summary}"""</pre>
+      <div class="rubric">
+        <div class="rubric-title">채점 기준 (20점 만점)</div>
+        <table class="rubric-table"><tbody><tr><td>A. 3개 에이전트 구현</td><td>6점</td></tr><tr><td>B. JSON 출력 일관성</td><td>4점</td></tr><tr><td>C. Description 명확성</td><td>4점</td></tr><tr><td>D. 단독 테스트 증거</td><td>3점</td></tr><tr><td>E. 프롬프트 템플릿 문서화</td><td>3점</td></tr></tbody></table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="t2" data-section="과제 2">
+  <div class="task-card required">
+    <div class="task-head">
+      <div class="task-title-wrap">
+        <div class="task-level">🔴 REQUIRED — 과제 2</div>
+        <div class="task-title">Orchestrator 팀장 에이전트</div>
+      </div>
+      <div class="task-points">배점 <strong>20</strong> 점</div>
+    </div>
+    <div class="task-body">
+      <p class="task-desc">3개 서브 에이전트를 지휘하는 Orchestrator. 질문에 따라 <strong>필요한 에이전트만</strong> 선택 호출.</p>
+      <div class="task-requirements">
+        <div class="tr-title">필수 요구사항</div>
+        <ul class="tr-list"><li>Orchestrator AI Agent (Sonnet) + 3개 Tool 연결</li><li>부록 D의 Orchestrator System Message 활용</li><li>5가지 시나리오로 테스트: 주식 / 암호화폐 / 매크로만 / 복합 / 관계없는 질문</li><li>각 시나리오에서 호출한 도구 기록 (메시지 버스)</li><li>잘못된 도구 호출 발견 시 Description 튜닝</li></ul>
+      </div>
+      
+      <div class="rubric">
+        <div class="rubric-title">채점 기준 (20점 만점)</div>
+        <table class="rubric-table"><tbody><tr><td>A. Orchestrator 프롬프트 품질</td><td>5점</td></tr><tr><td>B. 적절한 도구 선택 정확도</td><td>6점</td></tr><tr><td>C. 5가지 시나리오 테스트</td><td>4점</td></tr><tr><td>D. 도구 호출 로그</td><td>3점</td></tr><tr><td>E. 튜닝 기록</td><td>2점</td></tr></tbody></table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="t3" data-section="과제 3">
+  <div class="task-card required">
+    <div class="task-head">
+      <div class="task-title-wrap">
+        <div class="task-level">🔴 REQUIRED — 과제 3</div>
+        <div class="task-title">메시지 버스 로깅 시스템</div>
+      </div>
+      <div class="task-points">배점 <strong>20</strong> 점</div>
+    </div>
+    <div class="task-body">
+      <p class="task-desc">에이전트 간 "대화"를 타임라인으로 기록해 디버깅 + 감사 가능한 시스템.</p>
+      <div class="task-requirements">
+        <div class="tr-title">필수 요구사항</div>
+        <ul class="tr-list"><li>Orchestrator의 모든 도구 호출 기록 (Actor, Action, Input, Timestamp)</li><li>각 서브 에이전트의 응답도 기록 (Output 스냅샷)</li><li>한 질문의 전체 흐름을 Sheets에 <strong>타임라인</strong>으로 저장</li><li>질문당 평균 에이전트 호출 횟수 통계</li><li>이상 패턴 탐지 (같은 도구 3회+, 무한 루프 등)</li></ul>
+      </div>
+      
+      <div class="rubric">
+        <div class="rubric-title">채점 기준 (20점 만점)</div>
+        <table class="rubric-table"><tbody><tr><td>A. 메시지 버스 설계</td><td>5점</td></tr><tr><td>B. 로깅 완전성</td><td>5점</td></tr><tr><td>C. 타임라인 시각화</td><td>4점</td></tr><tr><td>D. 통계 분석</td><td>3점</td></tr><tr><td>E. 이상 탐지 로직</td><td>3점</td></tr></tbody></table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="t4" data-section="과제 4">
+  <div class="task-card advanced">
+    <div class="task-head">
+      <div class="task-title-wrap">
+        <div class="task-level">🟣 ADVANCED — 과제 4</div>
+        <div class="task-title">4번째 에이전트 추가 — 한국 주식 전용</div>
+      </div>
+      <div class="task-points">배점 <strong>20</strong> 점</div>
+    </div>
+    <div class="task-body">
+      <p class="task-desc">한국 주식 전용 에이전트를 팀에 추가. FinanceDataReader로 KOSPI·KOSDAQ 종목 데이터.</p>
+      <div class="task-requirements">
+        <div class="tr-title">필수 요구사항</div>
+        <ul class="tr-list"><li>KRX Stock Agent: 국내 종목 현재가·거래량·외국인 순매매</li><li>데이터 소스: <code>FinanceDataReader</code> 또는 <code>pykrx</code> (Code 노드 내 Python 사용)</li><li>Orchestrator에 4번째 도구로 등록</li><li>System Message 업데이트: 한국 종목 질문 → korean_stock_agent 호출</li><li>한국 종목 관련 질문 3개로 검증 (삼성전자, SK하이닉스, 카카오)</li></ul>
+      </div>
+      <div class="warning">
+  <strong>💡 데이터 소스 비교:</strong><br>
+  • <code>FinanceDataReader</code>: 가장 간단, pandas-friendly (<strong>학습용 추천</strong>)<br>
+  • <code>pykrx</code>: 상세 데이터, 투자자별 매매 동향<br>
+  • 네이버 금융 크롤링: 실시간·빠름, 파싱 필요<br>
+  n8n Python 환경에서는 FinanceDataReader가 Code 노드로 쉽게 호출 가능.
+</div>
+      <div class="rubric">
+        <div class="rubric-title">채점 기준 (20점 만점)</div>
+        <table class="rubric-table"><tbody><tr><td>A. 데이터 소스 선정 근거</td><td>3점</td></tr><tr><td>B. 에이전트 구현</td><td>6점</td></tr><tr><td>C. Orchestrator 통합</td><td>4점</td></tr><tr><td>D. 한국 종목 질문 테스트</td><td>4점</td></tr><tr><td>E. 4개 에이전트 조율 증거</td><td>3점</td></tr></tbody></table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="t5" data-section="과제 5">
+  <div class="task-card advanced">
+    <div class="task-head">
+      <div class="task-title-wrap">
+        <div class="task-level">🟣 ADVANCED — 과제 5</div>
+        <div class="task-title">비용 최적화 실험 — Haiku vs Sonnet 조합</div>
+      </div>
+      <div class="task-points">배점 <strong>20</strong> 점</div>
+    </div>
+    <div class="task-body">
+      <p class="task-desc">Orchestrator Sonnet + 서브 에이전트 Haiku 조합을 실험. 비용 절감 대비 품질 손실 측정.</p>
+      <div class="task-requirements">
+        <div class="tr-title">필수 요구사항</div>
+        <ul class="tr-list"><li>동일 질문 10개로 두 구성 실행:<br>&nbsp;&nbsp;① 모두 Sonnet / ② Orchestrator만 Sonnet + 서브 Haiku</li><li>response.usage에서 input/output 토큰 추출 + 로깅</li><li>구성별 총 비용 계산 (USD 또는 KRW)</li><li>답변 품질 수동 채점 (각 답변 5점 척도)</li><li>"품질 손실 N%로 비용 M% 절감 가능" 리포트</li></ul>
+      </div>
+      
+      <div class="rubric">
+        <div class="rubric-title">채점 기준 (20점 만점)</div>
+        <table class="rubric-table"><tbody><tr><td>A. 실험 설계 엄밀성</td><td>5점</td></tr><tr><td>B. 토큰·비용 측정</td><td>5점</td></tr><tr><td>C. 품질 채점 객관성</td><td>4점</td></tr><tr><td>D. 결과 분석 리포트</td><td>4점</td></tr><tr><td>E. 최적 구성 권고</td><td>2점</td></tr></tbody></table>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<div class="divider"></div>
+
+<section id="submit" data-section="제출">
+  <div class="eyebrow">Submit</div>
+  <h2>📤 제출 방법 + 기한</h2>
+  <div class="warning"><strong>⏰ 제출 기한:</strong> 다음 주 수업 시작 전까지. 지연 시 하루당 -2점.</div>
+  <div style="background:linear-gradient(135deg,#f97316,#431407);color:#fff;text-align:center;padding:24px 20px;border-radius:12px;margin:20px 0">
+    <div style="font-size:10px;letter-spacing:2px;color:#fbbf24;margin-bottom:6px;font-weight:700">📝 W7 HOMEWORK COMPLETE</div>
+    <div style="font-size:14px;font-weight:700;margin-bottom:4px">Orchestrator · 서브 에이전트 · 메시지 버스</div>
+    <div style="font-size:11px;color:rgba(255,255,255,.75);line-height:1.7">5 tasks · 100 pt · 4~8 hours</div>
+  </div>
+</section>
+
+</div>
+
+<script>
+const sections = document.querySelectorAll('[data-section]');
+const sfT = document.getElementById('sf-t');
+function update(){
+  const sy = window.scrollY;
+  let cur = sections[0]?.dataset.section || '';
+  sections.forEach(s => { if(sy >= s.getBoundingClientRect().top + sy - 110) cur = s.dataset.section; });
+  if(sfT.textContent !== cur) sfT.textContent = cur;
+}
+window.addEventListener('scroll', update, {passive:true});
+update();
+</script>
+</body>
+</html>

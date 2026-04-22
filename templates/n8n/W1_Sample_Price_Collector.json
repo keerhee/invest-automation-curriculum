@@ -1,0 +1,116 @@
+{
+  "name": "W1_Sample_BTC_Price_Collector",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "manual-trigger",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "url": "https://api.coingecko.com/api/v3/simple/price",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "ids",
+              "value": "bitcoin"
+            },
+            {
+              "name": "vs_currencies",
+              "value": "usd"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "id": "http-coingecko",
+      "name": "CoinGecko API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract BTC price and format nicely\nconst btc = $input.first().json.bitcoin.usd;\nconst formatted = btc.toLocaleString('en-US', {\n  style: 'currency',\n  currency: 'USD',\n  maximumFractionDigits: 0\n});\n\nreturn [{\n  json: {\n    symbol: 'BTC',\n    price_usd: btc,\n    price_formatted: formatted,\n    message: `🪙 BTC 현재가: ${formatted}`,\n    timestamp: new Date().toISOString()\n  }\n}];"
+      },
+      "id": "code-format",
+      "name": "Format Message",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "content": "={{ $json.message }}",
+        "options": {}
+      },
+      "id": "discord-send",
+      "name": "Discord",
+      "type": "n8n-nodes-base.discord",
+      "typeVersion": 2,
+      "position": [900, 300],
+      "credentials": {
+        "discordWebhookApi": {
+          "id": "SET_YOUR_CREDENTIAL_ID",
+          "name": "Discord Webhook - General"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "CoinGecko API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CoinGecko API": {
+      "main": [
+        [
+          {
+            "node": "Format Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Message": {
+      "main": [
+        [
+          {
+            "node": "Discord",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Asia/Seoul"
+  },
+  "staticData": null,
+  "tags": [
+    {
+      "name": "curriculum-w1",
+      "id": "curriculum-w1"
+    }
+  ],
+  "triggerCount": 0,
+  "versionId": "1.0.0",
+  "_description": "W1 Q1 과제 샘플 워크플로. Manual Trigger → CoinGecko API → Code → Discord. 실제 과제 제출 시 본인 Discord Credential로 교체 필요."
+}

@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>W8 과제 워크북 — Paper Trading 완성 + 수료 발표 Alpaca · Risk Guards · Portfolio</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;600&display=swap');
+:root{--black:#0d0d0d;--gray:#6b6b6b;--light:#f3f3f3;--border:#e6e6e6;--hw-orange:#f97316;--hw-dark:#431407;--hw-amber:#fbbf24;--required:#ef4444;--advanced:#8b5cf6;--fh:46px}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Noto Sans KR',sans-serif;background:#fff;color:var(--black);font-size:14px;line-height:1.75;padding-bottom:var(--fh)}
+#sf{position:fixed;bottom:0;left:0;right:0;height:var(--fh);background:var(--hw-dark);display:flex;align-items:center;justify-content:space-between;padding:0 16px;z-index:999}
+#sf .lbl{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:#fed7aa}
+#sf .ttl{font-size:12px;font-weight:700;color:#fff;max-width:50%;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#sf .score{font-size:11px;color:var(--hw-amber);white-space:nowrap;font-weight:700}
+.hero{background:linear-gradient(135deg,#f97316,#431407);color:#fff;padding:40px 20px 36px;text-align:center;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;top:-80px;right:-80px;width:260px;height:260px;border:1px solid rgba(255,255,255,.08);border-radius:50%}
+.hero-badge{display:inline-block;border:1px solid rgba(255,255,255,.25);border-radius:20px;padding:4px 14px;font-size:10px;letter-spacing:2px;color:#fed7aa;margin-bottom:10px;font-weight:700}
+.hero-week{font-size:13px;color:rgba(255,255,255,.7);margin-bottom:4px;letter-spacing:3px;font-weight:700}
+.hero h1{font-size:20px;font-weight:900;line-height:1.35;margin-bottom:12px;letter-spacing:-.5px}
+.hero-score-box{display:inline-flex;align-items:center;gap:8px;background:rgba(0,0,0,.2);border:1px solid rgba(255,255,255,.2);border-radius:30px;padding:6px 16px;margin-top:8px}
+.hero-score-box strong{color:var(--hw-amber);font-weight:900;font-size:14px}
+.container{max-width:720px;margin:0 auto;padding:0 15px}
+section{padding:30px 0 0}
+.divider{height:1px;background:var(--border);margin:28px 0 0}
+.eyebrow{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--gray);margin-bottom:5px}
+h2{font-size:18px;font-weight:900;letter-spacing:-.3px;margin-bottom:10px;line-height:1.3}
+h3{font-size:13px;font-weight:700;margin:16px 0 6px}
+h4{font-size:12px;font-weight:700;margin:12px 0 6px;color:#333}
+p{color:#333;margin-bottom:8px;font-size:13px}
+strong{color:var(--black);font-weight:700}
+code{font-family:'JetBrains Mono',monospace;background:#fff7ed;padding:1px 5px;border-radius:3px;font-size:11px;color:var(--hw-orange)}
+.overview{background:linear-gradient(135deg,#fff7ed,#ffedd5);border:1px solid var(--hw-orange);border-radius:12px;padding:14px 16px;margin:14px 0}
+.ov-title{font-size:11px;font-weight:700;color:var(--hw-dark);letter-spacing:1px;margin-bottom:8px}
+.ov-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.ov-item{background:#fff;border-radius:6px;padding:6px 10px;font-size:11px}
+.ov-label{font-size:9px;color:var(--hw-orange);font-weight:700;text-transform:uppercase;margin-bottom:2px}
+.ov-value{font-weight:600;color:#333}
+.score-summary{background:#0d1117;color:#fff;border-radius:12px;padding:16px;margin:12px 0}
+.ss-title{font-size:10px;color:var(--hw-amber);letter-spacing:2px;font-weight:700;margin-bottom:10px}
+.ss-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:8px}
+.ss-item{background:rgba(255,255,255,.08);border-radius:6px;padding:8px 4px;text-align:center}
+.ss-num{font-size:10px;color:#94a3b8;margin-bottom:2px}
+.ss-pts{font-size:14px;font-weight:900;color:#fff}
+.ss-pts-amber{color:var(--hw-amber)}
+.ss-pts-purple{color:#c4b5fd}
+.ss-total{text-align:center;margin-top:12px;padding-top:12px;border-top:1px dashed rgba(255,255,255,.2);font-size:13px;color:#fff}
+.ss-total strong{color:var(--hw-amber);font-size:18px}
+.task-card{background:#fff;border:2px solid var(--border);border-radius:12px;margin:14px 0;overflow:hidden;position:relative}
+.task-card.required{border-color:var(--required)}
+.task-card.advanced{border-color:var(--advanced)}
+.task-head{padding:12px 14px;display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap;border-bottom:1px solid var(--border)}
+.required .task-head{background:#fef2f2}
+.advanced .task-head{background:#f5f3ff}
+.task-title-wrap{flex:1;min-width:0}
+.task-level{font-size:9px;letter-spacing:2px;font-weight:700;margin-bottom:3px}
+.required .task-level{color:var(--required)}
+.advanced .task-level{color:var(--advanced)}
+.task-title{font-size:13px;font-weight:700;line-height:1.35;color:#333}
+.task-points{display:flex;align-items:center;gap:6px;background:#fff;border:1px solid var(--border);border-radius:20px;padding:4px 12px;font-size:11px;font-weight:700;white-space:nowrap}
+.task-points strong{font-size:14px;color:var(--hw-orange)}
+.task-body{padding:14px}
+.task-desc{font-size:12px;line-height:1.7;color:#333;margin-bottom:10px}
+.task-requirements{background:var(--light);border-left:3px solid var(--hw-orange);border-radius:0 8px 8px 0;padding:10px 14px;margin:10px 0;font-size:12px;line-height:1.65}
+.tr-title{font-size:10px;color:var(--hw-orange);font-weight:700;margin-bottom:5px;letter-spacing:1px}
+.tr-list{margin:0;padding-left:16px}
+.tr-list li{margin-bottom:4px;color:#333}
+.code-block{background:#0d1117;color:#e6edf3;border-radius:9px;padding:12px 14px;margin:10px 0;font-family:'JetBrains Mono',monospace;font-size:11px;line-height:1.7;overflow-x:auto;white-space:pre;tab-size:2;-moz-tab-size:2;word-wrap:normal}
+.code-block .cm{color:#8b949e;font-style:italic}
+.code-block .kw{color:#ff7b72}
+.code-block .str{color:#a5d6ff}
+.code-block .num{color:#79c0ff}
+.code-block .fn{color:#d2a8ff}
+.rubric{margin:12px 0}
+.rubric-title{font-size:10px;color:var(--hw-orange);font-weight:700;letter-spacing:1px;margin-bottom:6px;display:flex;align-items:center;gap:5px}
+.rubric-title::before{content:'📊';font-size:13px}
+.rubric-table{width:100%;border-collapse:collapse;font-size:11px}
+.rubric-table th{background:var(--hw-dark);color:#fff;padding:7px 8px;text-align:left;font-size:10px;font-weight:700}
+.rubric-table td{padding:7px 8px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.5}
+.rubric-table tr:nth-child(even) td{background:var(--light)}
+.rubric-table td:first-child{font-weight:700;color:var(--hw-orange);white-space:nowrap;font-family:'JetBrains Mono',monospace;font-size:10px}
+.rubric-table td:last-child{text-align:right;font-weight:700;color:#333;white-space:nowrap}
+.hint-block{background:#eff6ff;border:1px solid #93c5fd;border-radius:8px;margin:10px 0;overflow:hidden}
+.hint-summary{padding:10px 12px;cursor:pointer;font-size:11px;font-weight:700;color:#1e40af;display:flex;align-items:center;gap:6px;user-select:none;list-style:none}
+.hint-summary::before{content:'💡';font-size:13px}
+.hint-summary::after{content:'▼';font-size:10px;margin-left:auto;transition:transform .2s}
+.hint-block[open] .hint-summary::after{transform:rotate(180deg)}
+.hint-content{padding:0 12px 12px;font-size:11px;color:#1e3a8a;line-height:1.7}
+.hint-content code{background:#dbeafe;color:#1e40af}
+.warning{background:#fff8ed;border-left:3px solid var(--hw-amber);padding:10px 13px;border-radius:0 8px 8px 0;margin:10px 0;font-size:12px;line-height:1.65;color:#78350f}
+.warning strong{color:#92400e}
+.deliverable{background:#fff;border:2px dashed var(--hw-orange);border-radius:10px;padding:12px;margin:10px 0}
+.dv-title{font-size:10px;color:var(--hw-orange);letter-spacing:1px;font-weight:700;margin-bottom:4px}
+.dv-desc{font-size:11px;color:#333;line-height:1.6}
+.section-nav{background:var(--light);border-radius:10px;padding:12px;margin:10px 0}
+.sn-title{font-size:10px;color:var(--gray);font-weight:700;letter-spacing:1px;margin-bottom:8px}
+.sn-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:4px}
+.sn-link{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px 4px;background:#fff;border:1px solid var(--border);border-radius:6px;font-size:10px;color:#333;text-decoration:none;text-align:center}
+.sn-link:hover{border-color:var(--hw-orange);color:var(--hw-orange)}
+.sn-link.req{border-left:3px solid var(--required)}
+.sn-link.adv{border-left:3px solid var(--advanced)}
+.sn-num{font-size:14px;font-weight:900;color:#333;font-family:'JetBrains Mono',monospace}
+.sn-pts{font-size:9px;color:var(--gray);margin-top:2px}
+@media(max-width:400px){.ov-grid{grid-template-columns:1fr}.ss-grid{grid-template-columns:repeat(5,1fr);gap:3px}.ss-pts{font-size:12px}}
+</style>
+</head>
+<body>
+
+<div id="sf">
+  <span class="lbl">W8 Homework</span>
+  <span class="ttl" id="sf-t">W8 과제 워크북</span>
+  <span class="score" id="sf-s">0 / 100 점</span>
+</div>
+
+<div class="hero" data-section="개요">
+  <div class="hero-badge">📝 HOMEWORK</div>
+  <div class="hero-week">WEEK 8</div>
+  <h1>Paper Trading 완성 + 수료 발표<br>Alpaca · Risk Guards · Portfolio</h1>
+  <div class="hero-score-box">총점 <strong>100점</strong> · 필수 60 + 심화 40</div>
+</div>
+
+<div class="container">
+
+<section data-section="학습 목표">
+  <div class="overview">
+    <div class="ov-title">🎯 W8 학습 목표 복습</div>
+    <p style="font-size:12px;margin:4px 0 8px;color:#431407">Alpaca Paper Trading 연동 + Risk Guards 4단계 완전 구현 + 1주일 실 운영 + <strong>수료 발표</strong>. 8주의 집대성.</p>
+    <div class="ov-grid">
+      <div class="ov-item">
+        <div class="ov-label">🔧 핵심 도구</div>
+        <div class="ov-value">Alpaca Paper API<br>Bracket Order<br>Sharpe Ratio</div>
+      </div>
+      <div class="ov-item">
+        <div class="ov-label">⏱ 예상 시간</div>
+        <div class="ov-value">필수 4~5시간<br>심화 +3시간</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="score-summary">
+    <div class="ss-title">📊 과제 배점표</div>
+    <div class="ss-grid"><div class="ss-item"><div class="ss-num">과제 1</div><div class="ss-pts ss-pts-amber">20</div></div><div class="ss-item"><div class="ss-num">과제 2</div><div class="ss-pts ss-pts-amber">20</div></div><div class="ss-item"><div class="ss-num">과제 3</div><div class="ss-pts ss-pts-amber">20</div></div><div class="ss-item"><div class="ss-num">과제 4</div><div class="ss-pts ss-pts-purple">20</div></div><div class="ss-item"><div class="ss-num">과제 5</div><div class="ss-pts ss-pts-purple">20</div></div></div>
+    <div class="ss-total">합계 <strong>100점</strong> · 필수 60 + 심화 40</div>
+  </div>
+
+  <div class="section-nav">
+    <div class="sn-title">📍 빠른 이동</div>
+    <div class="sn-grid"><a class="sn-link req" href="#t1"><span class="sn-num">1</span><span class="sn-pts">20pt</span></a><a class="sn-link req" href="#t2"><span class="sn-num">2</span><span class="sn-pts">20pt</span></a><a class="sn-link req" href="#t3"><span class="sn-num">3</span><span class="sn-pts">20pt</span></a><a class="sn-link adv" href="#t4"><span class="sn-num">4</span><span class="sn-pts">20pt</span></a><a class="sn-link adv" href="#t5"><span class="sn-num">5</span><span class="sn-pts">20pt</span></a></div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+
+<section id="t1" data-section="과제 1">
+  <div class="task-card required">
+    <div class="task-head">
+      <div class="task-title-wrap">
+        <div class="task-level">🔴 REQUIRED — 과제 1</div>
+        <div class="task-title">Alpaca Paper Trading 계좌 연동</div>
+      </div>
+      <div class="task-points">배점 <strong>20</strong> 점</div>
+    </div>
+    <div class="task-body">
+      <p class="task-desc">Alpaca Paper Trading 계좌 개설 → n8n 연동 → 잔고 조회 + 시장가 매수 1건 성공.</p>
+      <div class="task-requirements">
+        <div class="tr-title">필수 요구사항</div>
+        <ul class="tr-list"><li>Alpaca 계정 생성 + Paper Trading 자동 활성화 ($100K 가상자본)</li><li>API Key + Secret Key 발급 + n8n Credential 등록</li><li><code>/v2/account</code>로 잔고·buying_power 조회 성공</li><li><code>/v2/orders</code>로 시장가 매수 1건 (예: AAPL 1주) 성공</li><li>체결 확인: <code>/v2/positions</code>에 포지션 표시</li></ul>
+      </div>
+      <h4>Alpaca Paper Trading 기본 URL</h4>
+<pre class="code-block">BASE_URL: <span class="str">https://paper-api.alpaca.markets</span>
+
+Headers:
+  APCA-API-KEY-ID: <span class="str">{{ $credentials.alpaca_key }}</span>
+  APCA-API-SECRET-KEY: <span class="str">{{ $credentials.alpaca_secret }}</span>
+
+매수 Body:
+{
+  <span class="str">"symbol"</span>: <span class="str">"AAPL"</span>,
+  <span class="str">"qty"</span>: <span class="num">1</span>,
+  <span class="str">"side"</span>: <span class="str">"buy"</span>,
+  <span class="str">"type"</span>: <span class="str">"market"</span>,
+  <span class="str">"time_in_force"</span>: <span class="str">"day"</span>
+}</pre>
+
+<div class="warning">
+  <strong>🛡️ 반드시 Paper URL:</strong> <code>paper-api.alpaca.markets</code>이지 <code>api.alpaca.markets</code>(실전)가 아님. URL 한 글자 실수로 실전 주문 발생 위험.
+</div>
+      <div class="rubric">
+        <div class="rubric-title">채점 기준 (20점 만점)</div>
+        <table class="rubric-table"><tbody><tr><td>A. Paper 계좌 + Key 발급</td><td>3점</td></tr><tr><td>B. 잔고 조회 성공</td><td>4점</td></tr><tr><td>C. 매수 1건 성공 + 체결</td><td>6점</td></tr><tr><td>D. 포지션 확인</td><td>4점</td></tr><tr><td>E. 스크린샷 기록</td><td>3점</td></tr></tbody></table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="t2" data-section="과제 2">
+  <div class="task-card required">
+    <div class="task-head">
+      <div class="task-title-wrap">
+        <div class="task-level">🔴 REQUIRED — 과제 2</div>
+        <div class="task-title">Risk Guards 4단계 완전 구현</div>
+      </div>
+      <div class="task-points">배점 <strong>20</strong> 점</div>
+    </div>
+    <div class="task-body">
+      <p class="task-desc">부록 E의 Risk Guards 4단계를 모두 코드로 구현해 잘못된 주문을 자동 차단.</p>
+      <div class="task-requirements">
+        <div class="tr-title">필수 요구사항</div>
+        <ul class="tr-list"><li><strong>Guard 1:</strong> Position Sizing (자본의 2~4%)</li><li><strong>Guard 2:</strong> Stop Loss -5% (Bracket Order)</li><li><strong>Guard 3:</strong> Take Profit +10%</li><li><strong>Guard 4:</strong> Daily Loss Guard -2%</li><li>4개 Guard를 통과하지 못한 주문 차단 로그 기록</li></ul>
+      </div>
+      <h4>Risk Guards 순차 체크 (부록 E 참고)</h4>
+<pre class="code-block">모든 주문 전 순서대로 통과 필수:
+
+Guard 1: qty × price &lt;= equity × <span class="num">0.04</span>
+Guard 2: stop_price = entry × (<span class="num">1</span> - <span class="num">0.05</span>)
+Guard 3: profit_price = entry × (<span class="num">1</span> + <span class="num">0.10</span>)
+Guard 4: daily_pnl_pct &gt;= -<span class="num">2.0</span>
+
+하나라도 실패 시 execute=false + reason 기록</pre>
+      <div class="rubric">
+        <div class="rubric-title">채점 기준 (20점 만점)</div>
+        <table class="rubric-table"><tbody><tr><td>A. Guard 1 Position Sizing 정확성</td><td>4점</td></tr><tr><td>B. Guard 2 Stop Loss 작동</td><td>4점</td></tr><tr><td>C. Guard 3 Take Profit 작동</td><td>3점</td></tr><tr><td>D. Guard 4 Daily Loss 차단</td><td>5점</td></tr><tr><td>E. 차단 로그 기록</td><td>4점</td></tr></tbody></table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="t3" data-section="과제 3">
+  <div class="task-card required">
+    <div class="task-head">
+      <div class="task-title-wrap">
+        <div class="task-level">🔴 REQUIRED — 과제 3</div>
+        <div class="task-title">Bracket Order 자동 매매 1주일 운영</div>
+      </div>
+      <div class="task-points">배점 <strong>20</strong> 점</div>
+    </div>
+    <div class="task-body">
+      <p class="task-desc">매수와 동시에 Stop/Profit 자동 등록되는 Bracket Order를 구현해 1주일 이상 실제 운영.</p>
+      <div class="task-requirements">
+        <div class="tr-title">필수 요구사항</div>
+        <ul class="tr-list"><li>Bracket Order Body 구성 (type=market + take_profit + stop_loss)</li><li>매수 성공 시 Bracket 3개 주문(진입/익절/손절) 동시 생성 확인</li><li>W7의 Orchestrator verdict → 자동 주문 연결</li><li><strong>1주일(5영업일) 이상</strong> 무중단 운영</li><li>일일 체결·청산 기록을 Sheets에 자동 적재</li></ul>
+      </div>
+      
+      <div class="rubric">
+        <div class="rubric-title">채점 기준 (20점 만점)</div>
+        <table class="rubric-table"><tbody><tr><td>A. Bracket Order 구현</td><td>5점</td></tr><tr><td>B. Orchestrator 연동</td><td>5점</td></tr><tr><td>C. 5일 무중단 운영</td><td>5점</td></tr><tr><td>D. 자동 기록 체계</td><td>3점</td></tr><tr><td>E. 이상 발생 시 대응 기록</td><td>2점</td></tr></tbody></table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="t4" data-section="과제 4">
+  <div class="task-card advanced">
+    <div class="task-head">
+      <div class="task-title-wrap">
+        <div class="task-level">🟣 ADVANCED — 과제 4</div>
+        <div class="task-title">성과 리포트 자동 생성기</div>
+      </div>
+      <div class="task-points">배점 <strong>20</strong> 점</div>
+    </div>
+    <div class="task-body">
+      <p class="task-desc">매주 일요일 자동 실행, Alpaca 체결 내역을 분석해 성과 리포트 + 인사이트 생성.</p>
+      <div class="task-requirements">
+        <div class="tr-title">필수 요구사항</div>
+        <ul class="tr-list"><li>매주 일요일 09:00 자동 실행</li><li>지난 1주 체결 내역 조회 (<code>/v2/orders?status=filled</code>)</li><li>계산 항목: 총 체결 수, 승률, 평균 수익률, 최대 손실, Sharpe Ratio</li><li>Claude Sonnet으로 <strong>주간 인사이트</strong> 생성 (성공/실패 패턴 분석)</li><li>HTML 리포트 + Discord 발송</li></ul>
+      </div>
+      
+      <div class="rubric">
+        <div class="rubric-title">채점 기준 (20점 만점)</div>
+        <table class="rubric-table"><tbody><tr><td>A. 주간 스케줄 + 데이터 조회</td><td>3점</td></tr><tr><td>B. 5가지 메트릭 계산</td><td>5점</td></tr><tr><td>C. Claude 인사이트 품질</td><td>5점</td></tr><tr><td>D. HTML 리포트 디자인</td><td>4점</td></tr><tr><td>E. Discord 발송 통합</td><td>3점</td></tr></tbody></table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="t5" data-section="과제 5">
+  <div class="task-card advanced">
+    <div class="task-head">
+      <div class="task-title-wrap">
+        <div class="task-level">🟣 ADVANCED — 과제 5</div>
+        <div class="task-title">수료 발표 — 본인 시스템 공개 프레젠테이션</div>
+      </div>
+      <div class="task-points">배점 <strong>20</strong> 점</div>
+    </div>
+    <div class="task-body">
+      <p class="task-desc">8주간 구축한 본인 시스템을 <strong>5분 내외 영상</strong>으로 발표 + 공개 리포트 작성.</p>
+      <div class="task-requirements">
+        <div class="tr-title">필수 요구사항</div>
+        <ul class="tr-list"><li>5분 내외 데모 영상: 시스템 전체 흐름 시연 (실제 주문 체결 장면 포함)</li><li>GitHub 공개 리포지토리: README + 워크플로 JSON + 실행 가이드</li><li>포트폴리오 리포트 (PDF 또는 HTML): 구조도 + 성과 + 한계 + 개선안</li><li>본인이 해결한 가장 어려웠던 문제 1개 상세 기술</li><li>W9 커뮤니티 공유 세션에서 발표</li></ul>
+      </div>
+      <div class="warning">
+  <strong>💡 발표 구성 제안:</strong><br>
+  1. 문제의식 (30초): 왜 만들었는가?<br>
+  2. 시스템 구조 (1분): 아키텍처 다이어그램<br>
+  3. 실제 작동 데모 (2분): verdict → 주문 → 체결<br>
+  4. 가장 자랑스러운 기능 (1분): 본인만의 차별점<br>
+  5. 한계와 미래 (30초): 무엇을 더 하고 싶은가
+</div>
+      <div class="rubric">
+        <div class="rubric-title">채점 기준 (20점 만점)</div>
+        <table class="rubric-table"><tbody><tr><td>A. 영상 내용·편집 완성도</td><td>5점</td></tr><tr><td>B. GitHub 리포 정돈 상태</td><td>4점</td></tr><tr><td>C. 리포트 구조·깊이</td><td>4점</td></tr><tr><td>D. 어려운 문제 기술 깊이</td><td>4점</td></tr><tr><td>E. 발표 설득력</td><td>3점</td></tr></tbody></table>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<div class="divider"></div>
+
+<section id="submit" data-section="제출">
+  <div class="eyebrow">Submit</div>
+  <h2>📤 제출 방법 + 기한</h2>
+  <div class="warning"><strong>⏰ 제출 기한:</strong> 다음 주 수업 시작 전까지. 지연 시 하루당 -2점.</div>
+  <div style="background:linear-gradient(135deg,#f97316,#431407);color:#fff;text-align:center;padding:24px 20px;border-radius:12px;margin:20px 0">
+    <div style="font-size:10px;letter-spacing:2px;color:#fbbf24;margin-bottom:6px;font-weight:700">📝 W8 HOMEWORK COMPLETE</div>
+    <div style="font-size:14px;font-weight:700;margin-bottom:4px">Paper Trading · Risk Guards · Portfolio 리포트</div>
+    <div style="font-size:11px;color:rgba(255,255,255,.75);line-height:1.7">5 tasks · 100 pt · 4~8 hours</div>
+  </div>
+</section>
+
+</div>
+
+<script>
+const sections = document.querySelectorAll('[data-section]');
+const sfT = document.getElementById('sf-t');
+function update(){
+  const sy = window.scrollY;
+  let cur = sections[0]?.dataset.section || '';
+  sections.forEach(s => { if(sy >= s.getBoundingClientRect().top + sy - 110) cur = s.dataset.section; });
+  if(sfT.textContent !== cur) sfT.textContent = cur;
+}
+window.addEventListener('scroll', update, {passive:true});
+update();
+</script>
+</body>
+</html>

@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>부록 C — KIS API 통합 레퍼런스</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;600&display=swap');
+:root{
+  --black:#0d0d0d;--gray:#6b6b6b;--light:#f3f3f3;--border:#e6e6e6;
+  --kis-blue:#0056a5;--kis-red:#d42128;--kis-dark:#001f3f;
+  --fh:46px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Noto Sans KR',sans-serif;background:#fff;color:var(--black);font-size:14px;line-height:1.75;padding-bottom:var(--fh)}
+
+#sf{position:fixed;bottom:0;left:0;right:0;height:var(--fh);background:var(--kis-dark);display:flex;align-items:center;justify-content:space-between;padding:0 16px;z-index:999}
+#sf .lbl{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:#5080b0}
+#sf .ttl{font-size:12px;font-weight:700;color:#fff;max-width:60%;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#sf .pct{font-size:10px;color:#5080b0;white-space:nowrap}
+
+.hero{background:linear-gradient(135deg,#0056a5,#001f3f);color:#fff;padding:48px 20px 40px;text-align:center;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;top:-80px;right:-80px;width:260px;height:260px;border:1px solid rgba(255,255,255,.08);border-radius:50%}
+.hero-badge{display:inline-block;border:1px solid rgba(255,255,255,.25);border-radius:20px;padding:4px 14px;font-size:10px;letter-spacing:2px;color:#7dd3fc;margin-bottom:14px;font-weight:700}
+.hero h1{font-size:22px;font-weight:900;line-height:1.35;margin-bottom:8px;letter-spacing:-.5px}
+.hero-sub{font-size:12px;color:rgba(255,255,255,.8);margin-bottom:22px}
+
+.container{max-width:720px;margin:0 auto;padding:0 15px}
+section{padding:36px 0 0}
+.divider{height:1px;background:var(--border);margin:34px 0 0}
+.eyebrow{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--gray);margin-bottom:5px}
+h2{font-size:19px;font-weight:900;letter-spacing:-.3px;margin-bottom:12px;line-height:1.3}
+h3{font-size:14px;font-weight:700;margin:20px 0 8px}
+h4{font-size:12px;font-weight:700;margin:14px 0 6px;color:#333}
+p{color:#333;margin-bottom:8px;font-size:13px}
+strong{color:var(--black);font-weight:700}
+code{font-family:'JetBrains Mono',monospace;background:#e0f2fe;padding:1px 5px;border-radius:3px;font-size:11px;color:var(--kis-blue)}
+
+/* TOC */
+.toc{background:var(--light);border-radius:12px;padding:16px 18px;margin:14px 0;border:1px solid var(--border)}
+.toc-title{font-size:11px;font-weight:700;color:var(--gray);letter-spacing:1px;margin-bottom:10px;text-transform:uppercase}
+.toc-item{display:block;padding:6px 0;font-size:12px;color:#333;text-decoration:none;border-bottom:1px dashed #e5e5e5}
+.toc-item:last-child{border-bottom:none}
+.toc-item:hover{color:var(--kis-blue)}
+.toc-num{display:inline-block;width:22px;color:var(--kis-blue);font-weight:700;font-family:'JetBrains Mono',monospace}
+
+.callout{background:var(--light);border-left:3px solid var(--black);padding:13px 15px;border-radius:0 8px 8px 0;margin:10px 0;font-size:13px;line-height:1.65}
+.callout.red{background:#fef2f2;border-left-color:var(--kis-red)}
+.callout.blue{background:#eff6ff;border-left-color:var(--kis-blue)}
+.callout.green{background:#f0fdf4;border-left-color:#15803d}
+.callout.orange{background:#fff8ed;border-left-color:#d97706}
+
+/* API ENDPOINT CARD */
+.api-card{background:#fff;border:1px solid var(--border);border-radius:10px;margin:12px 0;overflow:hidden}
+.api-head{background:var(--kis-blue);color:#fff;padding:10px 14px;display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.api-method{background:#fff;color:var(--kis-blue);border-radius:4px;padding:2px 8px;font-size:10px;font-weight:900;letter-spacing:.5px}
+.api-method.post{background:#22c55e;color:#fff}
+.api-method.get{background:#3b82f6;color:#fff}
+.api-name{font-size:12px;font-weight:700;flex:1;min-width:140px}
+.api-tr{background:rgba(255,255,255,.2);border-radius:3px;padding:2px 8px;font-size:9px;font-weight:700;font-family:'JetBrains Mono',monospace;letter-spacing:.5px}
+.api-tr.virtual{background:#fbbf24;color:#78350f}
+.api-body{padding:12px 14px;background:var(--light)}
+.api-url{background:#fff;border:1px solid var(--border);border-radius:5px;padding:7px 10px;font-family:'JetBrains Mono',monospace;font-size:10px;color:#333;word-break:break-all;margin-bottom:8px}
+.api-desc{font-size:11px;color:#333;line-height:1.65;margin-bottom:8px}
+
+.param-list{background:#fff;border:1px solid var(--border);border-radius:5px;overflow:hidden;margin:6px 0}
+.param-row{display:grid;grid-template-columns:110px 60px 1fr;gap:8px;padding:6px 10px;border-bottom:1px solid var(--border);font-size:10px;align-items:center}
+.param-row:last-child{border-bottom:none}
+.param-name{font-family:'JetBrains Mono',monospace;color:var(--kis-blue);font-weight:600}
+.param-type{font-size:9px;color:#888;text-align:center;background:var(--light);border-radius:3px;padding:1px 4px}
+.param-desc{color:#333;line-height:1.4}
+.param-row.required .param-name::after{content:' *';color:var(--kis-red)}
+
+/* CODE BLOCK */
+.code-block{background:#0d1117;color:#e6edf3;border-radius:9px;padding:14px 16px;margin:10px 0;font-family:'JetBrains Mono',monospace;font-size:11px;line-height:1.7;overflow-x:auto;white-space:pre;tab-size:2;-moz-tab-size:2;word-wrap:normal}
+.code-block .cm{color:#8b949e;font-style:italic}
+.code-block .kw{color:#ff7b72}
+.code-block .str{color:#a5d6ff}
+.code-block .num{color:#79c0ff}
+.code-block .fn{color:#d2a8ff}
+
+.snip-head{background:var(--kis-dark);color:#fff;padding:8px 12px;font-size:10px;font-weight:700;letter-spacing:1px;border-radius:9px 9px 0 0;margin-top:14px;margin-bottom:-10px;position:relative;z-index:1}
+.snip-head + .code-block{border-radius:0 0 9px 9px;margin-top:0}
+
+/* URL BOX */
+.url-box{background:#fff;border:2px solid var(--kis-blue);border-radius:10px;padding:12px 14px;margin:10px 0}
+.url-box.live{border-color:var(--kis-red);background:#fff5f5}
+.url-label{font-size:10px;font-weight:700;color:var(--kis-blue);margin-bottom:4px;letter-spacing:1px}
+.url-box.live .url-label{color:var(--kis-red)}
+.url-value{font-family:'JetBrains Mono',monospace;font-size:11px;color:#333;word-break:break-all}
+
+/* TR_ID MASTER TABLE */
+.tr-master{width:100%;border-collapse:collapse;margin:10px 0;font-size:10px}
+.tr-master th{background:var(--kis-dark);color:#fff;padding:7px 8px;text-align:left;font-size:9px;font-weight:700}
+.tr-master td{padding:6px 8px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.5}
+.tr-master tr:nth-child(even) td{background:var(--light)}
+.tr-master code{font-size:9px;background:#e0f2fe}
+.tr-master td:nth-child(2){font-family:'JetBrains Mono',monospace;color:var(--kis-blue);font-weight:600}
+.tr-master td:nth-child(3){font-family:'JetBrains Mono',monospace;color:var(--kis-red);font-weight:600}
+
+/* ERROR TABLE */
+.err-table{width:100%;border-collapse:collapse;margin:10px 0;font-size:11px}
+.err-table th{background:var(--kis-red);color:#fff;padding:8px 10px;text-align:left;font-size:10px;font-weight:700}
+.err-table td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.5}
+.err-table tr:nth-child(even) td{background:var(--light)}
+.err-table code{font-size:10px;background:#fee2e2;color:#991b1b}
+
+/* WARNING */
+.warning-box{background:#fef2f2;border:2px solid var(--kis-red);border-radius:12px;padding:14px 16px;margin:12px 0}
+.wb-title{font-size:12px;font-weight:900;color:var(--kis-red);margin-bottom:6px}
+.wb-body{font-size:11px;color:#7f1d1d;line-height:1.7}
+
+/* TIP */
+.tip-card{background:#eff6ff;border:1px solid #93c5fd;border-radius:10px;padding:12px 15px;margin:10px 0}
+.tip-title{font-size:11px;font-weight:700;color:#1e40af;margin-bottom:6px;display:flex;align-items:center;gap:5px}
+.tip-title::before{content:'💡';font-size:13px}
+.tip-body{font-size:11px;color:#1e3a8a;line-height:1.65}
+
+@media(max-width:400px){
+  .param-row{grid-template-columns:1fr}
+  .param-type{justify-self:start}
+  .tr-master{font-size:9px}
+  .tr-master td:first-child{white-space:normal}
+}
+</style>
+</head>
+<body>
+
+<div id="sf">
+  <span class="lbl">Appendix C · KIS API</span>
+  <span class="ttl" id="sf-t">KIS API 통합 레퍼런스</span>
+  <span class="pct" id="sf-p">0%</span>
+</div>
+
+<!-- HERO -->
+<div class="hero" data-section="KIS API Reference">
+  <div class="hero-badge">📘 APPENDIX C</div>
+  <h1>KIS API 통합 레퍼런스</h1>
+  <p class="hero-sub">엔드포인트 · TR_ID 전체 · 에러 코드 · 운영 패턴</p>
+</div>
+
+<div class="container">
+
+<section data-section="목차">
+  <div class="toc">
+    <div class="toc-title">📚 목차</div>
+    <a class="toc-item" href="#s1"><span class="toc-num">1.</span> 시스템 개요 + 환경 구분</a>
+    <a class="toc-item" href="#s2"><span class="toc-num">2.</span> OAuth 인증 + HashKey</a>
+    <a class="toc-item" href="#s3"><span class="toc-num">3.</span> 국내주식 시세 API</a>
+    <a class="toc-item" href="#s4"><span class="toc-num">4.</span> 국내주식 주문 API</a>
+    <a class="toc-item" href="#s5"><span class="toc-num">5.</span> 계좌/잔고 조회 API</a>
+    <a class="toc-item" href="#s6"><span class="toc-num">6.</span> TR_ID 전체 맵</a>
+    <a class="toc-item" href="#s7"><span class="toc-num">7.</span> 에러 코드 + 대응법</a>
+    <a class="toc-item" href="#s8"><span class="toc-num">8.</span> Rate Limit + 운영 패턴</a>
+  </div>
+</section>
+
+<!-- ═══ 1. 시스템 개요 ═══ -->
+<section id="s1" data-section="1. 시스템 개요">
+  <div class="eyebrow">Section 1</div>
+  <h2>1. 시스템 개요 + 환경 구분</h2>
+
+  <h3>KIS API 시스템 특징</h3>
+  <ul style="margin-left:18px;font-size:12px;line-height:1.8">
+    <li><strong>인증</strong>: appkey + appsecret → access_token (24시간 유효)</li>
+    <li><strong>주문 보안</strong>: hashkey 추가 인증 (주문 body 변조 방지)</li>
+    <li><strong>TR_ID 기반</strong>: 같은 URL이라도 TR_ID로 세부 기능 구분</li>
+    <li><strong>실전/모의 분리</strong>: URL + TR_ID 앞 글자(T/V)로 구분</li>
+    <li><strong>Rate Limit</strong>: 실전 20TPS, 모의 2TPS (초당 호출 수)</li>
+  </ul>
+
+  <h3>환경 2종 — 절대 섞이지 말 것</h3>
+
+  <div class="url-box">
+    <div class="url-label">📗 모의투자 (교육용 · 우리 선택)</div>
+    <div class="url-value">https://openapivts.koreainvestment.com:29443</div>
+  </div>
+  <div class="url-box live">
+    <div class="url-label">⚠️ 실전투자 (실제 자본 소모)</div>
+    <div class="url-value">https://openapi.koreainvestment.com:9443</div>
+  </div>
+
+  <h3>TR_ID 명명 규칙</h3>
+  <div class="callout blue">
+    <strong>첫 글자 = 환경 구분:</strong><br>
+    • <code>T</code>: <strong>실전투자</strong> (예: <code>TTTC0802U</code>)<br>
+    • <code>V</code>: <strong>모의투자</strong> (예: <code>VTTC0802U</code>)<br>
+    • <code>FH</code>: <strong>시세</strong> (실전/모의 공통, 예: <code>FHKST01010100</code>)<br>
+    한 글자 차이로 실전/모의가 바뀌므로 <strong>매우 주의</strong>. 모의에서 T로 시작하는 TR_ID 쓰면 403.
+  </div>
+
+  <h3>필수 헤더 5개 (모든 API 공통)</h3>
+  <table class="err-table">
+    <thead>
+      <tr><th>헤더</th><th>값</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>content-type</code></td><td>application/json</td></tr>
+      <tr><td><code>authorization</code></td><td>Bearer {access_token}</td></tr>
+      <tr><td><code>appkey</code></td><td>발급받은 36자리 AppKey</td></tr>
+      <tr><td><code>appsecret</code></td><td>발급받은 180자리 AppSecret</td></tr>
+      <tr><td><code>tr_id</code></td><td>호출하려는 TR_ID</td></tr>
+    </tbody>
+  </table>
+
+  <div class="warning-box">
+    <div class="wb-title">🚨 주문 시 추가 헤더</div>
+    <div class="wb-body">
+      매수/매도/정정/취소 등 <strong>주문 관련 API</strong>는 위 5개 + <code>hashkey</code> 헤더 추가 필수. Hashkey 생성 절차는 Section 2 참조.
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ═══ 2. OAuth + HashKey ═══ -->
+<section id="s2" data-section="2. OAuth + HashKey">
+  <div class="eyebrow">Section 2</div>
+  <h2>2. OAuth 인증 + HashKey</h2>
+
+  <h3>Access Token 발급</h3>
+
+  <div class="api-card">
+    <div class="api-head">
+      <span class="api-method post">POST</span>
+      <span class="api-name">OAuth2 Access Token 발급</span>
+      <span class="api-tr">AUTH</span>
+    </div>
+    <div class="api-body">
+      <div class="api-url">/oauth2/tokenP</div>
+      <div class="api-desc">24시간 유효 토큰 발급. <strong>하루 1회 재사용</strong> 원칙 (과도 발급 시 차단).</div>
+      <h4>Body (JSON)</h4>
+      <div class="param-list">
+        <div class="param-row required"><span class="param-name">grant_type</span><span class="param-type">string</span><span class="param-desc">client_credentials 고정</span></div>
+        <div class="param-row required"><span class="param-name">appkey</span><span class="param-type">string</span><span class="param-desc">발급받은 36자리 AppKey</span></div>
+        <div class="param-row required"><span class="param-name">appsecret</span><span class="param-type">string</span><span class="param-desc">발급받은 180자리 AppSecret</span></div>
+      </div>
+      <h4>Response 주요 필드</h4>
+      <div class="param-list">
+        <div class="param-row"><span class="param-name">access_token</span><span class="param-type">string</span><span class="param-desc">Bearer 토큰 본체</span></div>
+        <div class="param-row"><span class="param-name">expires_in</span><span class="param-type">int</span><span class="param-desc">만료까지 초 (86400 = 24시간)</span></div>
+        <div class="param-row"><span class="param-name">access_token_token_expired</span><span class="param-type">string</span><span class="param-desc">만료 시각 (YYYY-MM-DD HH:MM:SS)</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="snip-head">Python 토큰 발급 코드</div>
+  <pre class="code-block">url = <span class="str">'https://openapivts.koreainvestment.com:29443/oauth2/tokenP'</span>
+body = {
+    <span class="str">'grant_type'</span>: <span class="str">'client_credentials'</span>,
+    <span class="str">'appkey'</span>: APP_KEY,
+    <span class="str">'appsecret'</span>: APP_SECRET
+}
+response = requests.<span class="fn">post</span>(url, json=body, timeout=<span class="num">10</span>)
+token = response.<span class="fn">json</span>()[<span class="str">'access_token'</span>]</pre>
+
+  <h3>HashKey 생성</h3>
+  <p>주문 API 호출 전에 <strong>반드시</strong> 실행. 주문 Body를 먼저 해시 엔드포인트에 보내 HASH를 받고, 그 HASH를 실제 주문의 헤더에 첨부.</p>
+
+  <div class="api-card">
+    <div class="api-head">
+      <span class="api-method post">POST</span>
+      <span class="api-name">HashKey 생성</span>
+      <span class="api-tr">HASH</span>
+    </div>
+    <div class="api-body">
+      <div class="api-url">/uapi/hashkey</div>
+      <div class="api-desc">주문 Body와 <strong>완전히 동일한</strong> JSON을 이 엔드포인트에 POST. 반환된 HASH 값을 실제 주문의 <code>hashkey</code> 헤더에 설정.</div>
+      <h4>헤더 (공통 3개)</h4>
+      <div class="param-list">
+        <div class="param-row required"><span class="param-name">content-type</span><span class="param-type">string</span><span class="param-desc">application/json</span></div>
+        <div class="param-row required"><span class="param-name">appkey</span><span class="param-type">string</span><span class="param-desc">AppKey</span></div>
+        <div class="param-row required"><span class="param-name">appsecret</span><span class="param-type">string</span><span class="param-desc">AppSecret</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="warning-box">
+    <div class="wb-title">🚨 HashKey 3대 주의사항</div>
+    <div class="wb-body">
+      1. Body 한 글자라도 다르면 HASH 불일치 → <code>EGW00121</code> 에러<br>
+      2. HashKey 생성 직후 <strong>수분 내로 주문 실행</strong> (지연 시 무효화 가능성)<br>
+      3. JSON 필드 <strong>순서·공백·타입</strong> 모두 동일해야. n8n에서는 Set 노드로 Body 변수 하나 만들고 두 번 참조하는 방식 권장
+    </div>
+  </div>
+
+  <div class="snip-head">Python HashKey 생성 + 주문 예시</div>
+  <pre class="code-block"><span class="kw">def</span> <span class="fn">get_hashkey</span>(body: dict) -&gt; str:
+    <span class="str">"""주문 Body로 HashKey 생성."""</span>
+    url = <span class="str">'https://openapivts.koreainvestment.com:29443/uapi/hashkey'</span>
+    headers = {
+        <span class="str">'content-type'</span>: <span class="str">'application/json'</span>,
+        <span class="str">'appkey'</span>: APP_KEY,
+        <span class="str">'appsecret'</span>: APP_SECRET
+    }
+    r = requests.<span class="fn">post</span>(url, json=body, headers=headers)
+    <span class="kw">return</span> r.<span class="fn">json</span>()[<span class="str">'HASH'</span>]
+
+<span class="cm"># 사용 예: 매수 주문</span>
+order_body = {
+    <span class="str">'CANO'</span>: CANO,
+    <span class="str">'ACNT_PRDT_CD'</span>: <span class="str">'01'</span>,
+    <span class="str">'PDNO'</span>: <span class="str">'005930'</span>,
+    <span class="str">'ORD_DVSN'</span>: <span class="str">'01'</span>,
+    <span class="str">'ORD_QTY'</span>: <span class="str">'10'</span>,
+    <span class="str">'ORD_UNPR'</span>: <span class="str">'0'</span>
+}
+hash_key = <span class="fn">get_hashkey</span>(order_body)
+
+headers = {
+    <span class="str">'content-type'</span>: <span class="str">'application/json'</span>,
+    <span class="str">'authorization'</span>: <span class="str">f'Bearer {token}'</span>,
+    <span class="str">'appkey'</span>: APP_KEY,
+    <span class="str">'appsecret'</span>: APP_SECRET,
+    <span class="str">'tr_id'</span>: <span class="str">'VTTC0802U'</span>,
+    <span class="str">'hashkey'</span>: hash_key   <span class="cm"># 여기!</span>
+}
+<span class="cm"># order_body는 완전히 동일한 것을 재사용</span>
+response = requests.<span class="fn">post</span>(order_url, json=order_body, headers=headers)</pre>
+</section>
+
+<div class="divider"></div>
+
+<!-- ═══ 3. 시세 API ═══ -->
+<section id="s3" data-section="3. 시세 API">
+  <div class="eyebrow">Section 3</div>
+  <h2>3. 국내주식 시세 API</h2>
+
+  <!-- 현재가 -->
+  <div class="api-card">
+    <div class="api-head">
+      <span class="api-method get">GET</span>
+      <span class="api-name">주식 현재가 시세</span>
+      <span class="api-tr">FHKST01010100</span>
+    </div>
+    <div class="api-body">
+      <div class="api-url">/uapi/domestic-stock/v1/quotations/inquire-price</div>
+      <div class="api-desc">실시간 현재가 + 전일 대비 + 거래량 + PER/PBR.</div>
+      <h4>Query Parameters</h4>
+      <div class="param-list">
+        <div class="param-row required"><span class="param-name">FID_COND_MRKT_DIV_CODE</span><span class="param-type">string</span><span class="param-desc">J (주식/ETF/ETN)</span></div>
+        <div class="param-row required"><span class="param-name">FID_INPUT_ISCD</span><span class="param-type">string</span><span class="param-desc">6자리 종목코드 (예: 005930)</span></div>
+      </div>
+      <h4>Response output 주요 필드</h4>
+      <div class="param-list">
+        <div class="param-row"><span class="param-name">stck_prpr</span><span class="param-type">string</span><span class="param-desc">현재가 (문자열 숫자)</span></div>
+        <div class="param-row"><span class="param-name">prdy_vrss</span><span class="param-type">string</span><span class="param-desc">전일 대비</span></div>
+        <div class="param-row"><span class="param-name">prdy_ctrt</span><span class="param-type">string</span><span class="param-desc">전일 대비율 (%)</span></div>
+        <div class="param-row"><span class="param-name">stck_oprc</span><span class="param-type">string</span><span class="param-desc">시가</span></div>
+        <div class="param-row"><span class="param-name">stck_hgpr</span><span class="param-type">string</span><span class="param-desc">고가</span></div>
+        <div class="param-row"><span class="param-name">stck_lwpr</span><span class="param-type">string</span><span class="param-desc">저가</span></div>
+        <div class="param-row"><span class="param-name">acml_vol</span><span class="param-type">string</span><span class="param-desc">누적 거래량</span></div>
+        <div class="param-row"><span class="param-name">per</span><span class="param-type">string</span><span class="param-desc">주가수익비율 (PER)</span></div>
+        <div class="param-row"><span class="param-name">pbr</span><span class="param-type">string</span><span class="param-desc">주가순자산비율 (PBR)</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 일자별 시세 -->
+  <div class="api-card">
+    <div class="api-head">
+      <span class="api-method get">GET</span>
+      <span class="api-name">주식 일자별 시세 (최근 30일)</span>
+      <span class="api-tr">FHKST01010400</span>
+    </div>
+    <div class="api-body">
+      <div class="api-url">/uapi/domestic-stock/v1/quotations/inquire-daily-price</div>
+      <div class="api-desc">최근 30일 OHLCV. 기술적 지표 계산의 기초.</div>
+      <h4>Query Parameters</h4>
+      <div class="param-list">
+        <div class="param-row required"><span class="param-name">FID_COND_MRKT_DIV_CODE</span><span class="param-type">string</span><span class="param-desc">J</span></div>
+        <div class="param-row required"><span class="param-name">FID_INPUT_ISCD</span><span class="param-type">string</span><span class="param-desc">종목코드</span></div>
+        <div class="param-row required"><span class="param-name">FID_PERIOD_DIV_CODE</span><span class="param-type">string</span><span class="param-desc">D(일)/W(주)/M(월)</span></div>
+        <div class="param-row required"><span class="param-name">FID_ORG_ADJ_PRC</span><span class="param-type">string</span><span class="param-desc">0(수정주가 아님)/1(수정주가)</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 기간별 시세 -->
+  <div class="api-card">
+    <div class="api-head">
+      <span class="api-method get">GET</span>
+      <span class="api-name">주식 기간별 시세 (사용자 정의 기간)</span>
+      <span class="api-tr">FHKST03010100</span>
+    </div>
+    <div class="api-body">
+      <div class="api-url">/uapi/domestic-stock/v1/quotations/inquire-daily-itemchartprice</div>
+      <div class="api-desc">최대 100일 + 시작/종료일 지정 가능. 일봉 차트 데이터.</div>
+      <h4>Query Parameters</h4>
+      <div class="param-list">
+        <div class="param-row required"><span class="param-name">FID_COND_MRKT_DIV_CODE</span><span class="param-type">string</span><span class="param-desc">J</span></div>
+        <div class="param-row required"><span class="param-name">FID_INPUT_ISCD</span><span class="param-type">string</span><span class="param-desc">종목코드</span></div>
+        <div class="param-row required"><span class="param-name">FID_INPUT_DATE_1</span><span class="param-type">string</span><span class="param-desc">시작일 (YYYYMMDD)</span></div>
+        <div class="param-row required"><span class="param-name">FID_INPUT_DATE_2</span><span class="param-type">string</span><span class="param-desc">종료일 (YYYYMMDD)</span></div>
+        <div class="param-row required"><span class="param-name">FID_PERIOD_DIV_CODE</span><span class="param-type">string</span><span class="param-desc">D/W/M/Y</span></div>
+        <div class="param-row required"><span class="param-name">FID_ORG_ADJ_PRC</span><span class="param-type">string</span><span class="param-desc">0/1</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 호가 -->
+  <div class="api-card">
+    <div class="api-head">
+      <span class="api-method get">GET</span>
+      <span class="api-name">주식 호가/예상체결</span>
+      <span class="api-tr">FHKST01010200</span>
+    </div>
+    <div class="api-body">
+      <div class="api-url">/uapi/domestic-stock/v1/quotations/inquire-asking-price-exp-ccn</div>
+      <div class="api-desc">매수/매도 10호가 + 예상 체결가. 지정가 주문 전 참고.</div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ═══ 4. 주문 API ═══ -->
+<section id="s4" data-section="4. 주문 API">
+  <div class="eyebrow">Section 4</div>
+  <h2>4. 국내주식 주문 API</h2>
+
+  <!-- 현금 매수 -->
+  <div class="api-card">
+    <div class="api-head">
+      <span class="api-method post">POST</span>
+      <span class="api-name">주식 현금 매수</span>
+      <span class="api-tr virtual">VTTC0802U</span>
+    </div>
+    <div class="api-body">
+      <div class="api-url">/uapi/domestic-stock/v1/trading/order-cash</div>
+      <div class="api-desc">실전 TR_ID: <code>TTTC0802U</code>. HashKey 필수.</div>
+      <h4>Body 파라미터</h4>
+      <div class="param-list">
+        <div class="param-row required"><span class="param-name">CANO</span><span class="param-type">string</span><span class="param-desc">계좌번호 앞 8자리</span></div>
+        <div class="param-row required"><span class="param-name">ACNT_PRDT_CD</span><span class="param-type">string</span><span class="param-desc">계좌 상품코드 뒤 2자리 (예: 01)</span></div>
+        <div class="param-row required"><span class="param-name">PDNO</span><span class="param-type">string</span><span class="param-desc">종목코드 6자리</span></div>
+        <div class="param-row required"><span class="param-name">ORD_DVSN</span><span class="param-type">string</span><span class="param-desc">주문구분 (아래 표 참조)</span></div>
+        <div class="param-row required"><span class="param-name">ORD_QTY</span><span class="param-type">string</span><span class="param-desc">주문 수량 (문자열)</span></div>
+        <div class="param-row required"><span class="param-name">ORD_UNPR</span><span class="param-type">string</span><span class="param-desc">지정가 단가 (시장가는 "0")</span></div>
+      </div>
+
+      <h4>ORD_DVSN 주요 값</h4>
+      <table class="err-table">
+        <thead><tr><th>코드</th><th>의미</th></tr></thead>
+        <tbody>
+          <tr><td><code>00</code></td><td>지정가 (ORD_UNPR 필수)</td></tr>
+          <tr><td><code>01</code></td><td>시장가 (ORD_UNPR="0")</td></tr>
+          <tr><td><code>02</code></td><td>조건부지정가</td></tr>
+          <tr><td><code>03</code></td><td>최유리지정가</td></tr>
+          <tr><td><code>04</code></td><td>최우선지정가</td></tr>
+          <tr><td><code>05</code></td><td>장전 시간외</td></tr>
+          <tr><td><code>06</code></td><td>장후 시간외</td></tr>
+        </tbody>
+      </table>
+
+      <h4>Response output</h4>
+      <div class="param-list">
+        <div class="param-row"><span class="param-name">KRX_FWDG_ORD_ORGNO</span><span class="param-type">string</span><span class="param-desc">거래소 전송 기관번호</span></div>
+        <div class="param-row"><span class="param-name">ODNO</span><span class="param-type">string</span><span class="param-desc">주문번호 (정정/취소에 사용)</span></div>
+        <div class="param-row"><span class="param-name">ORD_TMD</span><span class="param-type">string</span><span class="param-desc">주문 시각 (HHMMSS)</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 현금 매도 -->
+  <div class="api-card">
+    <div class="api-head">
+      <span class="api-method post">POST</span>
+      <span class="api-name">주식 현금 매도</span>
+      <span class="api-tr virtual">VTTC0801U</span>
+    </div>
+    <div class="api-body">
+      <div class="api-url">/uapi/domestic-stock/v1/trading/order-cash</div>
+      <div class="api-desc">매수와 <strong>동일한 엔드포인트</strong>. TR_ID만 <code>VTTC0801U</code>로 변경. Body 구조 동일.</div>
+      <div class="tip-card">
+        <div class="tip-title">매수/매도 분기 로직</div>
+        <div class="tip-body">Python에서: <code>tr_id = 'VTTC0802U' if side == 'buy' else 'VTTC0801U'</code>. n8n에서: IF 노드 또는 Set 노드 조건부.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 정정/취소 -->
+  <div class="api-card">
+    <div class="api-head">
+      <span class="api-method post">POST</span>
+      <span class="api-name">주식 주문 정정/취소</span>
+      <span class="api-tr virtual">VTTC0803U</span>
+    </div>
+    <div class="api-body">
+      <div class="api-url">/uapi/domestic-stock/v1/trading/order-rvsecncl</div>
+      <div class="api-desc">미체결 주문 변경 or 취소.</div>
+      <h4>Body 주요 필드</h4>
+      <div class="param-list">
+        <div class="param-row required"><span class="param-name">CANO</span><span class="param-type">string</span><span class="param-desc">계좌번호 앞 8자리</span></div>
+        <div class="param-row required"><span class="param-name">ACNT_PRDT_CD</span><span class="param-type">string</span><span class="param-desc">계좌 상품코드</span></div>
+        <div class="param-row required"><span class="param-name">KRX_FWDG_ORD_ORGNO</span><span class="param-type">string</span><span class="param-desc">원주문의 거래소 기관번호</span></div>
+        <div class="param-row required"><span class="param-name">ORGN_ODNO</span><span class="param-type">string</span><span class="param-desc">원주문번호</span></div>
+        <div class="param-row required"><span class="param-name">ORD_DVSN</span><span class="param-type">string</span><span class="param-desc">주문구분</span></div>
+        <div class="param-row required"><span class="param-name">RVSE_CNCL_DVSN_CD</span><span class="param-type">string</span><span class="param-desc">01(정정) / 02(취소)</span></div>
+        <div class="param-row required"><span class="param-name">ORD_QTY</span><span class="param-type">string</span><span class="param-desc">정정 수량 (일부 취소 시)</span></div>
+        <div class="param-row required"><span class="param-name">ORD_UNPR</span><span class="param-type">string</span><span class="param-desc">정정 단가</span></div>
+        <div class="param-row required"><span class="param-name">QTY_ALL_ORD_YN</span><span class="param-type">string</span><span class="param-desc">Y(잔량 전부)/N(일부)</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ═══ 5. 계좌/잔고 ═══ -->
+<section id="s5" data-section="5. 계좌/잔고">
+  <div class="eyebrow">Section 5</div>
+  <h2>5. 계좌/잔고 조회 API</h2>
+
+  <!-- 잔고 -->
+  <div class="api-card">
+    <div class="api-head">
+      <span class="api-method get">GET</span>
+      <span class="api-name">주식 잔고 조회</span>
+      <span class="api-tr virtual">VTTC8434R</span>
+    </div>
+    <div class="api-body">
+      <div class="api-url">/uapi/domestic-stock/v1/trading/inquire-balance</div>
+      <div class="api-desc">보유 종목 리스트 (output1) + 계좌 요약 (output2).</div>
+      <h4>Query 필수 파라미터</h4>
+      <div class="param-list">
+        <div class="param-row required"><span class="param-name">CANO</span><span class="param-type">string</span><span class="param-desc">계좌번호 앞 8자리</span></div>
+        <div class="param-row required"><span class="param-name">ACNT_PRDT_CD</span><span class="param-type">string</span><span class="param-desc">계좌 상품코드</span></div>
+        <div class="param-row required"><span class="param-name">AFHR_FLPR_YN</span><span class="param-type">string</span><span class="param-desc">N (시간외 제외)</span></div>
+        <div class="param-row required"><span class="param-name">INQR_DVSN</span><span class="param-type">string</span><span class="param-desc">01 (대출일별) / 02 (종목별)</span></div>
+        <div class="param-row required"><span class="param-name">UNPR_DVSN</span><span class="param-type">string</span><span class="param-desc">01 (현재가)</span></div>
+        <div class="param-row required"><span class="param-name">FUND_STTL_ICLD_YN</span><span class="param-type">string</span><span class="param-desc">N</span></div>
+        <div class="param-row required"><span class="param-name">FNCG_AMT_AUTO_RDPT_YN</span><span class="param-type">string</span><span class="param-desc">N</span></div>
+        <div class="param-row required"><span class="param-name">PRCS_DVSN</span><span class="param-type">string</span><span class="param-desc">00 (전일 매매 포함) / 01 (제외)</span></div>
+        <div class="param-row required"><span class="param-name">CTX_AREA_FK100</span><span class="param-type">string</span><span class="param-desc">최초: 공란 / 연속조회: 이전 응답값</span></div>
+        <div class="param-row required"><span class="param-name">CTX_AREA_NK100</span><span class="param-type">string</span><span class="param-desc">최초: 공란</span></div>
+      </div>
+
+      <h4>output1 (보유 종목 리스트)</h4>
+      <div class="param-list">
+        <div class="param-row"><span class="param-name">pdno</span><span class="param-type">string</span><span class="param-desc">종목코드</span></div>
+        <div class="param-row"><span class="param-name">prdt_name</span><span class="param-type">string</span><span class="param-desc">종목명</span></div>
+        <div class="param-row"><span class="param-name">hldg_qty</span><span class="param-type">string</span><span class="param-desc">보유 수량</span></div>
+        <div class="param-row"><span class="param-name">pchs_avg_pric</span><span class="param-type">string</span><span class="param-desc">매입평균가</span></div>
+        <div class="param-row"><span class="param-name">prpr</span><span class="param-type">string</span><span class="param-desc">현재가</span></div>
+        <div class="param-row"><span class="param-name">evlu_amt</span><span class="param-type">string</span><span class="param-desc">평가금액</span></div>
+        <div class="param-row"><span class="param-name">evlu_pfls_amt</span><span class="param-type">string</span><span class="param-desc">평가손익</span></div>
+        <div class="param-row"><span class="param-name">evlu_pfls_rt</span><span class="param-type">string</span><span class="param-desc">평가손익률 (%)</span></div>
+      </div>
+
+      <h4>output2 (계좌 요약)</h4>
+      <div class="param-list">
+        <div class="param-row"><span class="param-name">dnca_tot_amt</span><span class="param-type">string</span><span class="param-desc">예수금 총액</span></div>
+        <div class="param-row"><span class="param-name">tot_evlu_amt</span><span class="param-type">string</span><span class="param-desc">총 평가금액</span></div>
+        <div class="param-row"><span class="param-name">asst_icdc_amt</span><span class="param-type">string</span><span class="param-desc">자산증감액</span></div>
+        <div class="param-row"><span class="param-name">asst_icdc_erng_rt</span><span class="param-type">string</span><span class="param-desc">자산증감수익률</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 주문가능 -->
+  <div class="api-card">
+    <div class="api-head">
+      <span class="api-method get">GET</span>
+      <span class="api-name">주문 가능 조회</span>
+      <span class="api-tr virtual">VTTC8908R</span>
+    </div>
+    <div class="api-body">
+      <div class="api-url">/uapi/domestic-stock/v1/trading/inquire-psbl-order</div>
+      <div class="api-desc">특정 종목 매수 가능 수량/금액 조회. 주문 전 필수 체크.</div>
+    </div>
+  </div>
+
+  <!-- 주문 체결 -->
+  <div class="api-card">
+    <div class="api-head">
+      <span class="api-method get">GET</span>
+      <span class="api-name">일별 주문 체결 조회</span>
+      <span class="api-tr virtual">VTTC8001R</span>
+    </div>
+    <div class="api-body">
+      <div class="api-url">/uapi/domestic-stock/v1/trading/inquire-daily-ccld</div>
+      <div class="api-desc">당일/과거 주문 내역 + 체결 상태.</div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ═══ 6. TR_ID 전체 맵 ═══ -->
+<section id="s6" data-section="6. TR_ID 전체 맵">
+  <div class="eyebrow">Section 6</div>
+  <h2>6. TR_ID 전체 맵</h2>
+
+  <table class="tr-master">
+    <thead>
+      <tr><th>기능</th><th>모의</th><th>실전</th><th>HTTP</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>시세</strong></td><td colspan="2">공통</td><td></td></tr>
+      <tr><td>주식 현재가</td><td colspan="2">FHKST01010100</td><td>GET</td></tr>
+      <tr><td>주식 호가/예상체결</td><td colspan="2">FHKST01010200</td><td>GET</td></tr>
+      <tr><td>일자별 시세</td><td colspan="2">FHKST01010400</td><td>GET</td></tr>
+      <tr><td>기간별 시세</td><td colspan="2">FHKST03010100</td><td>GET</td></tr>
+      <tr><td>투자자별 매매</td><td colspan="2">FHKST01010900</td><td>GET</td></tr>
+      <tr><td>체결가 조회</td><td colspan="2">FHKST01010300</td><td>GET</td></tr>
+
+      <tr><td><strong>주문</strong></td><td></td><td></td><td></td></tr>
+      <tr><td>현금 매수</td><td>VTTC0802U</td><td>TTTC0802U</td><td>POST</td></tr>
+      <tr><td>현금 매도</td><td>VTTC0801U</td><td>TTTC0801U</td><td>POST</td></tr>
+      <tr><td>정정/취소</td><td>VTTC0803U</td><td>TTTC0803U</td><td>POST</td></tr>
+      <tr><td>신용 매수</td><td>VTTC0852U</td><td>TTTC0852U</td><td>POST</td></tr>
+      <tr><td>신용 매도</td><td>VTTC0851U</td><td>TTTC0851U</td><td>POST</td></tr>
+
+      <tr><td><strong>계좌/잔고</strong></td><td></td><td></td><td></td></tr>
+      <tr><td>잔고 조회</td><td>VTTC8434R</td><td>TTTC8434R</td><td>GET</td></tr>
+      <tr><td>주문 가능</td><td>VTTC8908R</td><td>TTTC8908R</td><td>GET</td></tr>
+      <tr><td>일별 주문체결</td><td>VTTC8001R</td><td>TTTC8001R</td><td>GET</td></tr>
+      <tr><td>정정취소가능 주문</td><td>VTTC0081R</td><td>TTTC0081R</td><td>GET</td></tr>
+
+      <tr><td><strong>해외주식 (참고)</strong></td><td></td><td></td><td></td></tr>
+      <tr><td>해외 현재가</td><td colspan="2">HHDFS00000300</td><td>GET</td></tr>
+      <tr><td>해외 매수 (미국)</td><td>VTTT1002U</td><td>TTTT1002U</td><td>POST</td></tr>
+      <tr><td>해외 매도 (미국)</td><td>VTTT1006U</td><td>TTTT1006U</td><td>POST</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout blue">
+    <strong>🔑 암기 원칙:</strong> 첫 글자만 외우세요. 실전은 T, 모의는 V, 시세는 FH. 나머지는 포털에서 검색.
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ═══ 7. 에러 코드 ═══ -->
+<section id="s7" data-section="7. 에러 코드">
+  <div class="eyebrow">Section 7</div>
+  <h2>7. 에러 코드 + 대응법</h2>
+
+  <h3>자주 만나는 에러 코드 20선</h3>
+  <table class="err-table">
+    <thead>
+      <tr><th>코드</th><th>원인 + 대응</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>EGW00121</code></td><td><strong>HashKey 불일치</strong> — 주문 Body와 HashKey 생성 Body가 다름. 완전히 동일한 객체로 두 번 호출할 것</td></tr>
+      <tr><td><code>EGW00123</code></td><td>토큰 만료. 재발급 필요 (expires_in 체크)</td></tr>
+      <tr><td><code>EGW00133</code></td><td>앱키·시크릿 오류 또는 승인 대기 중. KIS Developers 포털 확인</td></tr>
+      <tr><td><code>EGW00201</code></td><td><strong>호출 유량 초과 (Rate Limit)</strong> — 실전 20TPS / 모의 2TPS. Wait 노드 또는 sleep 추가</td></tr>
+      <tr><td><code>EGW00205</code></td><td>요청 타임아웃. 네트워크 or API 장애. 재시도</td></tr>
+      <tr><td><code>EGW00007</code></td><td>필수 파라미터 누락. Query/Body 재확인</td></tr>
+      <tr><td><code>APBK0013</code></td><td>(정상) 주문 전송 완료. 에러 아님</td></tr>
+      <tr><td><code>APBK0912</code></td><td>매수 가능 금액 부족. 예수금 or 미체결 주문 확인</td></tr>
+      <tr><td><code>APBK0919</code></td><td>매도 가능 수량 부족. 실제 보유 수량 재확인</td></tr>
+      <tr><td><code>APBK0916</code></td><td>주문 가격 오류. 호가 단위(틱 사이즈) 준수 필요</td></tr>
+      <tr><td><code>APBK0650</code></td><td>장 마감 후 주문. 정규장 시간 확인 (09:00-15:30)</td></tr>
+      <tr><td><code>APBK7005</code></td><td>시장가 + 가격 입력 오류. 시장가는 ORD_UNPR="0"</td></tr>
+      <tr><td><code>APBK0511</code></td><td>거래정지 종목. 종목 상태 확인</td></tr>
+      <tr><td><code>APBK0522</code></td><td>상한가/하한가 도달. 지정가 조정</td></tr>
+      <tr><td><code>OPSP0002</code></td><td>TR_ID와 URL 불일치. 엔드포인트 재확인</td></tr>
+      <tr><td><code>OPSP0003</code></td><td>실전/모의 환경 불일치 (T/V 접두어 실수)</td></tr>
+      <tr><td><code>OPSP1001</code></td><td>계좌번호 오류. CANO 8자리 + ACNT_PRDT_CD 2자리</td></tr>
+      <tr><td><code>401 Unauthorized</code></td><td>헤더 authorization 누락 또는 잘못된 Bearer 토큰</td></tr>
+      <tr><td><code>403 Forbidden</code></td><td>권한 없음. KIS Developers 서비스 승인 필요 or 모의투자 신청</td></tr>
+      <tr><td><code>500 Internal Server Error</code></td><td>KIS 서버 장애. 잠시 후 재시도. 지속 시 고객센터 문의</td></tr>
+    </tbody>
+  </table>
+
+  <h3>에러 응답 구조</h3>
+  <div class="snip-head">에러 JSON 예시</div>
+  <pre class="code-block">{
+  <span class="str">"rt_cd"</span>: <span class="str">"1"</span>,             <span class="cm">// 0=성공, 1=실패</span>
+  <span class="str">"msg_cd"</span>: <span class="str">"EGW00121"</span>,     <span class="cm">// 에러 코드</span>
+  <span class="str">"msg1"</span>: <span class="str">"해쉬키가 일치하지 않습니다."</span>
+}</pre>
+
+  <div class="tip-card">
+    <div class="tip-title">에러 자동 처리 패턴</div>
+    <div class="tip-body">
+      <code>rt_cd</code>가 "0"이 아니면 에러. <code>msg_cd</code>로 분류 → Rate Limit이면 재시도, 토큰 만료면 재발급, 나머지는 Discord 알림.
+    </div>
+  </div>
+
+  <div class="snip-head">Python 에러 핸들러 예시</div>
+  <pre class="code-block"><span class="kw">def</span> <span class="fn">handle_kis_response</span>(response):
+    data = response.<span class="fn">json</span>()
+    <span class="kw">if</span> data.<span class="fn">get</span>(<span class="str">'rt_cd'</span>) == <span class="str">'0'</span>:
+        <span class="kw">return</span> data[<span class="str">'output'</span>]
+    
+    code = data.<span class="fn">get</span>(<span class="str">'msg_cd'</span>)
+    
+    <span class="kw">if</span> code == <span class="str">'EGW00201'</span>:
+        <span class="fn">time</span>.<span class="fn">sleep</span>(<span class="num">2</span>)
+        <span class="kw">raise</span> RetryableError(<span class="str">'Rate limit'</span>)
+    <span class="kw">elif</span> code == <span class="str">'EGW00123'</span>:
+        refresh_token()
+        <span class="kw">raise</span> RetryableError(<span class="str">'Token expired'</span>)
+    <span class="kw">elif</span> code <span class="kw">in</span> [<span class="str">'APBK0912'</span>, <span class="str">'APBK0919'</span>]:
+        <span class="fn">notify_discord</span>(<span class="str">f'자금/수량 부족: {data[\"msg1\"]}'</span>)
+    
+    <span class="kw">raise</span> Exception(<span class="str">f'KIS Error {code}: {data[\"msg1\"]}'</span>)</pre>
+</section>
+
+<div class="divider"></div>
+
+<!-- ═══ 8. Rate Limit + 운영 ═══ -->
+<section id="s8" data-section="8. Rate Limit + 운영">
+  <div class="eyebrow">Section 8</div>
+  <h2>8. Rate Limit + 운영 패턴</h2>
+
+  <h3>Rate Limit 정책</h3>
+  <table class="err-table">
+    <thead>
+      <tr><th>환경</th><th>초당 호출 수 (TPS)</th><th>비고</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>실전투자</td><td>20 TPS</td><td>시세·주문 모두 합산</td></tr>
+      <tr><td>모의투자</td><td>2 TPS</td><td>실전보다 엄격. 0.5초 간격 보장 필요</td></tr>
+      <tr><td>토큰 발급</td><td>1일 ≈ 24회 권장</td><td>과도 시 장기 차단 가능</td></tr>
+    </tbody>
+  </table>
+
+  <div class="warning-box">
+    <div class="wb-title">🚨 모의투자 Rate Limit 특별 주의</div>
+    <div class="wb-body">
+      모의투자는 2 TPS. 빠르게 여러 종목을 조회하면 바로 <code>EGW00201</code>. 반복문에서 <code>time.sleep(0.6)</code> 또는 n8n Wait 노드 <strong>0.6초</strong> 필수 삽입.
+    </div>
+  </div>
+
+  <h3>운영 패턴 5가지</h3>
+
+  <div class="callout blue">
+    <strong>① 토큰 캐싱 패턴</strong><br>
+    Google Sheets에 access_token + expiry 저장. 사용 시 만료 시각 체크 후 재사용. 하루 1회 재발급으로 API 호출 절약.
+  </div>
+
+  <div class="callout blue">
+    <strong>② Rate Limit 백오프 패턴</strong><br>
+    <code>EGW00201</code> 받으면 exponential backoff: 1초 → 2초 → 4초 → 8초 순으로 재시도. 최대 3회.
+  </div>
+
+  <div class="callout blue">
+    <strong>③ 2단계 승인 패턴</strong><br>
+    에이전트 주문 제안 → Discord 버튼 승인 → 실제 실행. 자동화 레벨을 점진적으로 높이는 안전장치.
+  </div>
+
+  <div class="callout blue">
+    <strong>④ Dry Run 테스트 패턴</strong><br>
+    주문 코드를 Hashkey 생성까지만 실행하고 실제 주문 전에 중단. Body가 정확한지 먼저 검증 후 활성화.
+  </div>
+
+  <div class="callout blue">
+    <strong>⑤ Error Trigger 분리 패턴</strong><br>
+    메인 워크플로와 에러 처리 워크플로를 분리. n8n Settings → Error Workflow 지정. 주문 실패 시 즉시 Discord 알림.
+  </div>
+
+  <h3>장 시간 (중요)</h3>
+  <table class="err-table">
+    <thead>
+      <tr><th>시간대</th><th>주문 가능 여부</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>정규장 09:00 ~ 15:30</td><td>✓ 즉시 체결 (시장가) / 지정가 대기</td></tr>
+      <tr><td>시간외 단일가 16:00 ~ 18:00</td><td>✓ 별도 TR_ID (<code>ORD_DVSN: 06</code>)</td></tr>
+      <tr><td>장전 시간외 08:30 ~ 08:40</td><td>✓ <code>ORD_DVSN: 05</code></td></tr>
+      <tr><td>주말·공휴일</td><td>✗ 대기 주문도 안 됨 (APBK0650)</td></tr>
+    </tbody>
+  </table>
+
+  <div class="tip-card">
+    <div class="tip-title">Schedule 트리거 최적 시간</div>
+    <div class="tip-body">
+      • <strong>08:30</strong>: 장 개장 전 분석 + 주문 준비<br>
+      • <strong>09:05</strong>: 개장 5분 후 실제 주문 실행 (변동성 피크 피하기)<br>
+      • <strong>15:15</strong>: 마감 전 청산 검토<br>
+      • <strong>18:00</strong>: 일일 성과 집계 + Sheets 기록
+    </div>
+  </div>
+
+  <h3>로깅 필수 항목</h3>
+  <ul style="margin-left:18px;font-size:12px;line-height:1.9">
+    <li>□ 모든 주문 요청의 <strong>Body + Timestamp</strong> 저장 (재현용)</li>
+    <li>□ 응답의 <strong>rt_cd, msg_cd, ODNO</strong> 저장</li>
+    <li>□ Daily 단위 <strong>매매 건수·체결률·수익률</strong> 집계</li>
+    <li>□ Rate Limit 발생 시간·빈도 추적 → 코드 개선</li>
+    <li>□ 에러 로그는 <strong>별도 Sheet</strong>에 분리 저장</li>
+  </ul>
+</section>
+
+<div style="background:linear-gradient(135deg,#0056a5,#001f3f);color:#fff;text-align:center;padding:32px 20px;margin:36px -15px 0;margin-bottom:var(--fh)">
+  <div style="font-size:10px;letter-spacing:2px;color:#7dd3fc;margin-bottom:8px;font-weight:700">📘 APPENDIX C COMPLETE</div>
+  <div style="font-size:14px;font-weight:700;margin-bottom:5px">KIS API 통합 레퍼런스</div>
+  <div style="font-size:11px;color:rgba(255,255,255,.7);line-height:1.7">8 sections · 15 endpoints · 20 error codes<br>2026 · ZeroOneAI Education</div>
+</div>
+
+</div>
+
+<script>
+const sections = document.querySelectorAll('[data-section]');
+const sfT = document.getElementById('sf-t');
+const sfP = document.getElementById('sf-p');
+function update(){
+  const sy = window.scrollY;
+  const dh = document.documentElement.scrollHeight - window.innerHeight;
+  sfP.textContent = Math.round((sy / Math.max(dh, 1)) * 100) + '%';
+  let cur = sections[0]?.dataset.section || '';
+  sections.forEach(s => {
+    if(sy >= s.getBoundingClientRect().top + sy - 110) cur = s.dataset.section;
+  });
+  if(sfT.textContent !== cur) sfT.textContent = cur;
+}
+window.addEventListener('scroll', update, {passive:true});
+update();
+</script>
+</body>
+</html>

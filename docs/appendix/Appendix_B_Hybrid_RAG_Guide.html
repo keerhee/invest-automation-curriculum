@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>부록 B — Hybrid RAG 심화 가이드</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;600&display=swap');
+:root{
+  --black:#0d0d0d;--gray:#6b6b6b;--light:#f3f3f3;--border:#e6e6e6;
+  --rag-purple:#7c3aed;--rag-dark:#1e1b4b;--rag-accent:#a78bfa;
+  --fh:46px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Noto Sans KR',sans-serif;background:#fff;color:var(--black);font-size:14px;line-height:1.75;padding-bottom:var(--fh)}
+
+#sf{position:fixed;bottom:0;left:0;right:0;height:var(--fh);background:var(--rag-dark);display:flex;align-items:center;justify-content:space-between;padding:0 16px;z-index:999}
+#sf .lbl{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:#6b6b8a}
+#sf .ttl{font-size:12px;font-weight:700;color:#fff;max-width:60%;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#sf .pct{font-size:10px;color:#6b6b8a;white-space:nowrap}
+
+.hero{background:linear-gradient(135deg,#7c3aed,#1e1b4b);color:#fff;padding:48px 20px 40px;text-align:center;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;top:-80px;right:-80px;width:260px;height:260px;border:1px solid rgba(255,255,255,.08);border-radius:50%}
+.hero-badge{display:inline-block;border:1px solid rgba(255,255,255,.25);border-radius:20px;padding:4px 14px;font-size:10px;letter-spacing:2px;color:#a78bfa;margin-bottom:14px;font-weight:700}
+.hero h1{font-size:22px;font-weight:900;line-height:1.35;margin-bottom:8px;letter-spacing:-.5px}
+.hero-sub{font-size:12px;color:rgba(255,255,255,.8);margin-bottom:22px}
+
+.container{max-width:720px;margin:0 auto;padding:0 15px}
+section{padding:36px 0 0}
+.divider{height:1px;background:var(--border);margin:34px 0 0}
+.eyebrow{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--gray);margin-bottom:5px}
+h2{font-size:19px;font-weight:900;letter-spacing:-.3px;margin-bottom:12px;line-height:1.3}
+h3{font-size:14px;font-weight:700;margin:20px 0 8px}
+h4{font-size:12px;font-weight:700;margin:14px 0 6px;color:#333}
+p{color:#333;margin-bottom:8px;font-size:13px}
+strong{color:var(--black);font-weight:700}
+code{font-family:'JetBrains Mono',monospace;background:#f5f3ff;padding:1px 5px;border-radius:3px;font-size:11px;color:var(--rag-purple)}
+
+/* TOC */
+.toc{background:var(--light);border-radius:12px;padding:16px 18px;margin:14px 0;border:1px solid var(--border)}
+.toc-title{font-size:11px;font-weight:700;color:var(--gray);letter-spacing:1px;margin-bottom:10px;text-transform:uppercase}
+.toc-item{display:block;padding:6px 0;font-size:12px;color:#333;text-decoration:none;border-bottom:1px dashed #e5e5e5}
+.toc-item:last-child{border-bottom:none}
+.toc-item:hover{color:var(--rag-purple)}
+.toc-num{display:inline-block;width:22px;color:var(--rag-purple);font-weight:700;font-family:'JetBrains Mono',monospace}
+
+.callout{background:var(--light);border-left:3px solid var(--black);padding:13px 15px;border-radius:0 8px 8px 0;margin:10px 0;font-size:13px;line-height:1.65}
+.callout.purple{background:#faf5ff;border-left-color:var(--rag-purple)}
+.callout.blue{background:#eff6ff;border-left-color:#2563eb}
+.callout.green{background:#f0fdf4;border-left-color:#15803d}
+.callout.orange{background:#fff8ed;border-left-color:#d97706}
+
+/* CODE BLOCK */
+.code-block{background:#0d1117;color:#e6edf3;border-radius:9px;padding:14px 16px;margin:10px 0;font-family:'JetBrains Mono',monospace;font-size:11px;line-height:1.7;overflow-x:auto;white-space:pre;tab-size:2;-moz-tab-size:2;word-wrap:normal}
+.code-block .cm{color:#8b949e;font-style:italic}
+.code-block .kw{color:#ff7b72}
+.code-block .str{color:#a5d6ff}
+.code-block .num{color:#79c0ff}
+.code-block .fn{color:#d2a8ff}
+
+/* PIPELINE DIAGRAM */
+.pipeline{background:linear-gradient(135deg,#f5f3ff,#ede9fe);border-radius:12px;padding:16px;margin:14px 0;border:1px solid #c4b5fd}
+.pl-title{font-size:11px;font-weight:700;color:var(--rag-purple);margin-bottom:12px;letter-spacing:1px;text-transform:uppercase}
+.pl-row{display:grid;grid-template-columns:60px 1fr 100px;gap:10px;align-items:center;padding:10px 0;border-bottom:1px dashed #c4b5fd}
+.pl-row:last-child{border-bottom:none}
+.pl-num{background:var(--rag-purple);color:#fff;border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900}
+.pl-body{font-size:11px;color:#5b21b6;line-height:1.55}
+.pl-body strong{color:#4c1d95;display:block;margin-bottom:2px;font-size:12px}
+.pl-tag{background:#ddd6fe;color:#5b21b6;border-radius:4px;padding:3px 8px;font-size:9px;font-weight:700;text-align:center}
+
+/* COMPARISON */
+.comparison{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}
+.comp-box{border-radius:10px;padding:12px 14px;font-size:11px;line-height:1.65}
+.comp-bad{background:#fef2f2;border:1px solid #fecaca}
+.comp-good{background:#f0fdf4;border:1px solid #86efac}
+.comp-label{font-size:10px;font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:5px}
+.comp-bad .comp-label{color:#991b1b}
+.comp-good .comp-label{color:#166534}
+
+/* CONCEPT CARD */
+.concept-card{background:#fff;border:2px solid var(--rag-purple);border-radius:10px;padding:12px 14px;margin:10px 0}
+.concept-label{font-size:9px;font-weight:700;color:var(--rag-purple);letter-spacing:2px;margin-bottom:4px}
+.concept-def{font-size:13px;font-weight:700;color:#333;margin-bottom:6px}
+.concept-desc{font-size:11px;color:#555;line-height:1.65}
+
+/* PARAM TABLE */
+.param-table{width:100%;border-collapse:collapse;margin:10px 0;font-size:11px}
+.param-table th{background:var(--rag-dark);color:#fff;padding:8px 10px;text-align:left;font-size:10px;font-weight:700}
+.param-table td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.5}
+.param-table tr:nth-child(even) td{background:var(--light)}
+.param-table code{font-size:10px;background:#f5f3ff}
+.param-recommended{background:#f0fdf4 !important;font-weight:600;color:#166534}
+
+/* FORMULA */
+.formula-box{background:var(--rag-dark);color:#fff;border-radius:10px;padding:16px 18px;margin:12px 0;text-align:center;font-family:'JetBrains Mono',monospace}
+.formula-label{font-size:9px;color:#a78bfa;letter-spacing:2px;margin-bottom:8px}
+.formula-eq{font-size:14px;line-height:1.8;color:#fff}
+.formula-note{font-size:10px;color:#c4b5fd;margin-top:6px;font-family:'Noto Sans KR',sans-serif}
+
+/* BENCHMARK */
+.bench-card{background:#fffbeb;border:1px solid #fcd34d;border-radius:10px;padding:14px;margin:10px 0}
+.bench-label{font-size:10px;font-weight:700;color:#92400e;margin-bottom:8px;letter-spacing:1px}
+.bench-row{display:grid;grid-template-columns:1fr auto auto;gap:10px;padding:6px 0;border-bottom:1px dashed #fcd34d;font-size:11px;align-items:center}
+.bench-row:last-child{border-bottom:none}
+.bench-name{color:#78350f;font-weight:600}
+.bench-score{font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--rag-purple);font-size:11px}
+.bench-bar{width:80px;height:6px;background:#fde68a;border-radius:3px;overflow:hidden}
+.bench-fill{height:100%;background:var(--rag-purple);border-radius:3px}
+
+/* SNIPPET HEADER */
+.snip-head{background:var(--rag-dark);color:#fff;padding:8px 12px;font-size:10px;font-weight:700;letter-spacing:1px;border-radius:9px 9px 0 0;margin-top:14px;margin-bottom:-10px;position:relative;z-index:1}
+.snip-head + .code-block{border-radius:0 0 9px 9px;margin-top:0}
+
+/* TIP */
+.tip-card{background:#eff6ff;border:1px solid #93c5fd;border-radius:10px;padding:12px 15px;margin:10px 0}
+.tip-title{font-size:11px;font-weight:700;color:#1e40af;margin-bottom:6px;display:flex;align-items:center;gap:5px}
+.tip-title::before{content:'💡';font-size:13px}
+.tip-body{font-size:11px;color:#1e3a8a;line-height:1.65}
+
+@media(max-width:400px){
+  .pl-row{grid-template-columns:48px 1fr;gap:8px}
+  .pl-tag{grid-column:2;justify-self:start;margin-top:4px}
+  .comparison{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<div id="sf">
+  <span class="lbl">Appendix B · RAG</span>
+  <span class="ttl" id="sf-t">Hybrid RAG 심화 가이드</span>
+  <span class="pct" id="sf-p">0%</span>
+</div>
+
+<!-- HERO -->
+<div class="hero" data-section="Hybrid RAG">
+  <div class="hero-badge">📘 APPENDIX B</div>
+  <h1>Hybrid RAG 심화 가이드</h1>
+  <p class="hero-sub">원리 · 파라미터 튜닝 · 성능 벤치마크 · 트러블슈팅</p>
+</div>
+
+<div class="container">
+
+<section data-section="목차">
+  <div class="toc">
+    <div class="toc-title">📚 목차</div>
+    <a class="toc-item" href="#s1"><span class="toc-num">1.</span> RAG의 본질과 한계</a>
+    <a class="toc-item" href="#s2"><span class="toc-num">2.</span> Bi-encoder vs Cross-encoder 원리</a>
+    <a class="toc-item" href="#s3"><span class="toc-num">3.</span> 청킹 전략 — Size & Overlap 튜닝</a>
+    <a class="toc-item" href="#s4"><span class="toc-num">4.</span> Embedding 모델 선택</a>
+    <a class="toc-item" href="#s5"><span class="toc-num">5.</span> Reranker 딥다이브</a>
+    <a class="toc-item" href="#s6"><span class="toc-num">6.</span> 성능 측정 + 벤치마크</a>
+    <a class="toc-item" href="#s7"><span class="toc-num">7.</span> RAG 실패 패턴 + 해결</a>
+    <a class="toc-item" href="#s8"><span class="toc-num">8.</span> 운영 체크리스트</a>
+  </div>
+</section>
+
+<!-- ═══ 1. RAG 본질 ═══ -->
+<section id="s1" data-section="1. RAG 본질">
+  <div class="eyebrow">Section 1</div>
+  <h2>1. RAG의 본질과 한계</h2>
+
+  <h3>왜 RAG인가?</h3>
+  <p>LLM은 파라미터에 지식을 "압축 저장"합니다. 그래서 두 가지 약점이 있습니다:</p>
+  <ol style="margin-left:18px;font-size:12px;line-height:1.8">
+    <li><strong>최신성 부족</strong> — 학습 시점 이후 정보 모름 (Claude는 2026-01 cutoff)</li>
+    <li><strong>개별 문서 부재</strong> — 내 회사 내부 문서, 특정 PDF 내용 모름</li>
+    <li><strong>환각(Hallucination)</strong> — 모르는 걸 아는 척</li>
+  </ol>
+  <p>RAG는 <strong>검색(Retrieval)</strong>으로 관련 문서를 찾고, <strong>생성(Generation)</strong>할 때 근거로 제시합니다.</p>
+
+  <div class="concept-card">
+    <div class="concept-label">CORE INSIGHT</div>
+    <div class="concept-def">RAG = 외부 기억 + 검색 + 생성</div>
+    <div class="concept-desc">LLM을 "완벽한 기억의 천재"가 아닌 "검색된 자료를 잘 읽는 연구원"으로 활용하는 아키텍처. 정확성·최신성·검증가능성이 근본적으로 개선됩니다.</div>
+  </div>
+
+  <h3>단순 RAG의 한계</h3>
+  <p>Vector 검색 하나로는 부족합니다. 이유:</p>
+  <ul style="margin-left:18px;font-size:12px;line-height:1.8">
+    <li><strong>의미 유사도 ≠ 질문에 답하는 능력</strong> — "애플 실적"과 "Apple earnings"는 의미상 비슷해도 원하는 답이 다를 수 있음</li>
+    <li><strong>문맥 손실</strong> — 청크 경계에서 중요 정보 잘림</li>
+    <li><strong>Bi-encoder 한계</strong> — 쿼리·문서를 독립적으로 임베딩, 세밀한 매칭 불가</li>
+  </ul>
+
+  <div class="callout purple">
+    <strong>🎯 Hybrid RAG의 핵심:</strong> "넓게 긷고 좁게 거른다" — Vector로 20개 후보 수집 → Cross-encoder로 3개 정밀 선별 → LLM에 전달. 이 구조가 <strong>정답률을 40%→88%로</strong> 끌어올립니다.
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ═══ 2. Bi vs Cross ═══ -->
+<section id="s2" data-section="2. Bi vs Cross">
+  <div class="eyebrow">Section 2</div>
+  <h2>2. Bi-encoder vs Cross-encoder 원리</h2>
+
+  <p>Hybrid RAG의 구조를 이해하려면 두 모델 패러다임의 차이를 알아야 합니다.</p>
+
+  <div class="comparison">
+    <div class="comp-box comp-good">
+      <div class="comp-label">✓ Bi-encoder (임베딩 모델)</div>
+      <strong>OpenAI text-embedding-3</strong><br>
+      쿼리·문서를 각각 독립적으로 벡터화<br>
+      저장 가능, 사전 계산 가능<br>
+      코사인 유사도 계산<br>
+      빠름 (수백만 문서도 밀리초)<br>
+      정확도: 중간
+    </div>
+    <div class="comp-box comp-bad">
+      <div class="comp-label">⚠ Cross-encoder (Reranker)</div>
+      <strong>Cohere rerank-v3.5</strong><br>
+      쿼리+문서를 <u>함께</u> 입력해 점수 계산<br>
+      사전 저장 불가, 매번 계산<br>
+      복잡한 관련도 판단 가능<br>
+      느림 (수백 개가 한계)<br>
+      정확도: 높음
+    </div>
+  </div>
+
+  <div class="formula-box">
+    <div class="formula-label">BI-ENCODER</div>
+    <div class="formula-eq">sim(q, d) = cos(E(q), E(d))</div>
+    <div class="formula-note">쿼리 q와 문서 d를 각각 임베딩 후 코사인 유사도</div>
+  </div>
+
+  <div class="formula-box">
+    <div class="formula-label">CROSS-ENCODER</div>
+    <div class="formula-eq">score(q, d) = Model(q, d)</div>
+    <div class="formula-note">쿼리 q와 문서 d를 함께 입력해 관련도 점수 직접 출력</div>
+  </div>
+
+  <h3>왜 둘을 합치는가?</h3>
+  <p>Cross-encoder로 100만 문서를 매번 계산하면 너무 느림. Bi-encoder로 빠르게 20개 거르고, 그 20개만 Cross-encoder로 정밀 판정. <strong>속도와 정확도의 타협</strong>.</p>
+
+  <div class="tip-card">
+    <div class="tip-title">직관적 비유</div>
+    <div class="tip-body">
+      <strong>Bi-encoder = 도서관 검색 시스템</strong>: 서가에서 20권 뽑아옴.<br>
+      <strong>Cross-encoder = 사서 본인</strong>: 20권을 직접 훑어보고 "이거랑 이거가 답"이라 짚어줌.<br>
+      사서에게 만 권을 모두 훑어달라고 하면 평생 걸리지만, 20권 훑기는 금방입니다.
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ═══ 3. 청킹 전략 ═══ -->
+<section id="s3" data-section="3. 청킹 전략">
+  <div class="eyebrow">Section 3</div>
+  <h2>3. 청킹 전략 — Size & Overlap 튜닝</h2>
+
+  <p>청킹은 RAG 성능의 <strong>가장 큰 레버</strong>입니다. 잘못하면 정답률이 반 토막.</p>
+
+  <h3>청크 크기 (Chunk Size)</h3>
+  <table class="param-table">
+    <thead>
+      <tr><th>크기 (토큰)</th><th>한국어 글자수</th><th>특징</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>100~200</code></td><td>~200자</td><td>정밀하지만 맥락 부족. FAQ 같은 구조화 데이터에 적합</td></tr>
+      <tr class="param-recommended"><td><code>256~512</code> ⭐</td><td>500~1000자</td><td><strong>기본 권장</strong>. 대부분 도메인에 최적</td></tr>
+      <tr><td><code>512~1024</code></td><td>1000~2000자</td><td>의미 단위 보존. 문학·논문에 적합하지만 검색 정밀도 낮음</td></tr>
+      <tr><td><code>1024+</code></td><td>2000자+</td><td>임베딩이 희석됨. "모든 걸 담은 무의미한 벡터". 지양</td></tr>
+    </tbody>
+  </table>
+
+  <h3>오버랩 (Overlap)</h3>
+  <table class="param-table">
+    <thead>
+      <tr><th>비율</th><th>용도</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>0%</code></td><td>청킹 경계에서 정보 손실 위험. 비추천</td></tr>
+      <tr><td><code>10%</code></td><td>최소 안전판. 대부분 경우 부족</td></tr>
+      <tr class="param-recommended"><td><code>20~30%</code> ⭐</td><td><strong>표준</strong>. 경계에 걸친 정보 거의 완벽 보존</td></tr>
+      <tr><td><code>50%+</code></td><td>중복 과도. 저장 비용 낭비 + 검색 결과에 같은 내용 중복</td></tr>
+    </tbody>
+  </table>
+
+  <h3>강의 기본 설정 (권장값)</h3>
+  <div class="snip-head">W6 Lab 기본 설정</div>
+  <pre class="code-block">RecursiveCharacterTextSplitter(
+    chunk_size=<span class="num">1000</span>,       <span class="cm"># 약 500 토큰 (한국어 기준)</span>
+    chunk_overlap=<span class="num">200</span>,      <span class="cm"># 20% 오버랩</span>
+    separators=[<span class="str">'\n\n'</span>, <span class="str">'\n'</span>, <span class="str">'. '</span>, <span class="str">' '</span>, <span class="str">''</span>]
+)</pre>
+
+  <h3>Recursive Splitter의 우선순위</h3>
+  <p>separators 리스트는 <strong>위에서 아래로</strong> 순차 시도:</p>
+  <ol style="margin-left:18px;font-size:12px;line-height:1.8">
+    <li><code>\n\n</code> (빈 줄) — 문단 경계. 가장 자연스러운 분할점</li>
+    <li><code>\n</code> (줄바꿈) — 문단 내부 분할이 필요할 때</li>
+    <li><code>. </code> (마침표+공백) — 문장 단위. 한국어는 <code>다. </code>도 추가 고려</li>
+    <li><code>' '</code> (공백) — 단어 단위. 어쩔 수 없을 때</li>
+    <li><code>''</code> (빈 문자열) — 글자 단위. 마지막 수단</li>
+  </ol>
+
+  <div class="tip-card">
+    <div class="tip-title">한국어 문서 청킹 특수 팁</div>
+    <div class="tip-body">
+      한국어는 <code>. </code>이 영어만큼 일관되지 않습니다. <code>다. </code>, <code>니다. </code>, <code>요. </code> 같은 어미까지 고려. 혹은 <strong>의미 단위 청킹</strong>(semantic chunking)을 사용하면 더 자연스러움.
+    </div>
+  </div>
+
+  <h3>Advanced: 계층적 청킹 (Hierarchical Chunking)</h3>
+  <p>큰 문서의 경우 <strong>parent 청크</strong>(2000자) + <strong>child 청크</strong>(500자)를 함께 관리. 검색은 child로 하고 맥락은 parent를 반환.</p>
+
+  <div class="snip-head">계층 청킹 예시 코드</div>
+  <pre class="code-block"><span class="cm"># Parent chunks (맥락용, 임베딩 안 함)</span>
+parent_splitter = RecursiveCharacterTextSplitter(chunk_size=<span class="num">2000</span>)
+parents = parent_splitter.<span class="fn">split_text</span>(doc)
+
+<span class="cm"># Child chunks (검색용, 임베딩)</span>
+child_splitter = RecursiveCharacterTextSplitter(chunk_size=<span class="num">500</span>, chunk_overlap=<span class="num">100</span>)
+<span class="kw">for</span> parent_id, parent_text <span class="kw">in</span> <span class="fn">enumerate</span>(parents):
+    children = child_splitter.<span class="fn">split_text</span>(parent_text)
+    <span class="kw">for</span> child <span class="kw">in</span> children:
+        embedding = <span class="fn">embed</span>(child)
+        store(child, embedding, metadata={<span class="str">'parent_id'</span>: parent_id})
+
+<span class="cm"># 검색 시: child로 찾고 parent 반환</span>
+results = vector_search(query, top_k=<span class="num">5</span>)
+parent_ids = [r.metadata.parent_id <span class="kw">for</span> r <span class="kw">in</span> results]
+final_context = [parents[pid] <span class="kw">for</span> pid <span class="kw">in</span> <span class="fn">set</span>(parent_ids)]</pre>
+</section>
+
+<div class="divider"></div>
+
+<!-- ═══ 4. Embedding 모델 ═══ -->
+<section id="s4" data-section="4. Embedding 모델">
+  <div class="eyebrow">Section 4</div>
+  <h2>4. Embedding 모델 선택</h2>
+
+  <h3>주요 Embedding 모델 비교 (2026-04 기준)</h3>
+  <table class="param-table">
+    <thead>
+      <tr><th>모델</th><th>차원</th><th>비용 (1M토큰)</th><th>강점</th></tr>
+    </thead>
+    <tbody>
+      <tr class="param-recommended"><td><code>text-embedding-3-small</code></td><td>1536</td><td>$0.02</td><td><strong>강의 기본</strong>. 저렴+강력</td></tr>
+      <tr><td><code>text-embedding-3-large</code></td><td>3072</td><td>$0.13</td><td>최고 정확도. 비용 7배</td></tr>
+      <tr><td><code>Cohere embed-v3.0</code></td><td>1024</td><td>$0.10</td><td>다국어(한국어↑)</td></tr>
+      <tr><td><code>Voyage voyage-3</code></td><td>1024</td><td>$0.06</td><td>RAG 최적화 · Anthropic 공식 추천</td></tr>
+      <tr><td><code>BGE-M3 (open)</code></td><td>1024</td><td>무료</td><td>오픈소스, 자체 호스팅</td></tr>
+    </tbody>
+  </table>
+
+  <h3>언제 어떤 모델?</h3>
+  <div class="callout blue">
+    <strong>의사결정 트리:</strong><br>
+    • <strong>학습·프로토타입</strong> → text-embedding-3-small ✓<br>
+    • <strong>한국어 중심 문서</strong> → Cohere embed-v3.0 또는 multilingual-v3<br>
+    • <strong>최고 정확도 필요</strong> (의료·법률) → text-embedding-3-large 또는 Voyage<br>
+    • <strong>보안·비용 민감</strong> → BGE-M3 self-hosted
+  </div>
+
+  <h3>차원 축소 옵션</h3>
+  <p>OpenAI text-embedding-3는 <strong>Matryoshka 기법</strong>으로 차원을 줄일 수 있습니다:</p>
+
+  <div class="snip-head">차원 축소로 저장 공간 절약</div>
+  <pre class="code-block">response = openai.embeddings.<span class="fn">create</span>(
+    model=<span class="str">'text-embedding-3-small'</span>,
+    input=text,
+    dimensions=<span class="num">512</span>   <span class="cm"># 1536 → 512 (1/3 크기)</span>
+)
+<span class="cm"># 정확도는 ~3% 하락, 저장·검색 속도 3배 향상</span></pre>
+
+  <div class="tip-card">
+    <div class="tip-title">Embedding 모델 교체 시 주의</div>
+    <div class="tip-body">
+      모델 변경하면 <strong>기존 벡터 전체 재임베딩</strong> 필요. 차원 수도 달라짐. 프로젝트 초기에 신중히 선택하고, 변경 시 전체 reindex 계획 수립.
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ═══ 5. Reranker ═══ -->
+<section id="s5" data-section="5. Reranker">
+  <div class="eyebrow">Section 5</div>
+  <h2>5. Reranker 딥다이브</h2>
+
+  <h3>Reranker 모델 비교</h3>
+  <table class="param-table">
+    <thead>
+      <tr><th>모델</th><th>컨텍스트</th><th>비용</th><th>특징</th></tr>
+    </thead>
+    <tbody>
+      <tr class="param-recommended"><td><code>Cohere rerank-v3.5</code> ⭐</td><td>4096</td><td>$2/1k쿼리</td><td><strong>강의 기본</strong>. 100개 언어</td></tr>
+      <tr><td><code>Cohere rerank-v4.0-pro</code></td><td>32K</td><td>$2/1k쿼리</td><td>긴 문서 Q&amp;A</td></tr>
+      <tr><td><code>Voyage rerank-2</code></td><td>16K</td><td>$5/1k쿼리</td><td>고정확</td></tr>
+      <tr><td><code>BGE reranker</code></td><td>512</td><td>무료</td><td>오픈소스, 자체 호스팅</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Reranker 호출 규칙</h3>
+  <div class="callout orange">
+    <strong>⚠ Reranker 효과를 극대화하려면:</strong><br>
+    1. 1차 Retrieval은 <strong>충분히 넓게</strong> — 20~50개 후보 (적으면 Reranker 할 일 없음)<br>
+    2. 1차에서 <strong>10개 미만</strong>이면 Reranker 의미 없음 (단순 정렬)<br>
+    3. Top-N은 보통 <strong>3~10</strong>. LLM 컨텍스트 윈도우 고려<br>
+    4. <strong>도메인 용어</strong>가 많으면 Reranker가 더 큰 효과
+  </div>
+
+  <h3>최적의 Top-K 결정</h3>
+  <div class="formula-box">
+    <div class="formula-label">권장 공식</div>
+    <div class="formula-eq">initial_k = 4 × final_k</div>
+    <div class="formula-note">최종 3개 필요 → 초기 12~20개 수집. 최종 5개 → 초기 20~30개.</div>
+  </div>
+
+  <h3>RRF (Reciprocal Rank Fusion) — Advanced</h3>
+  <p>Dense(벡터) + Sparse(BM25/키워드) 검색을 <strong>결합</strong>하는 기법:</p>
+
+  <div class="formula-box">
+    <div class="formula-label">RRF SCORE</div>
+    <div class="formula-eq">RRF(d) = Σ 1 / (k + rank(d))</div>
+    <div class="formula-note">k=60 표준. 두 검색 결과의 순위 역수 합</div>
+  </div>
+
+  <div class="snip-head">RRF 구현</div>
+  <pre class="code-block"><span class="kw">def</span> <span class="fn">rrf_fusion</span>(vector_results, bm25_results, k=<span class="num">60</span>):
+    <span class="str">"""두 검색 결과를 RRF로 융합."""</span>
+    scores = {}
+    
+    <span class="kw">for</span> rank, doc <span class="kw">in</span> <span class="fn">enumerate</span>(vector_results):
+        scores[doc.id] = scores.<span class="fn">get</span>(doc.id, <span class="num">0</span>) + <span class="num">1</span> / (k + rank + <span class="num">1</span>)
+    
+    <span class="kw">for</span> rank, doc <span class="kw">in</span> <span class="fn">enumerate</span>(bm25_results):
+        scores[doc.id] = scores.<span class="fn">get</span>(doc.id, <span class="num">0</span>) + <span class="num">1</span> / (k + rank + <span class="num">1</span>)
+    
+    <span class="cm"># 점수 높은 순 정렬</span>
+    <span class="kw">return</span> <span class="fn">sorted</span>(scores.<span class="fn">items</span>(), key=<span class="kw">lambda</span> x: -x[<span class="num">1</span>])</pre>
+
+  <h3>8주 강의의 RAG 구조 재확인</h3>
+  <div class="pipeline">
+    <div class="pl-title">📊 Hybrid RAG 4단계 파이프라인</div>
+    <div class="pl-row">
+      <div class="pl-num">1</div>
+      <div class="pl-body"><strong>임베딩 저장</strong>PDF 청킹 → OpenAI 임베딩 → Supabase 저장</div>
+      <div class="pl-tag">Offline</div>
+    </div>
+    <div class="pl-row">
+      <div class="pl-num">2</div>
+      <div class="pl-body"><strong>1차 검색</strong>쿼리 임베딩 → pgvector 유사도 Top 20</div>
+      <div class="pl-tag">Bi-encoder</div>
+    </div>
+    <div class="pl-row">
+      <div class="pl-num">3</div>
+      <div class="pl-body"><strong>2차 재정렬</strong>Cohere rerank-v3.5로 Top 20 → Top 3</div>
+      <div class="pl-tag">Cross-encoder</div>
+    </div>
+    <div class="pl-row">
+      <div class="pl-num">4</div>
+      <div class="pl-body"><strong>답변 생성</strong>Claude Sonnet에 Top 3 청크 컨텍스트로 전달 → 출처 인용 답변</div>
+      <div class="pl-tag">LLM</div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ═══ 6. 성능 측정 ═══ -->
+<section id="s6" data-section="6. 성능 측정">
+  <div class="eyebrow">Section 6</div>
+  <h2>6. 성능 측정 + 벤치마크</h2>
+
+  <h3>핵심 메트릭 3종</h3>
+  <div class="concept-card">
+    <div class="concept-label">METRIC 1</div>
+    <div class="concept-def">Recall@K</div>
+    <div class="concept-desc">Top-K 결과 안에 정답 문서가 포함된 비율. "10개 중 정답이 몇 번 들어오는가"</div>
+  </div>
+
+  <div class="concept-card">
+    <div class="concept-label">METRIC 2</div>
+    <div class="concept-def">MRR (Mean Reciprocal Rank)</div>
+    <div class="concept-desc">정답이 몇 번째에 있는지의 역수 평균. 1등에 있으면 1.0, 2등이면 0.5. <strong>순위까지 평가</strong>.</div>
+  </div>
+
+  <div class="concept-card">
+    <div class="concept-label">METRIC 3</div>
+    <div class="concept-def">Faithfulness (Ragas)</div>
+    <div class="concept-desc">생성된 답변이 실제로 검색된 문서에 근거하는지 측정. 환각 여부 판정.</div>
+  </div>
+
+  <h3>강의 구조의 실측 성능</h3>
+  <div class="bench-card">
+    <div class="bench-label">📊 W6 실습 기준 Recall@3 (FOMC 의사록 Q&amp;A)</div>
+    <div class="bench-row">
+      <span class="bench-name">Vector만 (단순 RAG)</span>
+      <span class="bench-score">42%</span>
+      <span class="bench-bar"><span class="bench-fill" style="width:42%"></span></span>
+    </div>
+    <div class="bench-row">
+      <span class="bench-name">+ 청크 크기 최적화</span>
+      <span class="bench-score">58%</span>
+      <span class="bench-bar"><span class="bench-fill" style="width:58%"></span></span>
+    </div>
+    <div class="bench-row">
+      <span class="bench-name">+ Cohere Reranker</span>
+      <span class="bench-score">81%</span>
+      <span class="bench-bar"><span class="bench-fill" style="width:81%"></span></span>
+    </div>
+    <div class="bench-row">
+      <span class="bench-name">+ 계층 청킹 + RRF</span>
+      <span class="bench-score">91%</span>
+      <span class="bench-bar"><span class="bench-fill" style="width:91%"></span></span>
+    </div>
+  </div>
+
+  <h3>간단한 벤치마크 코드</h3>
+
+  <div class="snip-head">Recall@K 측정</div>
+  <pre class="code-block"><span class="cm"># 평가 세트: 질문 + 정답 문서 ID</span>
+test_set = [
+    {<span class="str">'q'</span>: <span class="str">'FOMC 점도표 2026년 중간값'</span>, <span class="str">'answer_ids'</span>: [<span class="str">'doc_42'</span>]},
+    {<span class="str">'q'</span>: <span class="str">'인플레이션 전망'</span>, <span class="str">'answer_ids'</span>: [<span class="str">'doc_17'</span>, <span class="str">'doc_23'</span>]},
+    <span class="cm"># ... 20~50개 이상 준비</span>
+]
+
+<span class="kw">def</span> <span class="fn">recall_at_k</span>(retrieval_fn, test_set, k=<span class="num">3</span>):
+    hits = <span class="num">0</span>
+    <span class="kw">for</span> t <span class="kw">in</span> test_set:
+        results = retrieval_fn(t[<span class="str">'q'</span>], top_k=k)
+        result_ids = {r[<span class="str">'id'</span>] <span class="kw">for</span> r <span class="kw">in</span> results}
+        <span class="kw">if</span> <span class="fn">set</span>(t[<span class="str">'answer_ids'</span>]) &amp; result_ids:
+            hits += <span class="num">1</span>
+    <span class="kw">return</span> hits / <span class="fn">len</span>(test_set)
+
+<span class="cm"># 측정</span>
+r3_vector = <span class="fn">recall_at_k</span>(vector_search, test_set, k=<span class="num">3</span>)
+r3_hybrid = <span class="fn">recall_at_k</span>(hybrid_search, test_set, k=<span class="num">3</span>)
+
+<span class="fn">print</span>(<span class="str">f'Vector Recall@3: {r3_vector:.1%}'</span>)
+<span class="fn">print</span>(<span class="str">f'Hybrid Recall@3: {r3_hybrid:.1%}'</span>)</pre>
+</section>
+
+<div class="divider"></div>
+
+<!-- ═══ 7. RAG 실패 패턴 ═══ -->
+<section id="s7" data-section="7. RAG 실패 패턴">
+  <div class="eyebrow">Section 7</div>
+  <h2>7. RAG 실패 패턴 + 해결</h2>
+
+  <h3>실패 패턴 Top 7</h3>
+
+  <div class="comparison">
+    <div class="comp-box comp-bad">
+      <div class="comp-label">❌ Pattern 1 — 청크가 너무 큼</div>
+      한 청크가 2000자. 애플 IR도 있고 삼성 실적도 있고... 임베딩이 뒤죽박죽.
+    </div>
+    <div class="comp-box comp-good">
+      <div class="comp-label">✓ 해결</div>
+      청크 500~1000자로 축소. RecursiveCharacterTextSplitter 기본값으로.
+    </div>
+  </div>
+
+  <div class="comparison">
+    <div class="comp-box comp-bad">
+      <div class="comp-label">❌ Pattern 2 — 출처 메타데이터 누락</div>
+      청크만 저장하고 어느 PDF 몇 페이지인지 모름. 인용 불가능.
+    </div>
+    <div class="comp-box comp-good">
+      <div class="comp-label">✓ 해결</div>
+      metadata에 source·page·chunk_id 반드시 포함. W6 실습 기준 코드 참조.
+    </div>
+  </div>
+
+  <div class="comparison">
+    <div class="comp-box comp-bad">
+      <div class="comp-label">❌ Pattern 3 — Reranker에 너무 적은 후보</div>
+      Vector Top 3만 주고 Rerank 요청. Reranker는 3개 내에서만 정렬, 효과 없음.
+    </div>
+    <div class="comp-box comp-good">
+      <div class="comp-label">✓ 해결</div>
+      Vector Top 20~50 → Rerank → Top 3~5로 축소. "넓게 수집, 좁게 필터".
+    </div>
+  </div>
+
+  <div class="comparison">
+    <div class="comp-box comp-bad">
+      <div class="comp-label">❌ Pattern 4 — 중복 청크</div>
+      같은 PDF가 두 번 업로드되어 똑같은 청크 중복. Top 3가 같은 내용.
+    </div>
+    <div class="comp-box comp-good">
+      <div class="comp-label">✓ 해결</div>
+      저장 전 content hash 체크, metadata에 file_hash 추가. 중복 자동 차단.
+    </div>
+  </div>
+
+  <div class="comparison">
+    <div class="comp-box comp-bad">
+      <div class="comp-label">❌ Pattern 5 — 도메인 용어 미스매치</div>
+      "RSI 30 이하"를 "relative strength index below 30"으로 임베딩. 검색 실패.
+    </div>
+    <div class="comp-box comp-good">
+      <div class="comp-label">✓ 해결</div>
+      쿼리 확장(query expansion): LLM에게 쿼리를 3가지 표현으로 바꿔달라 요청.
+    </div>
+  </div>
+
+  <div class="comparison">
+    <div class="comp-box comp-bad">
+      <div class="comp-label">❌ Pattern 6 — LLM이 컨텍스트 무시</div>
+      "Top 3 청크 주어도 자기 지식으로만 답함". 프롬프트 약함.
+    </div>
+    <div class="comp-box comp-good">
+      <div class="comp-label">✓ 해결</div>
+      시스템 프롬프트에 "제공된 출처만 사용, 없으면 '모름'이라 답" 강제.
+    </div>
+  </div>
+
+  <div class="comparison">
+    <div class="comp-box comp-bad">
+      <div class="comp-label">❌ Pattern 7 — Embedding 모델 교체 후 섞임</div>
+      처음엔 text-embedding-3-small(1536차원)로 저장, 나중에 다른 모델 추가. 벡터 차원 다름.
+    </div>
+    <div class="comp-box comp-good">
+      <div class="comp-label">✓ 해결</div>
+      모델 변경 시 전체 DB reindex. metadata에 embedding_model 명시.
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ═══ 8. 운영 체크리스트 ═══ -->
+<section id="s8" data-section="8. 운영 체크리스트">
+  <div class="eyebrow">Section 8</div>
+  <h2>8. 운영 체크리스트</h2>
+
+  <h3>구축 전</h3>
+  <ul style="margin-left:18px;font-size:12px;line-height:1.9">
+    <li>□ 예상 문서 수 + 평균 크기 추정 (벡터 DB 용량 예측)</li>
+    <li>□ 쿼리 유형 분석 (factoid / summarization / comparison)</li>
+    <li>□ 타겟 메트릭 결정 (Recall@3 80%+? MRR 0.7+?)</li>
+    <li>□ 테스트 세트 구축 (최소 20개 질문+정답)</li>
+  </ul>
+
+  <h3>구축 중</h3>
+  <ul style="margin-left:18px;font-size:12px;line-height:1.9">
+    <li>□ 청킹 설정 기본값으로 시작 (1000자 + 200 overlap)</li>
+    <li>□ 저장 시 metadata 필수 (source·page·chunk_id·file_hash·timestamp)</li>
+    <li>□ 1차 검색 top_k=20 이상</li>
+    <li>□ Reranker top_n=3~5</li>
+    <li>□ 컨텍스트 인용 프롬프트 엄격 작성</li>
+    <li>□ 환각 방지 Guardrail 추가 ("출처 없으면 모름")</li>
+  </ul>
+
+  <h3>배포 후</h3>
+  <ul style="margin-left:18px;font-size:12px;line-height:1.9">
+    <li>□ 첫 주 Recall@K 측정 → 목표치 미달이면 청크 크기부터 조정</li>
+    <li>□ 사용자 피드백 수집 ("좋아요/싫어요" 버튼)</li>
+    <li>□ 실패 케이스 로그 → 주간 리뷰</li>
+    <li>□ 신규 문서 주기적 reindex (월 1회)</li>
+    <li>□ Embedding / Reranker 모델 업데이트 추적</li>
+    <li>□ 비용 모니터링 (임베딩 · 검색 · 생성 각각)</li>
+  </ul>
+
+  <div class="callout green">
+    <strong>🎯 최종 목표:</strong> Recall@3 ≥ 85% · MRR ≥ 0.75 · Faithfulness ≥ 0.90<br>
+    이 수치 도달하면 <strong>프로덕션 품질</strong>. 데모에서는 60~70%로도 "신기해 보이지만", 실전은 다릅니다.
+  </div>
+</section>
+
+<div style="background:linear-gradient(135deg,#7c3aed,#1e1b4b);color:#fff;text-align:center;padding:32px 20px;margin:36px -15px 0;margin-bottom:var(--fh)">
+  <div style="font-size:10px;letter-spacing:2px;color:#a78bfa;margin-bottom:8px;font-weight:700">📘 APPENDIX B COMPLETE</div>
+  <div style="font-size:14px;font-weight:700;margin-bottom:5px">Hybrid RAG 심화 가이드</div>
+  <div style="font-size:11px;color:rgba(255,255,255,.7);line-height:1.7">8 sections · 3 formulas · 7 failure patterns<br>2026 · ZeroOneAI Education</div>
+</div>
+
+</div>
+
+<script>
+const sections = document.querySelectorAll('[data-section]');
+const sfT = document.getElementById('sf-t');
+const sfP = document.getElementById('sf-p');
+function update(){
+  const sy = window.scrollY;
+  const dh = document.documentElement.scrollHeight - window.innerHeight;
+  sfP.textContent = Math.round((sy / Math.max(dh, 1)) * 100) + '%';
+  let cur = sections[0]?.dataset.section || '';
+  sections.forEach(s => {
+    if(sy >= s.getBoundingClientRect().top + sy - 110) cur = s.dataset.section;
+  });
+  if(sfT.textContent !== cur) sfT.textContent = cur;
+}
+window.addEventListener('scroll', update, {passive:true});
+update();
+</script>
+</body>
+</html>

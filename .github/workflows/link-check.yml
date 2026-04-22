@@ -1,0 +1,42 @@
+name: 🔗 Link Checker
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '**.md'
+      - '**.html'
+  pull_request:
+    branches: [main]
+    paths:
+      - '**.md'
+      - '**.html'
+  schedule:
+    # 매주 일요일 자정 (UTC) = 월요일 09:00 KST
+    - cron: '0 0 * * 0'
+
+jobs:
+  markdown-link-check:
+    name: Check links in Markdown
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Check Markdown links
+        uses: gaurav-nelson/github-action-markdown-link-check@v1
+        with:
+          use-quiet-mode: 'yes'
+          use-verbose-mode: 'yes'
+          config-file: '.github/workflows/link-check-config.json'
+
+  html-link-check:
+    name: Check links in HTML
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Install lychee
+        uses: lycheeverse/lychee-action@v1
+        with:
+          args: --verbose --no-progress './docs/**/*.html' './README.md'
+          fail: false  # 경고만, PR 차단은 안 함

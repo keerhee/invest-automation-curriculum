@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 💬 Discord 커뮤니티
+    url: https://discord.gg/YOUR_INVITE
+    about: 빠른 질문은 Discord가 더 효과적입니다
+  - name: 📖 FAQ 먼저 확인
+    url: https://github.com/YOUR_ORG/invest-automation-curriculum/blob/main/FAQ.md
+    about: 자주 묻는 질문 50+개를 정리했습니다
+  - name: 📚 문서 보기
+    url: https://github.com/YOUR_ORG/invest-automation-curriculum/tree/main/docs
+    about: 강의노트·랩·부록 자료

@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>W3 과제 워크북 — 뉴스 센티먼트 분석</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;600&display=swap');
+:root{--black:#0d0d0d;--gray:#6b6b6b;--light:#f3f3f3;--border:#e6e6e6;--hw-orange:#f97316;--hw-dark:#431407;--hw-amber:#fbbf24;--required:#ef4444;--advanced:#8b5cf6;--fh:46px}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Noto Sans KR',sans-serif;background:#fff;color:var(--black);font-size:14px;line-height:1.75;padding-bottom:var(--fh)}
+#sf{position:fixed;bottom:0;left:0;right:0;height:var(--fh);background:var(--hw-dark);display:flex;align-items:center;justify-content:space-between;padding:0 16px;z-index:999}
+#sf .lbl{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:#fed7aa}
+#sf .ttl{font-size:12px;font-weight:700;color:#fff;max-width:50%;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#sf .score{font-size:11px;color:var(--hw-amber);white-space:nowrap;font-weight:700}
+.hero{background:linear-gradient(135deg,#f97316,#431407);color:#fff;padding:40px 20px 36px;text-align:center;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;top:-80px;right:-80px;width:260px;height:260px;border:1px solid rgba(255,255,255,.08);border-radius:50%}
+.hero-badge{display:inline-block;border:1px solid rgba(255,255,255,.25);border-radius:20px;padding:4px 14px;font-size:10px;letter-spacing:2px;color:#fed7aa;margin-bottom:10px;font-weight:700}
+.hero-week{font-size:13px;color:rgba(255,255,255,.7);margin-bottom:4px;letter-spacing:3px;font-weight:700}
+.hero h1{font-size:20px;font-weight:900;line-height:1.35;margin-bottom:12px;letter-spacing:-.5px}
+.hero-score-box{display:inline-flex;align-items:center;gap:8px;background:rgba(0,0,0,.2);border:1px solid rgba(255,255,255,.2);border-radius:30px;padding:6px 16px;margin-top:8px}
+.hero-score-box strong{color:var(--hw-amber);font-weight:900;font-size:14px}
+.container{max-width:720px;margin:0 auto;padding:0 15px}
+section{padding:30px 0 0}
+.divider{height:1px;background:var(--border);margin:28px 0 0}
+.eyebrow{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--gray);margin-bottom:5px}
+h2{font-size:18px;font-weight:900;letter-spacing:-.3px;margin-bottom:10px;line-height:1.3}
+h3{font-size:13px;font-weight:700;margin:16px 0 6px}
+h4{font-size:12px;font-weight:700;margin:12px 0 6px;color:#333}
+p{color:#333;margin-bottom:8px;font-size:13px}
+strong{color:var(--black);font-weight:700}
+code{font-family:'JetBrains Mono',monospace;background:#fff7ed;padding:1px 5px;border-radius:3px;font-size:11px;color:var(--hw-orange)}
+.overview{background:linear-gradient(135deg,#fff7ed,#ffedd5);border:1px solid var(--hw-orange);border-radius:12px;padding:14px 16px;margin:14px 0}
+.ov-title{font-size:11px;font-weight:700;color:var(--hw-dark);letter-spacing:1px;margin-bottom:8px}
+.ov-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.ov-item{background:#fff;border-radius:6px;padding:6px 10px;font-size:11px}
+.ov-label{font-size:9px;color:var(--hw-orange);font-weight:700;text-transform:uppercase;margin-bottom:2px}
+.ov-value{font-weight:600;color:#333}
+.score-summary{background:#0d1117;color:#fff;border-radius:12px;padding:16px;margin:12px 0}
+.ss-title{font-size:10px;color:var(--hw-amber);letter-spacing:2px;font-weight:700;margin-bottom:10px}
+.ss-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:8px}
+.ss-item{background:rgba(255,255,255,.08);border-radius:6px;padding:8px 4px;text-align:center}
+.ss-num{font-size:10px;color:#94a3b8;margin-bottom:2px}
+.ss-pts{font-size:14px;font-weight:900;color:#fff}
+.ss-pts-amber{color:var(--hw-amber)}
+.ss-pts-purple{color:#c4b5fd}
+.ss-total{text-align:center;margin-top:12px;padding-top:12px;border-top:1px dashed rgba(255,255,255,.2);font-size:13px;color:#fff}
+.ss-total strong{color:var(--hw-amber);font-size:18px}
+.task-card{background:#fff;border:2px solid var(--border);border-radius:12px;margin:14px 0;overflow:hidden;position:relative}
+.task-card.required{border-color:var(--required)}
+.task-card.advanced{border-color:var(--advanced)}
+.task-head{padding:12px 14px;display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap;border-bottom:1px solid var(--border)}
+.required .task-head{background:#fef2f2}
+.advanced .task-head{background:#f5f3ff}
+.task-title-wrap{flex:1;min-width:0}
+.task-level{font-size:9px;letter-spacing:2px;font-weight:700;margin-bottom:3px}
+.required .task-level{color:var(--required)}
+.advanced .task-level{color:var(--advanced)}
+.task-title{font-size:13px;font-weight:700;line-height:1.35;color:#333}
+.task-points{display:flex;align-items:center;gap:6px;background:#fff;border:1px solid var(--border);border-radius:20px;padding:4px 12px;font-size:11px;font-weight:700;white-space:nowrap}
+.task-points strong{font-size:14px;color:var(--hw-orange)}
+.task-body{padding:14px}
+.task-desc{font-size:12px;line-height:1.7;color:#333;margin-bottom:10px}
+.task-requirements{background:var(--light);border-left:3px solid var(--hw-orange);border-radius:0 8px 8px 0;padding:10px 14px;margin:10px 0;font-size:12px;line-height:1.65}
+.tr-title{font-size:10px;color:var(--hw-orange);font-weight:700;margin-bottom:5px;letter-spacing:1px}
+.tr-list{margin:0;padding-left:16px}
+.tr-list li{margin-bottom:4px;color:#333}
+.code-block{background:#0d1117;color:#e6edf3;border-radius:9px;padding:12px 14px;margin:10px 0;font-family:'JetBrains Mono',monospace;font-size:11px;line-height:1.7;overflow-x:auto;white-space:pre;tab-size:2;-moz-tab-size:2;word-wrap:normal}
+.code-block .cm{color:#8b949e;font-style:italic}
+.code-block .kw{color:#ff7b72}
+.code-block .str{color:#a5d6ff}
+.code-block .num{color:#79c0ff}
+.code-block .fn{color:#d2a8ff}
+.submit-list{background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:10px 12px;margin:10px 0}
+.sl-title{font-size:10px;color:#166534;font-weight:700;margin-bottom:6px;letter-spacing:1px}
+.sl-item{display:flex;align-items:flex-start;gap:8px;padding:4px 0;font-size:12px;color:#333;line-height:1.55;cursor:pointer;user-select:none}
+.sl-item input[type="checkbox"]{flex-shrink:0;margin-top:3px;width:14px;height:14px;accent-color:#16a34a;cursor:pointer}
+.sl-item.checked{color:#888;text-decoration:line-through}
+.rubric{margin:12px 0}
+.rubric-title{font-size:10px;color:var(--hw-orange);font-weight:700;letter-spacing:1px;margin-bottom:6px;display:flex;align-items:center;gap:5px}
+.rubric-title::before{content:'📊';font-size:13px}
+.rubric-table{width:100%;border-collapse:collapse;font-size:11px}
+.rubric-table th{background:var(--hw-dark);color:#fff;padding:7px 8px;text-align:left;font-size:10px;font-weight:700}
+.rubric-table td{padding:7px 8px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.5}
+.rubric-table tr:nth-child(even) td{background:var(--light)}
+.rubric-table td:first-child{font-weight:700;color:var(--hw-orange);white-space:nowrap;font-family:'JetBrains Mono',monospace;font-size:10px}
+.rubric-table td:last-child{text-align:right;font-weight:700;color:#333;white-space:nowrap}
+.hint-block{background:#eff6ff;border:1px solid #93c5fd;border-radius:8px;margin:10px 0;overflow:hidden}
+.hint-summary{padding:10px 12px;cursor:pointer;font-size:11px;font-weight:700;color:#1e40af;display:flex;align-items:center;gap:6px;user-select:none;list-style:none}
+.hint-summary::before{content:'💡';font-size:13px}
+.hint-summary::after{content:'▼';font-size:10px;margin-left:auto;transition:transform .2s}
+.hint-block[open] .hint-summary::after{transform:rotate(180deg)}
+.hint-content{padding:0 12px 12px;font-size:11px;color:#1e3a8a;line-height:1.7}
+.hint-content code{background:#dbeafe;color:#1e40af}
+.warning{background:#fff8ed;border-left:3px solid var(--hw-amber);padding:10px 13px;border-radius:0 8px 8px 0;margin:10px 0;font-size:12px;line-height:1.65;color:#78350f}
+.warning strong{color:#92400e}
+.deliverable{background:#fff;border:2px dashed var(--hw-orange);border-radius:10px;padding:12px;margin:10px 0}
+.dv-title{font-size:10px;color:var(--hw-orange);letter-spacing:1px;font-weight:700;margin-bottom:4px}
+.dv-desc{font-size:11px;color:#333;line-height:1.6}
+.section-nav{background:var(--light);border-radius:10px;padding:12px;margin:10px 0}
+.sn-title{font-size:10px;color:var(--gray);font-weight:700;letter-spacing:1px;margin-bottom:8px}
+.sn-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:4px}
+.sn-link{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px 4px;background:#fff;border:1px solid var(--border);border-radius:6px;font-size:10px;color:#333;text-decoration:none;text-align:center}
+.sn-link:hover{border-color:var(--hw-orange);color:var(--hw-orange)}
+.sn-link.req{border-left:3px solid var(--required)}
+.sn-link.adv{border-left:3px solid var(--advanced)}
+.sn-num{font-size:14px;font-weight:900;color:#333;font-family:'JetBrains Mono',monospace}
+.sn-pts{font-size:9px;color:var(--gray);margin-top:2px}
+@media(max-width:400px){.ov-grid{grid-template-columns:1fr}.ss-grid{grid-template-columns:repeat(5,1fr);gap:3px}.ss-pts{font-size:12px}}
+</style>
+</head>
+<body>
+
+<div id="sf">
+  <span class="lbl">W3 Homework</span>
+  <span class="ttl" id="sf-t">W3 과제 워크북</span>
+  <span class="score" id="sf-s">0 / 100 점</span>
+</div>
+
+<div class="hero" data-section="개요">
+  <div class="hero-badge">📝 HOMEWORK</div>
+  <div class="hero-week">WEEK 3</div>
+  <h1>뉴스 센티먼트 분석<br>Alpha Vantage + Claude</h1>
+  <div class="hero-score-box">총점 <strong>100점</strong> · 필수 60 + 심화 40</div>
+</div>
+
+<div class="container">
+
+<section data-section="학습 목표">
+  <div class="overview">
+    <div class="ov-title">🎯 W3 학습 목표 복습</div>
+    <p style="font-size:12px;margin:4px 0 8px;color:#431407">Alpha Vantage NEWS_SENTIMENT API로 뉴스 수집 → Claude Haiku로 <strong>2차 분석 + 센티먼트 통합</strong>. 처음으로 <strong>LLM의 판단력</strong>을 파이프라인에 넣는 주차.</p>
+    <div class="ov-grid">
+      <div class="ov-item">
+        <div class="ov-label">🔧 새로운 도구</div>
+        <div class="ov-value">Alpha Vantage<br>Anthropic API<br>AI Agent 노드</div>
+      </div>
+      <div class="ov-item">
+        <div class="ov-label">⏱ 예상 시간</div>
+        <div class="ov-value">필수 4시간<br>심화 +3시간</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="score-summary">
+    <div class="ss-title">📊 과제 배점표</div>
+    <div class="ss-grid">
+      <div class="ss-item"><div class="ss-num">과제 1</div><div class="ss-pts ss-pts-amber">20</div></div>
+      <div class="ss-item"><div class="ss-num">과제 2</div><div class="ss-pts ss-pts-amber">20</div></div>
+      <div class="ss-item"><div class="ss-num">과제 3</div><div class="ss-pts ss-pts-amber">20</div></div>
+      <div class="ss-item"><div class="ss-num">과제 4</div><div class="ss-pts ss-pts-purple">20</div></div>
+      <div class="ss-item"><div class="ss-num">과제 5</div><div class="ss-pts ss-pts-purple">20</div></div>
+    </div>
+    <div class="ss-total">합계 <strong>100점</strong> · 필수 60 + 심화 40</div>
+  </div>
+
+  <div class="section-nav">
+    <div class="sn-title">📍 빠른 이동</div>
+    <div class="sn-grid">
+      <a class="sn-link req" href="#t1"><span class="sn-num">1</span><span class="sn-pts">20pt</span></a>
+      <a class="sn-link req" href="#t2"><span class="sn-num">2</span><span class="sn-pts">20pt</span></a>
+      <a class="sn-link req" href="#t3"><span class="sn-num">3</span><span class="sn-pts">20pt</span></a>
+      <a class="sn-link adv" href="#t4"><span class="sn-num">4</span><span class="sn-pts">20pt</span></a>
+      <a class="sn-link adv" href="#t5"><span class="sn-num">5</span><span class="sn-pts">20pt</span></a>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- TASK 1 -->
+<section id="t1" data-section="과제 1">
+  <div class="task-card required">
+    <div class="task-head">
+      <div class="task-title-wrap">
+        <div class="task-level">🔴 REQUIRED — 과제 1</div>
+        <div class="task-title">관심 종목 뉴스 피드 수집기</div>
+      </div>
+      <div class="task-points">배점 <strong>20</strong> 점</div>
+    </div>
+    <div class="task-body">
+      <p class="task-desc">Alpha Vantage <code>NEWS_SENTIMENT</code> API로 관심 종목 3개에 대한 최근 24시간 뉴스를 자동 수집합니다.</p>
+
+      <div class="task-requirements">
+        <div class="tr-title">필수 요구사항</div>
+        <ul class="tr-list">
+          <li>Alpha Vantage API Key 발급 (무료, 분당 5회 제한)</li>
+          <li><code>function=NEWS_SENTIMENT</code> + <code>tickers=AAPL,MSFT,NVDA</code> 등 3개 종목</li>
+          <li>각 뉴스의 <strong>title, url, source, sentiment_score, time_published</strong> 추출</li>
+          <li>Google Sheets에 뉴스 별로 1행씩 저장 (최대 50건)</li>
+          <li>매일 <strong>09:00, 18:00</strong> 하루 2회 실행</li>
+        </ul>
+      </div>
+
+      <h4>API URL 예시</h4>
+      <pre class="code-block">https://www.alphavantage.co/query
+  ?function=NEWS_SENTIMENT
+  &amp;tickers=AAPL,MSFT,NVDA
+  &amp;time_from=<span class="var">{{ yesterday }}</span>T0000
+  &amp;limit=<span class="num">50</span>
+  &amp;apikey=<span class="var">{{ $credentials.av }}</span></pre>
+
+      <details class="hint-block">
+        <summary class="hint-summary">응답에서 뉴스 배열 풀어내기</summary>
+        <div class="hint-content">
+<pre style="margin-top:6px;background:#1e293b;color:#e6edf3;padding:8px;border-radius:4px;font-size:10px">// Code 노드에서 feed 배열을 item별로 분리
+const feed = $input.first().json.feed || [];
+return feed.map(article => ({
+  json: {
+    title: article.title,
+    url: article.url,
+    source: article.source,
+    sentiment_score: parseFloat(article.overall_sentiment_score),
+    sentiment_label: article.overall_sentiment_label,
+    time_published: article.time_published,
+    ticker_sentiment: article.ticker_sentiment
+  }
+}));</pre>
+          이후 Sheets 노드가 각 item을 1행씩 저장.
+        </div>
+      </details>
+
+      <div class="warning">
+        <strong>⚠️ Alpha Vantage Rate Limit:</strong> 무료 Key는 분당 5회, 일 25회 제한. 학습용으로 <strong>demo</strong> 키 사용 가능하지만 일부 기능 제한. 진지하게 쓰려면 Premium 고려.
+      </div>
+
+      <div class="rubric">
+        <div class="rubric-title">채점 기준 (20점 만점)</div>
+        <table class="rubric-table">
+          <tbody>
+            <tr><td>A. API 호출 + Key 관리</td><td>4점</td></tr>
+            <tr><td>B. 뉴스 파싱 Code 노드</td><td>5점</td></tr>
+            <tr><td>C. Sheets 뉴스별 1행 저장</td><td>5점</td></tr>
+            <tr><td>D. 2회 Schedule 작동</td><td>3점</td></tr>
+            <tr><td>E. 중복 뉴스 체크 로직 (optional)</td><td>3점</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TASK 2 -->
+<section id="t2" data-section="과제 2">
+  <div class="task-card required">
+    <div class="task-head">
+      <div class="task-title-wrap">
+        <div class="task-level">🔴 REQUIRED — 과제 2</div>
+        <div class="task-title">Claude Haiku로 개별 뉴스 2차 분석</div>
+      </div>
+      <div class="task-points">배점 <strong>20</strong> 점</div>
+    </div>
+    <div class="task-body">
+      <p class="task-desc">Alpha Vantage가 제공하는 sentiment_score는 <strong>단순 키워드 기반</strong>입니다. 여기에 Claude Haiku의 <strong>맥락 이해</strong>를 더해 더 정밀한 분석을 합니다.</p>
+
+      <div class="task-requirements">
+        <div class="tr-title">필수 요구사항</div>
+        <ul class="tr-list">
+          <li>AI Agent 노드 + Anthropic Chat Model (<code>claude-haiku-4-5</code>) 연결</li>
+          <li>각 뉴스를 Claude에게 전달 → <strong>영향 지속성, 카테고리, 신뢰도</strong> 추출</li>
+          <li>JSON 출력 강제: <code>{"sentiment": -1~1, "category": "earnings|macro|...", "impact": "short_term|long_term", "confidence": 1-5}</code></li>
+          <li>Claude 분석 결과를 <strong>기존 뉴스 행에 컬럼 추가</strong>로 저장</li>
+          <li>Alpha Vantage 점수 vs Claude 점수 <strong>비교 컬럼</strong> 추가</li>
+        </ul>
+      </div>
+
+      <h4>Claude 프롬프트 템플릿 (참고: 부록 D)</h4>
+      <pre class="code-block"><span class="cm">System Message:</span>
+당신은 금융 뉴스 분석 전문가입니다. 주어진 헤드라인과 요약을 읽고 
+투자 관점에서 센티먼트를 판단하세요.
+
+<span class="cm">User Message:</span>
+Ticker: {{ $json.ticker }}
+Headline: {{ $json.title }}
+Summary: {{ $json.summary }}
+
+다음 JSON으로만 답하세요:
+{
+  "sentiment_score": -1.0 ~ 1.0,
+  "category": "earnings|macro|product|regulation|other",
+  "impact_horizon": "immediate|short_term|long_term",
+  "confidence": 1-5,
+  "reasoning": "한 문장 근거"
+}</pre>
+
+      <div class="warning">
+        <strong>💰 비용 주의:</strong> Haiku는 저렴하지만 하루 50건 × 2회 = 100건/일 × 30일 = 3000건/월. 토큰당 비용 계산해두기. 학습용 월 $1~2 예상.
+      </div>
+
+      <div class="rubric">
+        <div class="rubric-title">채점 기준 (20점 만점)</div>
+        <table class="rubric-table">
+          <tbody>
+            <tr><td>A. Claude 연결 + 프롬프트 품질</td><td>6점</td></tr>
+            <tr><td>B. JSON 파싱 안정성</td><td>4점</td></tr>
+            <tr><td>C. Sheets 컬럼 확장</td><td>4점</td></tr>
+            <tr><td>D. 두 점수 비교 분석</td><td>3점</td></tr>
+            <tr><td>E. 비용 측정 기록</td><td>3점</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TASK 3 -->
+<section id="t3" data-section="과제 3">
+  <div class="task-card required">
+    <div class="task-head">
+      <div class="task-title-wrap">
+        <div class="task-level">🔴 REQUIRED — 과제 3</div>
+        <div class="task-title">종합 센티먼트 브리핑 → Discord 발송</div>
+      </div>
+      <div class="task-points">배점 <strong>20</strong> 점</div>
+    </div>
+    <div class="task-body">
+      <p class="task-desc">여러 뉴스를 <strong>종합</strong>해서 종목별 브리핑을 만들고 Discord로 발송. Aggregate 노드 + Claude Sonnet 활용.</p>
+
+      <div class="task-requirements">
+        <div class="tr-title">필수 요구사항</div>
+        <ul class="tr-list">
+          <li>Aggregate 노드로 뉴스들을 종목별로 그룹핑</li>
+          <li>Claude Sonnet에게 <strong>종목별 브리핑</strong> 요청 (각 종목 3문장 요약)</li>
+          <li>Discord Embed 형식으로 발송:
+            <ul>
+              <li>Title: <code>🤖 오전 센티먼트 브리핑</code></li>
+              <li>Fields: 종목별 1필드 (이름 + 점수 + 핵심 이슈)</li>
+              <li>Color: 종합 센티먼트가 +면 초록, -면 빨강, 중립이면 노랑</li>
+            </ul>
+          </li>
+          <li>브리핑 마지막에 <strong>"가장 주목할 한 가지"</strong> 강조</li>
+        </ul>
+      </div>
+
+      <h4>Discord Embed 예시</h4>
+      <pre class="code-block">{
+  <span class="str">"embeds"</span>: [{
+    <span class="str">"title"</span>: <span class="str">"🤖 오전 센티먼트 브리핑 · 2026-04-22"</span>,
+    <span class="str">"color"</span>: <span class="num">3066993</span>,  <span class="cm">// 초록</span>
+    <span class="str">"fields"</span>: [
+      {<span class="str">"name"</span>: <span class="str">"AAPL (+0.31)"</span>, 
+       <span class="str">"value"</span>: <span class="str">"WWDC 기대감 + AI 칩 루머"</span>, 
+       <span class="str">"inline"</span>: <span class="kw">false</span>},
+      {<span class="str">"name"</span>: <span class="str">"MSFT (-0.12)"</span>, 
+       <span class="str">"value"</span>: <span class="str">"EU 규제 우려"</span>, 
+       <span class="str">"inline"</span>: <span class="kw">false</span>},
+      {<span class="str">"name"</span>: <span class="str">"🎯 오늘 주목"</span>, 
+       <span class="str">"value"</span>: <span class="str">"NVIDIA 실적 발표 예정"</span>}
+    ]
+  }]
+}</pre>
+
+      <div class="rubric">
+        <div class="rubric-title">채점 기준 (20점 만점)</div>
+        <table class="rubric-table">
+          <tbody>
+            <tr><td>A. Aggregate로 종목별 그룹핑</td><td>4점</td></tr>
+            <tr><td>B. Sonnet 브리핑 품질</td><td>6점</td></tr>
+            <tr><td>C. Embed 색상 동적 결정</td><td>4점</td></tr>
+            <tr><td>D. "주목 포인트" 강조 로직</td><td>3점</td></tr>
+            <tr><td>E. 모바일 가독성</td><td>3점</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- TASK 4 -->
+<section id="t4" data-section="과제 4">
+  <div class="task-card advanced">
+    <div class="task-head">
+      <div class="task-title-wrap">
+        <div class="task-level">🟣 ADVANCED — 과제 4</div>
+        <div class="task-title">센티먼트 × 가격 상관관계 분석</div>
+      </div>
+      <div class="task-points">배점 <strong>20</strong> 점</div>
+    </div>
+    <div class="task-body">
+      <p class="task-desc">"뉴스 센티먼트가 실제 주가와 상관관계가 있는가?"를 <strong>데이터로 증명</strong>합니다.</p>
+
+      <div class="task-requirements">
+        <div class="tr-title">필수 요구사항</div>
+        <ul class="tr-list">
+          <li>14일 이상 뉴스 센티먼트 + 주가 데이터 축적</li>
+          <li>Code 노드에서 <strong>Pearson 상관계수</strong> 계산 함수 작성</li>
+          <li>센티먼트 점수 vs 다음날 수익률의 상관계수 계산</li>
+          <li>상관계수가 통계적으로 유의한지 판단 (<code>|r| &gt; 0.3</code>)</li>
+          <li>결과를 Sheets에 <strong>리포트</strong>로 정리 + Discord 주간 요약 발송</li>
+        </ul>
+      </div>
+
+      <h4>Pearson 상관계수 함수</h4>
+      <pre class="code-block"><span class="kw">function</span> <span class="fn">pearson</span>(x, y) {
+  <span class="kw">const</span> n = x.length;
+  <span class="kw">const</span> sumX = x.<span class="fn">reduce</span>((a,b) =&gt; a+b, <span class="num">0</span>);
+  <span class="kw">const</span> sumY = y.<span class="fn">reduce</span>((a,b) =&gt; a+b, <span class="num">0</span>);
+  <span class="kw">const</span> sumXY = x.<span class="fn">reduce</span>((s, xi, i) =&gt; s + xi * y[i], <span class="num">0</span>);
+  <span class="kw">const</span> sumX2 = x.<span class="fn">reduce</span>((s, xi) =&gt; s + xi*xi, <span class="num">0</span>);
+  <span class="kw">const</span> sumY2 = y.<span class="fn">reduce</span>((s, yi) =&gt; s + yi*yi, <span class="num">0</span>);
+  
+  <span class="kw">const</span> num = n * sumXY - sumX * sumY;
+  <span class="kw">const</span> den = <span class="fn">Math.sqrt</span>((n*sumX2 - sumX*sumX) * (n*sumY2 - sumY*sumY));
+  
+  <span class="kw">return</span> den === <span class="num">0</span> ? <span class="num">0</span> : num / den;
+}</pre>
+
+      <div class="warning">
+        <strong>🎓 통계 주의:</strong> 14일 데이터로는 통계적 유의성 확보 어려움. 이 과제는 "<strong>분석 방법론 학습</strong>"이 목적이지, "실제 상관관계 증명"이 아님. 결과가 r=0.1 이면 "유의미하지 않음"을 정직하게 보고.
+      </div>
+
+      <div class="rubric">
+        <div class="rubric-title">채점 기준 (20점 만점)</div>
+        <table class="rubric-table">
+          <tbody>
+            <tr><td>A. 데이터 축적 + 전처리</td><td>4점</td></tr>
+            <tr><td>B. Pearson 구현 정확성</td><td>5점</td></tr>
+            <tr><td>C. 시각화 (산점도 or 차트)</td><td>4점</td></tr>
+            <tr><td>D. 결과 해석 정확성</td><td>4점</td></tr>
+            <tr><td>E. 리포트 품질</td><td>3점</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TASK 5 -->
+<section id="t5" data-section="과제 5">
+  <div class="task-card advanced">
+    <div class="task-head">
+      <div class="task-title-wrap">
+        <div class="task-level">🟣 ADVANCED — 과제 5</div>
+        <div class="task-title">2차원 Verdict (W1+W3 통합)</div>
+      </div>
+      <div class="task-points">배점 <strong>20</strong> 점</div>
+    </div>
+    <div class="task-body">
+      <p class="task-desc">W1(가격 변동률) + W3(뉴스 센티먼트) 두 차원을 통합해 <strong>2D Verdict</strong>를 생성하는 워크플로를 만듭니다. W4의 "3D Verdict" 예고편.</p>
+
+      <div class="task-requirements">
+        <div class="tr-title">필수 요구사항</div>
+        <ul class="tr-list">
+          <li>두 차원의 시그널 방향 일치/불일치 판정 (4가지 시나리오)</li>
+          <li>시나리오별 verdict:
+            <ul>
+              <li>가격↑ + 센티먼트↑ → <code>STRONG_BUY</code></li>
+              <li>가격↑ + 센티먼트↓ → <code>WATCH_REVERSAL</code></li>
+              <li>가격↓ + 센티먼트↑ → <code>BUY_OPPORTUNITY</code></li>
+              <li>가격↓ + 센티먼트↓ → <code>AVOID</code></li>
+            </ul>
+          </li>
+          <li>Claude가 <strong>2~3문장 근거</strong> 생성</li>
+          <li>confidence 점수 포함 (1~5)</li>
+          <li>3일 이상 실제 verdict 기록</li>
+        </ul>
+      </div>
+
+      <div class="rubric">
+        <div class="rubric-title">채점 기준 (20점 만점)</div>
+        <table class="rubric-table">
+          <tbody>
+            <tr><td>A. 두 차원 통합 로직</td><td>6점</td></tr>
+            <tr><td>B. 4시나리오 분기 처리</td><td>4점</td></tr>
+            <tr><td>C. Claude 근거 생성 품질</td><td>4점</td></tr>
+            <tr><td>D. Confidence 산정 합리성</td><td>3점</td></tr>
+            <tr><td>E. 3일 데이터 기록</td><td>3점</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<section id="submit" data-section="제출">
+  <div class="eyebrow">Submit</div>
+  <h2>📤 제출 방법 + 기한</h2>
+  <div class="warning"><strong>⏰ 제출 기한:</strong> W4 수업 시작 전까지. 과제 4~5는 W5까지 연장 가능.</div>
+  <div style="background:linear-gradient(135deg,#f97316,#431407);color:#fff;text-align:center;padding:24px 20px;border-radius:12px;margin:20px 0">
+    <div style="font-size:10px;letter-spacing:2px;color:#fbbf24;margin-bottom:6px;font-weight:700">📝 W3 HOMEWORK COMPLETE</div>
+    <div style="font-size:14px;font-weight:700;margin-bottom:4px">뉴스 센티먼트 분석 · AI 파이프라인 입문</div>
+    <div style="font-size:11px;color:rgba(255,255,255,.75);line-height:1.7">5 tasks · 100 pt · 4~7 hours<br>Claude와 협업하는 첫 경험</div>
+  </div>
+</section>
+
+</div>
+
+<script>
+document.querySelectorAll('.sl-item input[type="checkbox"]').forEach(cb => {
+  cb.addEventListener('change', () => cb.parentElement.classList.toggle('checked', cb.checked));
+});
+const sections = document.querySelectorAll('[data-section]');
+const sfT = document.getElementById('sf-t');
+function update(){
+  const sy = window.scrollY;
+  let cur = sections[0]?.dataset.section || '';
+  sections.forEach(s => { if(sy >= s.getBoundingClientRect().top + sy - 110) cur = s.dataset.section; });
+  if(sfT.textContent !== cur) sfT.textContent = cur;
+}
+window.addEventListener('scroll', update, {passive:true});
+update();
+</script>
+</body>
+</html>

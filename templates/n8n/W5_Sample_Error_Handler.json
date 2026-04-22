@@ -1,0 +1,119 @@
+{
+  "name": "W5_Sample_Error_Handler",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "error-trigger",
+      "name": "Error Trigger",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "rate-limit-check",
+              "leftValue": "={{ $json.execution.error.message }}",
+              "rightValue": "429",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "or"
+        }
+      },
+      "id": "if-rate-limit",
+      "name": "Is Rate Limit?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "amount": 5,
+        "unit": "seconds"
+      },
+      "id": "wait-backoff",
+      "name": "Wait 5s",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [680, 200]
+    },
+    {
+      "parameters": {
+        "content": "=🚨 **Workflow Failed**\n\n**Workflow**: {{ $json.workflow.name }}\n**Node**: {{ $json.execution.lastNodeExecuted }}\n**Error**: {{ $json.execution.error.message }}\n**Time**: {{ $now.setZone('Asia/Seoul').toFormat('yyyy-MM-dd HH:mm:ss') }}\n\nCheck n8n executions for details.",
+        "options": {}
+      },
+      "id": "discord-alert",
+      "name": "Discord Alert",
+      "type": "n8n-nodes-base.discord",
+      "typeVersion": 2,
+      "position": [680, 400],
+      "credentials": {
+        "discordWebhookApi": {
+          "id": "SET_YOUR_ERROR_CHANNEL_ID",
+          "name": "Discord Webhook - Errors"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Error Trigger": {
+      "main": [
+        [
+          {
+            "node": "Is Rate Limit?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Rate Limit?": {
+      "main": [
+        [
+          {
+            "node": "Wait 5s",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Discord Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Asia/Seoul"
+  },
+  "staticData": null,
+  "tags": [
+    {
+      "name": "curriculum-w5",
+      "id": "curriculum-w5"
+    },
+    {
+      "name": "error-handler",
+      "id": "error-handler"
+    }
+  ],
+  "triggerCount": 0,
+  "versionId": "1.0.0",
+  "_description": "W5 Q5 에러 처리 샘플. Rate Limit(429)이면 5초 대기 후 재시도, 다른 에러는 Discord 알림. 대상 워크플로의 Settings에서 Error Workflow로 이 워크플로를 지정해야 작동."
+}

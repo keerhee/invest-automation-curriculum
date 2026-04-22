@@ -1,0 +1,939 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>부록 E — 안전장치 체크리스트</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;600&display=swap');
+:root{
+  --black:#0d0d0d;--gray:#6b6b6b;--light:#f3f3f3;--border:#e6e6e6;
+  --safe-red:#dc2626;--safe-dark:#450a0a;--safe-orange:#ea580c;--safe-yellow:#fbbf24;
+  --safe-green:#16a34a;
+  --fh:46px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Noto Sans KR',sans-serif;background:#fff;color:var(--black);font-size:14px;line-height:1.75;padding-bottom:var(--fh)}
+
+#sf{position:fixed;bottom:0;left:0;right:0;height:var(--fh);background:var(--safe-dark);display:flex;align-items:center;justify-content:space-between;padding:0 16px;z-index:999}
+#sf .lbl{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:#fca5a5}
+#sf .ttl{font-size:12px;font-weight:700;color:#fff;max-width:60%;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#sf .pct{font-size:10px;color:#fca5a5;white-space:nowrap}
+
+.hero{background:linear-gradient(135deg,#dc2626,#450a0a);color:#fff;padding:48px 20px 40px;text-align:center;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;top:-80px;right:-80px;width:260px;height:260px;border:1px solid rgba(255,255,255,.08);border-radius:50%}
+.hero-badge{display:inline-block;border:1px solid rgba(255,255,255,.25);border-radius:20px;padding:4px 14px;font-size:10px;letter-spacing:2px;color:#fca5a5;margin-bottom:14px;font-weight:700}
+.hero h1{font-size:22px;font-weight:900;line-height:1.35;margin-bottom:8px;letter-spacing:-.5px}
+.hero-sub{font-size:12px;color:rgba(255,255,255,.85);margin-bottom:22px}
+
+.container{max-width:720px;margin:0 auto;padding:0 15px}
+section{padding:36px 0 0}
+.divider{height:1px;background:var(--border);margin:34px 0 0}
+.eyebrow{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--gray);margin-bottom:5px}
+h2{font-size:19px;font-weight:900;letter-spacing:-.3px;margin-bottom:12px;line-height:1.3}
+h3{font-size:14px;font-weight:700;margin:20px 0 8px}
+h4{font-size:12px;font-weight:700;margin:14px 0 6px;color:#333}
+p{color:#333;margin-bottom:8px;font-size:13px}
+strong{color:var(--black);font-weight:700}
+code{font-family:'JetBrains Mono',monospace;background:#fee2e2;padding:1px 5px;border-radius:3px;font-size:11px;color:var(--safe-red)}
+
+/* TOC */
+.toc{background:var(--light);border-radius:12px;padding:16px 18px;margin:14px 0;border:1px solid var(--border)}
+.toc-title{font-size:11px;font-weight:700;color:var(--gray);letter-spacing:1px;margin-bottom:10px;text-transform:uppercase}
+.toc-item{display:block;padding:6px 0;font-size:12px;color:#333;text-decoration:none;border-bottom:1px dashed #e5e5e5}
+.toc-item:last-child{border-bottom:none}
+.toc-item:hover{color:var(--safe-red)}
+.toc-num{display:inline-block;width:26px;color:var(--safe-red);font-weight:700;font-family:'JetBrains Mono',monospace}
+
+.callout{background:var(--light);border-left:3px solid var(--black);padding:13px 15px;border-radius:0 8px 8px 0;margin:10px 0;font-size:13px;line-height:1.65}
+.callout.red{background:#fef2f2;border-left-color:var(--safe-red)}
+.callout.orange{background:#fff7ed;border-left-color:var(--safe-orange)}
+.callout.yellow{background:#fffbeb;border-left-color:var(--safe-yellow)}
+.callout.green{background:#f0fdf4;border-left-color:var(--safe-green)}
+
+/* CODE */
+.code-block{background:#0d1117;color:#e6edf3;border-radius:9px;padding:14px 16px;margin:10px 0;font-family:'JetBrains Mono',monospace;font-size:11px;line-height:1.7;overflow-x:auto;white-space:pre;tab-size:2;-moz-tab-size:2;word-wrap:normal}
+.code-block .cm{color:#8b949e;font-style:italic}
+.code-block .kw{color:#ff7b72}
+.code-block .str{color:#a5d6ff}
+.code-block .num{color:#79c0ff}
+.code-block .fn{color:#d2a8ff}
+
+/* GUARD CARD — 핵심 컴포넌트 */
+.guard-card{background:#fff;border:2px solid var(--border);border-radius:12px;margin:14px 0;overflow:hidden}
+.guard-card.critical{border-color:var(--safe-red)}
+.guard-card.high{border-color:var(--safe-orange)}
+.guard-card.medium{border-color:var(--safe-yellow)}
+
+.guard-head{padding:12px 14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.critical .guard-head{background:#fef2f2;color:#991b1b}
+.high .guard-head{background:#fff7ed;color:#9a3412}
+.medium .guard-head{background:#fffbeb;color:#92400e}
+
+.guard-number{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:900;flex-shrink:0}
+.critical .guard-number{background:var(--safe-red);color:#fff}
+.high .guard-number{background:var(--safe-orange);color:#fff}
+.medium .guard-number{background:var(--safe-yellow);color:#78350f}
+
+.guard-title-wrap{flex:1;min-width:0}
+.guard-level{font-size:9px;letter-spacing:2px;font-weight:700}
+.guard-title{font-size:13px;font-weight:700;line-height:1.35}
+.guard-body{padding:12px 14px;font-size:12px;line-height:1.7;color:#333}
+
+/* CHECKLIST ITEM */
+.check-list{list-style:none;padding:0;margin:10px 0}
+.check-list li{position:relative;padding:8px 0 8px 28px;font-size:12px;line-height:1.65;border-bottom:1px dashed #e5e5e5;color:#333}
+.check-list li:last-child{border-bottom:none}
+.check-list li::before{content:'☐';position:absolute;left:0;top:7px;font-size:16px;color:var(--safe-red);font-weight:700}
+.check-list li strong{color:var(--black)}
+.check-list.done li::before{content:'☑';color:var(--safe-green)}
+
+/* DANGER BOX */
+.danger-box{background:#450a0a;color:#fee2e2;border-radius:12px;padding:16px 18px;margin:12px 0;position:relative}
+.danger-box::before{content:'⚠️';position:absolute;top:-10px;left:16px;font-size:24px;background:#fee2e2;border-radius:50%;width:32px;height:32px;display:flex;align-items:center;justify-content:center}
+.danger-title{font-size:13px;font-weight:900;color:#fff;margin-left:22px;margin-bottom:8px}
+.danger-body{font-size:11px;line-height:1.75;color:#fecaca}
+.danger-body strong{color:#fca5a5}
+
+/* DECISION TREE */
+.tree-node{margin:8px 0 8px 0;font-size:12px}
+.tree-node.root{border-left:3px solid var(--safe-red);padding:8px 12px;background:#fef2f2;border-radius:0 6px 6px 0}
+.tree-node.branch{margin-left:20px;border-left:2px dashed #fecaca;padding:6px 10px}
+.tree-node.leaf{margin-left:40px;padding:4px 10px;background:var(--light);border-radius:6px;font-size:11px}
+.tree-arrow{color:var(--safe-red);font-weight:700;font-family:'JetBrains Mono',monospace;margin-right:6px}
+
+/* PARAM TABLE */
+.param-table{width:100%;border-collapse:collapse;margin:10px 0;font-size:11px}
+.param-table th{background:var(--safe-dark);color:#fff;padding:8px 10px;text-align:left;font-size:10px;font-weight:700}
+.param-table td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.5}
+.param-table tr:nth-child(even) td{background:var(--light)}
+.param-table code{font-size:10px;background:#fee2e2}
+.param-table tr.recommended td{background:#f0fdf4}
+.param-table tr.recommended td:first-child{font-weight:700;color:var(--safe-green)}
+
+/* PROTOCOL */
+.protocol-step{background:#fff;border-left:4px solid var(--safe-red);padding:10px 14px;margin:8px 0;font-size:12px;line-height:1.65}
+.protocol-num{display:inline-block;background:var(--safe-red);color:#fff;border-radius:4px;padding:1px 7px;font-size:10px;font-weight:700;margin-right:8px;font-family:'JetBrains Mono',monospace}
+.protocol-title{font-weight:700;display:inline}
+.protocol-desc{margin-top:4px;color:#555;font-size:11px}
+
+/* TIP */
+.tip-card{background:#eff6ff;border:1px solid #93c5fd;border-radius:10px;padding:12px 15px;margin:10px 0}
+.tip-title{font-size:11px;font-weight:700;color:#1e40af;margin-bottom:6px;display:flex;align-items:center;gap:5px}
+.tip-title::before{content:'💡';font-size:13px}
+.tip-body{font-size:11px;color:#1e3a8a;line-height:1.65}
+
+@media(max-width:400px){
+  .guard-head{flex-wrap:nowrap}
+  .tree-node.branch{margin-left:12px}
+  .tree-node.leaf{margin-left:24px}
+}
+</style>
+</head>
+<body>
+
+<div id="sf">
+  <span class="lbl">Appendix E · Safety</span>
+  <span class="ttl" id="sf-t">안전장치 체크리스트</span>
+  <span class="pct" id="sf-p">0%</span>
+</div>
+
+<!-- HERO -->
+<div class="hero" data-section="안전장치 체크리스트">
+  <div class="hero-badge">📘 APPENDIX E</div>
+  <h1>안전장치 체크리스트</h1>
+  <p class="hero-sub">Risk Guards · 실계좌 전환 검증 · 사고 대응 프로토콜</p>
+</div>
+
+<div class="container">
+
+<section data-section="목차">
+  <div class="toc">
+    <div class="toc-title">📚 목차</div>
+    <a class="toc-item" href="#s1"><span class="toc-num">1.</span> 왜 안전장치인가</a>
+    <a class="toc-item" href="#s2"><span class="toc-num">2.</span> Risk Guards 4단계</a>
+    <a class="toc-item" href="#s3"><span class="toc-num">3.</span> 2단계 승인 시스템</a>
+    <a class="toc-item" href="#s4"><span class="toc-num">4.</span> 로깅 필수 항목</a>
+    <a class="toc-item" href="#s5"><span class="toc-num">5.</span> 실계좌 전환 7대 검증</a>
+    <a class="toc-item" href="#s6"><span class="toc-num">6.</span> 사고 대응 프로토콜</a>
+    <a class="toc-item" href="#s7"><span class="toc-num">7.</span> 최종 배포 체크리스트</a>
+  </div>
+</section>
+
+<!-- ═══ 1. 왜 안전장치 ═══ -->
+<section id="s1" data-section="1. 왜 안전장치">
+  <div class="eyebrow">Section 1</div>
+  <h2>1. 왜 안전장치인가</h2>
+
+  <p>자동매매 시스템의 핵심 리스크는 <strong>"한 번의 실수가 모든 걸 날릴 수 있다"</strong>는 점입니다. 사람은 이상한 주문을 보면 '어? 이거 뭐지?' 하고 멈추지만, 자동화는 코드가 시키는 대로 끝까지 실행합니다.</p>
+
+  <div class="danger-box">
+    <div class="danger-title">실전 사고 사례</div>
+    <div class="danger-body">
+      2012년 Knight Capital은 소프트웨어 배포 실수로 <strong>45분 동안 4억 6천만 달러</strong>를 잃고 파산. 가격 소수점 위치 하나 잘못된 탓. 2023년 개인 투자자 한 명은 무한 루프 버그로 <strong>하룻밤에 8천만 원</strong> 손실. 모든 사례의 공통점: <strong>안전장치 부재</strong>.
+    </div>
+  </div>
+
+  <h3>안전장치의 3층 방어선</h3>
+  <div class="tree-node root">
+    <span class="tree-arrow">🛡️</span> <strong>3중 방어선 (Defense in Depth)</strong>
+  </div>
+  <div class="tree-node branch">
+    <span class="tree-arrow">1️⃣</span> <strong>Pre-Trade Guards</strong>: 주문 실행 전 검증
+  </div>
+  <div class="tree-node leaf">Position Sizing · Stop/Profit 가격 · Daily Loss Guard · Max Positions</div>
+  <div class="tree-node branch">
+    <span class="tree-arrow">2️⃣</span> <strong>In-Trade Monitoring</strong>: 체결 후 모니터링
+  </div>
+  <div class="tree-node leaf">Bracket Order 자동 청산 · 실시간 PnL 추적 · 이상 탐지</div>
+  <div class="tree-node branch">
+    <span class="tree-arrow">3️⃣</span> <strong>Circuit Breakers</strong>: 시스템 전체 차단
+  </div>
+  <div class="tree-node leaf">Max Drawdown 초과 시 전면 정지 · 수동 Kill Switch · 2단계 승인</div>
+
+  <div class="callout red">
+    <strong>⚠️ 핵심 원칙:</strong> 안전장치는 "과하다" 싶을 정도로 여러 겹 쌓아야 합니다. 하나가 뚫려도 다른 게 잡아줍니다. 어차피 대부분은 발동 안 되지만, <strong>단 한 번의 사고를 막기 위해 존재</strong>합니다.
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ═══ 2. Risk Guards 4단계 ═══ -->
+<section id="s2" data-section="2. Risk Guards 4단계">
+  <div class="eyebrow">Section 2</div>
+  <h2>2. Risk Guards 4단계</h2>
+
+  <p>W8에서 배운 4단계 Guards. 모든 자동 주문은 이 4개를 순차 통과해야 합니다.</p>
+
+  <!-- Guard 1 -->
+  <div class="guard-card high">
+    <div class="guard-head">
+      <div class="guard-number">1</div>
+      <div class="guard-title-wrap">
+        <div class="guard-level">POSITION SIZING</div>
+        <div class="guard-title">포지션 사이징 (자본의 2~4% 룰)</div>
+      </div>
+    </div>
+    <div class="guard-body">
+      <strong>목적:</strong> 한 포지션이 전체 자본을 망가뜨리지 못하게 제한.
+
+      <table class="param-table" style="margin-top:10px">
+        <thead>
+          <tr><th>Confidence</th><th>자본 대비 할당</th><th>비고</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>1 (매우 낮음)</td><td>1%</td><td>실행 스킵 권장</td></tr>
+          <tr><td>2 (낮음)</td><td>1.5%</td><td>-</td></tr>
+          <tr><td>3 (보통)</td><td>2%</td><td>기본값</td></tr>
+          <tr class="recommended"><td>4 (높음)</td><td>3%</td><td>⭐ 적극 매수</td></tr>
+          <tr><td>5 (매우 높음)</td><td>4%</td><td>최대 한도</td></tr>
+        </tbody>
+      </table>
+
+      <div class="callout yellow" style="margin-top:10px">
+        <strong>🚨 절대 금지:</strong> 한 종목이 자본의 <strong>5% 초과</strong> 금지. 아무리 확신해도. "분산 투자"의 수학적 의미는 "최대 5%".
+      </div>
+
+      <h4 style="margin-top:12px">✅ 체크리스트</h4>
+      <ul class="check-list">
+        <li><strong>계산 로직 검증:</strong> <code>qty × price ≤ equity × 0.04</code> 공식 테스트</li>
+        <li><strong>최소 1주 보장:</strong> qty는 절대 0이 될 수 없음 (주문 실패)</li>
+        <li><strong>소숫점 주식 미지원 확인:</strong> <code>int()</code>로 반드시 정수화</li>
+        <li><strong>한국 주식 호가 단위:</strong> 가격이 호가 단위의 배수인지 체크</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Guard 2 -->
+  <div class="guard-card high">
+    <div class="guard-head">
+      <div class="guard-number">2</div>
+      <div class="guard-title-wrap">
+        <div class="guard-level">STOP LOSS</div>
+        <div class="guard-title">손절 (-5% 자동 청산)</div>
+      </div>
+    </div>
+    <div class="guard-body">
+      <strong>목적:</strong> 하락 손실을 -5%에서 강제 차단. 감정적 판단으로 더 떨어지는 걸 못 보는 "물타기" 사고 방지.
+
+      <pre class="code-block"><span class="cm"># Bracket Order로 매수와 동시에 등록</span>
+<span class="kw">def</span> <span class="fn">calculate_stop_loss</span>(entry: float, stop_pct: float = <span class="num">0.05</span>) -&gt; float:
+    <span class="str">"""손절가 + 손절-지정가 (slippage 보호)"""</span>
+    stop_trigger = entry * (<span class="num">1</span> - stop_pct)         <span class="cm"># 트리거: -5%</span>
+    stop_limit   = entry * (<span class="num">1</span> - stop_pct) * <span class="num">0.995</span>  <span class="cm"># 지정가: -5.5%</span>
+    <span class="kw">return</span> {<span class="str">'stop'</span>: <span class="fn">round</span>(stop_trigger, <span class="num">2</span>), <span class="str">'limit'</span>: <span class="fn">round</span>(stop_limit, <span class="num">2</span>)}</pre>
+
+      <h4 style="margin-top:12px">변동성별 권장 손절 폭</h4>
+      <table class="param-table">
+        <tbody>
+          <tr><td>저변동 ETF (SPY 등)</td><td>-3%</td></tr>
+          <tr class="recommended"><td>대형주 (AAPL, 삼성전자)</td><td>-5% ⭐</td></tr>
+          <tr><td>중소형주</td><td>-7~10%</td></tr>
+          <tr><td>암호화폐</td><td>-8~15%</td></tr>
+        </tbody>
+      </table>
+
+      <h4 style="margin-top:12px">✅ 체크리스트</h4>
+      <ul class="check-list">
+        <li><strong>Bracket Order 사용:</strong> 매수 주문과 동시에 손절 걸기. 별도 주문 금지</li>
+        <li><strong>stop_limit은 stop보다 낮게:</strong> 0.5% 슬리피지 버퍼</li>
+        <li><strong>시장가 손절 금지:</strong> 급락 시 체결가가 예상보다 훨씬 낮아짐</li>
+        <li><strong>손절 변경 금지:</strong> 일단 걸면 "그래도 기다려볼까"로 풀지 않기</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Guard 3 -->
+  <div class="guard-card medium">
+    <div class="guard-head">
+      <div class="guard-number">3</div>
+      <div class="guard-title-wrap">
+        <div class="guard-level">TAKE PROFIT</div>
+        <div class="guard-title">익절 (+10% 자동 청산)</div>
+      </div>
+    </div>
+    <div class="guard-body">
+      <strong>목적:</strong> 욕심을 시스템이 제어. +10% 수익 나면 일단 확정.
+
+      <div class="callout yellow">
+        <strong>💭 왜 "욕심 제어"가 중요한가:</strong> 개인 투자자의 가장 흔한 실수는 "+50% 갔다가 본전". 수익이 나기 시작하면 "더 갈 것 같은 느낌"이 들고, 결국 포지션을 오래 들고 있다가 역회전. 시스템이 +10%에 자동 팔아주면 이런 감정적 실수가 원천 차단됩니다.
+      </div>
+
+      <h4 style="margin-top:12px">리스크/리워드 비율 (R:R)</h4>
+      <table class="param-table">
+        <thead>
+          <tr><th>Stop</th><th>Profit</th><th>R:R</th><th>적합성</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>-3%</td><td>+3%</td><td>1:1</td><td>스캘핑, 비추천</td></tr>
+          <tr class="recommended"><td>-5%</td><td>+10%</td><td>1:2 ⭐</td><td>강의 기본값, 대부분 경우</td></tr>
+          <tr><td>-5%</td><td>+15%</td><td>1:3</td><td>추세 추종 전략</td></tr>
+          <tr><td>-3%</td><td>+15%</td><td>1:5</td><td>브레이크아웃, 승률 낮음</td></tr>
+        </tbody>
+      </table>
+
+      <h4 style="margin-top:12px">✅ 체크리스트</h4>
+      <ul class="check-list">
+        <li><strong>Trailing Stop 고려:</strong> 수익 구간 들어서면 손절선도 함께 상향 (Advanced)</li>
+        <li><strong>부분 익절:</strong> 절반만 +10%에 매도, 나머지는 +20%에 (분할)</li>
+        <li><strong>수익 실현 로그:</strong> 실제 평균 익절가 vs 목표가 비교로 개선</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Guard 4 -->
+  <div class="guard-card critical">
+    <div class="guard-head">
+      <div class="guard-number">4</div>
+      <div class="guard-title-wrap">
+        <div class="guard-level">DAILY LOSS GUARD</div>
+        <div class="guard-title">일일 손실 한도 (-2% 시 전면 중단)</div>
+      </div>
+    </div>
+    <div class="guard-body">
+      <strong>목적:</strong> 연속 손실로 계좌 절반 날리는 사고 방지. 감정 격화 상태에서의 복수 매매 차단.
+
+      <pre class="code-block"><span class="kw">def</span> <span class="fn">daily_loss_guard</span>(account) -&gt; dict:
+    equity = <span class="fn">float</span>(account[<span class="str">'equity'</span>])
+    last_equity = <span class="fn">float</span>(account[<span class="str">'last_equity'</span>])
+    daily_pnl_pct = (equity - last_equity) / last_equity * <span class="num">100</span>
+    
+    <span class="kw">if</span> daily_pnl_pct &lt; <span class="num">-2.0</span>:
+        <span class="kw">return</span> {
+            <span class="str">'allowed'</span>: <span class="kw">False</span>,
+            <span class="str">'reason'</span>: <span class="str">f'Daily loss {daily_pnl_pct:.2f}% exceeds -2% limit'</span>,
+            <span class="str">'action'</span>: <span class="str">'HALT_ALL_TRADING'</span>
+        }
+    
+    <span class="kw">if</span> daily_pnl_pct &lt; <span class="num">-1.5</span>:   <span class="cm"># 경고 영역</span>
+        <span class="kw">return</span> {
+            <span class="str">'allowed'</span>: <span class="kw">True</span>,
+            <span class="str">'warning'</span>: <span class="str">'Approaching daily limit'</span>,
+            <span class="str">'reduce_size_factor'</span>: <span class="num">0.5</span>   <span class="cm"># 포지션 절반 축소</span>
+        }
+    
+    <span class="kw">return</span> {<span class="str">'allowed'</span>: <span class="kw">True</span>}</pre>
+
+      <h4 style="margin-top:12px">단계별 대응</h4>
+      <table class="param-table">
+        <thead>
+          <tr><th>일일 손실</th><th>대응</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>0 ~ -1%</td><td>정상 거래</td></tr>
+          <tr><td>-1% ~ -1.5%</td><td>경고, 포지션 크기 50%로 축소</td></tr>
+          <tr><td>-1.5% ~ -2%</td><td>심각 경고, 신규 매수 금지 (기존 포지션만 관리)</td></tr>
+          <tr><td style="color:var(--safe-red);font-weight:700">-2% 초과</td><td style="color:var(--safe-red);font-weight:700">🚨 전면 중단, Discord 긴급 알림, 다음 영업일까지 거래 금지</td></tr>
+        </tbody>
+      </table>
+
+      <h4 style="margin-top:12px">✅ 체크리스트</h4>
+      <ul class="check-list">
+        <li><strong>매 주문 전 체크:</strong> execute_verdict() 함수 초입에 필수</li>
+        <li><strong>Workflow 전체 차단:</strong> Switch 노드로 후속 주문 모두 스킵</li>
+        <li><strong>자동 재개 금지:</strong> 다음날 수동 확인 후에만 재개 (사고 원인 파악 시간)</li>
+        <li><strong>Discord 긴급 알림:</strong> @everyone 태그로 즉시 통보</li>
+      </ul>
+
+      <div class="callout red">
+        <strong>🚨 Max Drawdown 추가 (선택적 5번째 Guard):</strong> 누적 손실이 -10%에 도달하면 30일간 시스템 완전 정지. 이 정도면 전략 자체를 재검토해야 할 신호입니다.
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ═══ 3. 2단계 승인 ═══ -->
+<section id="s3" data-section="3. 2단계 승인">
+  <div class="eyebrow">Section 3</div>
+  <h2>3. 2단계 승인 시스템</h2>
+
+  <p>자동화 수준을 점진적으로 높이는 안전장치. AI가 제안하고, <strong>사람이 최종 승인</strong>하는 구조.</p>
+
+  <h3>3가지 자동화 레벨</h3>
+
+  <div class="guard-card medium">
+    <div class="guard-head">
+      <div class="guard-number">L1</div>
+      <div class="guard-title-wrap">
+        <div class="guard-level">ADVISORY ONLY</div>
+        <div class="guard-title">AI 제안 + 사람 수동 실행</div>
+      </div>
+    </div>
+    <div class="guard-body">
+      <strong>적용 시기:</strong> 시스템 가동 첫 1~2개월. 학습·검증 단계.<br>
+      AI가 "BUY 추천"을 Discord에 띄우면 사람이 증권사 앱에서 직접 주문. 시스템의 판단 품질을 <strong>실전 무손실</strong>로 평가할 수 있음.
+    </div>
+  </div>
+
+  <div class="guard-card high">
+    <div class="guard-head">
+      <div class="guard-number">L2</div>
+      <div class="guard-title-wrap">
+        <div class="guard-level">APPROVED AUTO</div>
+        <div class="guard-title">AI 제안 + Discord 버튼 승인 → 자동 실행</div>
+      </div>
+    </div>
+    <div class="guard-body">
+      <strong>적용 시기:</strong> L1에서 2개월 이상 적절한 품질 확인 후.<br>
+      Discord Webhook으로 verdict 전송 → 사용자가 ✅ / ❌ 버튼 클릭 → n8n이 응답 받아 실행.
+
+      <h4 style="margin-top:10px">Discord 인터랙션 구현 (n8n)</h4>
+      <pre class="code-block"><span class="cm"># 1. AI Agent 결과 → Discord에 "승인 대기" 메시지 발송</span>
+<span class="cm"># 2. Webhook 노드로 Discord 버튼 응답 대기</span>
+<span class="cm"># 3. 승인되면 주문 실행, 거부되면 로그만</span>
+
+<span class="cm"># Discord embed payload 예시:</span>
+{
+  <span class="str">"embeds"</span>: [{
+    <span class="str">"title"</span>: <span class="str">"🤖 주문 승인 요청"</span>,
+    <span class="str">"description"</span>: <span class="str">"AAPL BUY 10주 @ $180"</span>,
+    <span class="str">"fields"</span>: [
+      {<span class="str">"name"</span>: <span class="str">"Confidence"</span>, <span class="str">"value"</span>: <span class="str">"4/5"</span>, <span class="str">"inline"</span>: <span class="kw">true</span>},
+      {<span class="str">"name"</span>: <span class="str">"Stop"</span>, <span class="str">"value"</span>: <span class="str">"$171 (-5%)"</span>, <span class="str">"inline"</span>: <span class="kw">true</span>},
+      {<span class="str">"name"</span>: <span class="str">"Target"</span>, <span class="str">"value"</span>: <span class="str">"$198 (+10%)"</span>, <span class="str">"inline"</span>: <span class="kw">true</span>}
+    ],
+    <span class="str">"footer"</span>: {<span class="str">"text"</span>: <span class="str">"5분 내 응답 없으면 자동 취소"</span>}
+  }],
+  <span class="str">"components"</span>: [{
+    <span class="str">"type"</span>: <span class="num">1</span>,
+    <span class="str">"components"</span>: [
+      {<span class="str">"type"</span>: <span class="num">2</span>, <span class="str">"style"</span>: <span class="num">3</span>, <span class="str">"label"</span>: <span class="str">"✅ 승인"</span>, <span class="str">"custom_id"</span>: <span class="str">"approve_AAPL_20260422"</span>},
+      {<span class="str">"type"</span>: <span class="num">2</span>, <span class="str">"style"</span>: <span class="num">4</span>, <span class="str">"label"</span>: <span class="str">"❌ 거부"</span>, <span class="str">"custom_id"</span>: <span class="str">"reject_AAPL_20260422"</span>}
+    ]
+  }]
+}</pre>
+
+      <div class="tip-card">
+        <div class="tip-title">타임아웃 설정</div>
+        <div class="tip-body">
+          "5분 내 응답 없으면 자동 취소" 원칙. 사용자가 자리 비웠을 때 깜짝 주문 방지. n8n Wait 노드 + Webhook 조합으로 구현.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="guard-card critical">
+    <div class="guard-head">
+      <div class="guard-number">L3</div>
+      <div class="guard-title-wrap">
+        <div class="guard-level">FULL AUTO</div>
+        <div class="guard-title">완전 자동 실행 (⚠️ 위험)</div>
+      </div>
+    </div>
+    <div class="guard-body">
+      <strong>적용 시기:</strong> L2에서 6개월 이상 검증 + Sharpe Ratio 안정적일 때.<br>
+      승인 없이 자동 주문. <strong>교육 과정에서는 절대 권장하지 않음.</strong>
+
+      <div class="danger-box">
+        <div class="danger-title">L3 전환 전 필수 조건</div>
+        <div class="danger-body">
+          ✓ L2에서 <strong>최소 6개월</strong> 안정 운영<br>
+          ✓ 월간 수익률 <strong>일관성</strong> 확인 (varience 낮음)<br>
+          ✓ Max Drawdown이 <strong>-5% 이내</strong>로 유지됨<br>
+          ✓ 시스템 버그·예외 케이스 <strong>0건</strong> 유지<br>
+          ✓ Kill Switch 항상 접근 가능<br>
+          <strong>하나라도 미달 시 L2 유지 강력 권장.</strong>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ═══ 4. 로깅 ═══ -->
+<section id="s4" data-section="4. 로깅">
+  <div class="eyebrow">Section 4</div>
+  <h2>4. 로깅 필수 항목</h2>
+
+  <p>"기록되지 않은 것은 발생하지 않은 것"이라는 IT 업계 격언. 사고 발생 시 <strong>재현 가능성</strong>이 생명입니다.</p>
+
+  <h3>3단계 로깅 구조</h3>
+
+  <div class="guard-card medium">
+    <div class="guard-head">
+      <div class="guard-number">📝</div>
+      <div class="guard-title-wrap">
+        <div class="guard-level">LEVEL 1 — DECISION LOG</div>
+        <div class="guard-title">판단 과정 로그</div>
+      </div>
+    </div>
+    <div class="guard-body">
+      Google Sheets 또는 CSV에 <strong>매 분석마다</strong> 저장:
+      <ul class="check-list">
+        <li><strong>timestamp</strong> — ISO 8601 형식</li>
+        <li><strong>ticker</strong> — 분석 대상</li>
+        <li><strong>input_data_snapshot</strong> — Price/News/Chart 결과 전체 JSON</li>
+        <li><strong>verdict</strong> — BUY/SELL/HOLD/WATCH</li>
+        <li><strong>confidence</strong> — 1~5</li>
+        <li><strong>reasoning</strong> — AI 응답 전문</li>
+        <li><strong>model_used</strong> — Haiku/Sonnet 구분</li>
+        <li><strong>cost_usd</strong> — API 비용</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="guard-card high">
+    <div class="guard-head">
+      <div class="guard-number">📊</div>
+      <div class="guard-title-wrap">
+        <div class="guard-level">LEVEL 2 — ORDER LOG</div>
+        <div class="guard-title">주문 실행 로그</div>
+      </div>
+    </div>
+    <div class="guard-body">
+      <strong>모든 주문 요청</strong>에 대해:
+      <ul class="check-list">
+        <li><strong>request_id</strong> — UUID</li>
+        <li><strong>timestamp</strong> — 발송 시각</li>
+        <li><strong>order_body</strong> — HashKey 생성에 사용된 Body 전문 (재현용)</li>
+        <li><strong>response_code</strong> — rt_cd, msg_cd</li>
+        <li><strong>order_id</strong> — 성공 시 거래소 주문번호 (ODNO)</li>
+        <li><strong>filled_price</strong> — 체결가 (부분 체결 포함)</li>
+        <li><strong>filled_qty</strong> — 체결 수량</li>
+        <li><strong>guards_passed</strong> — 통과한 Guard 목록</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="guard-card critical">
+    <div class="guard-head">
+      <div class="guard-number">🚨</div>
+      <div class="guard-title-wrap">
+        <div class="guard-level">LEVEL 3 — ERROR LOG</div>
+        <div class="guard-title">에러 및 예외 로그 (별도 시트)</div>
+      </div>
+    </div>
+    <div class="guard-body">
+      <strong>별도 시트로 분리</strong>하는 것이 중요. 에러만 모아서 주간 리뷰.
+      <ul class="check-list">
+        <li><strong>error_type</strong> — RATE_LIMIT / AUTH_FAILURE / INSUFFICIENT_FUNDS / UNKNOWN</li>
+        <li><strong>error_message</strong> — API 응답 그대로</li>
+        <li><strong>context</strong> — 에러 발생 직전의 상태 스냅샷</li>
+        <li><strong>retry_count</strong> — 재시도 횟수</li>
+        <li><strong>resolution</strong> — 자동 해결 / 수동 개입 / 무시</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>로그 보관 주기</h3>
+  <table class="param-table">
+    <thead>
+      <tr><th>로그 레벨</th><th>보관 기간</th><th>이유</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Decision Log</td><td>최소 3개월</td><td>전략 개선·백테스트 재현</td></tr>
+      <tr><td>Order Log</td><td><strong>최소 1년</strong></td><td>세무·분쟁·감사 대비</td></tr>
+      <tr><td>Error Log</td><td>최소 6개월</td><td>시스템 개선 패턴 분석</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout orange">
+    <strong>📦 백업 원칙:</strong> Google Sheets만 의지 말고, <strong>매주 CSV export → 로컬 백업</strong>. 혹시 Sheets 계정 문제 생기면 복구 불가.
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ═══ 5. 실계좌 전환 7대 검증 ═══ -->
+<section id="s5" data-section="5. 실계좌 전환 검증">
+  <div class="eyebrow">Section 5</div>
+  <h2>5. 실계좌 전환 7대 검증</h2>
+
+  <div class="danger-box">
+    <div class="danger-title">교육 과정 수강생 주의</div>
+    <div class="danger-body">
+      이 섹션은 본 강의에서 실습하지 않습니다. <strong>모의투자만으로 과정을 완료</strong>하세요. 아래는 <u>과정 이후 개인적으로 실전 전환을 고민할 때</u> 참고할 체크리스트입니다. 실전 전환은 <strong>본인 책임</strong>이며, 학원·강사는 어떤 손실도 책임지지 않습니다.
+    </div>
+  </div>
+
+  <h3>7대 검증 기준 (모두 Pass해야 실전 전환 가능)</h3>
+
+  <div class="guard-card critical">
+    <div class="guard-head">
+      <div class="guard-number">1</div>
+      <div class="guard-title-wrap">
+        <div class="guard-level">VERIFICATION 1</div>
+        <div class="guard-title">최소 3개월 모의투자 운영</div>
+      </div>
+    </div>
+    <div class="guard-body">
+      <ul class="check-list">
+        <li>연속 3개월, 매일 정상 작동 확인</li>
+        <li>최소 100건 이상 체결 경험</li>
+        <li>월별 수익률 일관성 (변동성 낮음)</li>
+        <li>시스템 개입 없이 자동 운영되는 구간 포함</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="guard-card critical">
+    <div class="guard-head">
+      <div class="guard-number">2</div>
+      <div class="guard-title-wrap">
+        <div class="guard-level">VERIFICATION 2</div>
+        <div class="guard-title">Sharpe Ratio ≥ 1.0</div>
+      </div>
+    </div>
+    <div class="guard-body">
+      위험 대비 수익률 지표. 1.0 이상이어야 "운이 아닌 실력" 구분 가능.
+      <pre class="code-block">Sharpe = (mean_return - risk_free) / std_deviation
+
+<span class="cm"># 일별 수익률 기준</span>
+daily_returns = df[<span class="str">'daily_return_pct'</span>] / <span class="num">100</span>
+sharpe = (daily_returns.<span class="fn">mean</span>() * <span class="num">252</span>) / (daily_returns.<span class="fn">std</span>() * <span class="num">15.87</span>)
+<span class="fn">print</span>(<span class="str">f'Annualized Sharpe: {sharpe:.2f}'</span>)</pre>
+      <strong>판정:</strong> &lt; 0.5 불합격 / 0.5~1.0 재검토 / &gt; 1.0 양호 / &gt; 2.0 우수
+    </div>
+  </div>
+
+  <div class="guard-card critical">
+    <div class="guard-head">
+      <div class="guard-number">3</div>
+      <div class="guard-title-wrap">
+        <div class="guard-level">VERIFICATION 3</div>
+        <div class="guard-title">Max Drawdown ≤ -10%</div>
+      </div>
+    </div>
+    <div class="guard-body">
+      최고점 대비 최대 하락폭. -10% 넘었으면 전략 재검토.
+      <pre class="code-block">df[<span class="str">'cummax'</span>] = df[<span class="str">'equity'</span>].<span class="fn">cummax</span>()
+df[<span class="str">'drawdown'</span>] = (df[<span class="str">'equity'</span>] - df[<span class="str">'cummax'</span>]) / df[<span class="str">'cummax'</span>] * <span class="num">100</span>
+max_dd = df[<span class="str">'drawdown'</span>].<span class="fn">min</span>()
+<span class="fn">print</span>(<span class="str">f'Max Drawdown: {max_dd:.2f}%'</span>)</pre>
+    </div>
+  </div>
+
+  <div class="guard-card critical">
+    <div class="guard-head">
+      <div class="guard-number">4</div>
+      <div class="guard-title-wrap">
+        <div class="guard-level">VERIFICATION 4</div>
+        <div class="guard-title">승률 + R:R 조합 검증</div>
+      </div>
+    </div>
+    <div class="guard-body">
+      <strong>기대값 공식:</strong><br>
+      <code>E = (승률 × 평균수익) - (패율 × 평균손실)</code><br><br>
+      <strong>양의 기대값 (E > 0) 필수.</strong> 예:<br>
+      승률 50% + 평균수익 +10% / 평균손실 -5% → E = 0.5×10 - 0.5×5 = +2.5% ✓<br>
+      승률 60% + 평균수익 +3% / 평균손실 -5% → E = 0.6×3 - 0.4×5 = -0.2% ✗ 
+    </div>
+  </div>
+
+  <div class="guard-card high">
+    <div class="guard-head">
+      <div class="guard-number">5</div>
+      <div class="guard-title-wrap">
+        <div class="guard-level">VERIFICATION 5</div>
+        <div class="guard-title">예외 처리 완전성 테스트</div>
+      </div>
+    </div>
+    <div class="guard-body">
+      아래 시나리오를 <strong>모두 의도적으로 발생시켜</strong> 시스템이 적절히 대응하는지 확인:
+      <ul class="check-list">
+        <li>API 키 만료 → 재발급 로직 작동?</li>
+        <li>Rate Limit 초과 → Exponential Backoff?</li>
+        <li>Discord Webhook 불능 → 대체 로그 기록?</li>
+        <li>장 중 API 서버 다운 → 진행 중 주문 적절한 처리?</li>
+        <li>Claude API 에러 → 안전한 기본 동작 (HOLD)?</li>
+        <li>네트워크 끊김 → 재시도 후 적절한 실패 처리?</li>
+        <li>잘못된 종목 코드 → 주문 전 검증 차단?</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="guard-card high">
+    <div class="guard-head">
+      <div class="guard-number">6</div>
+      <div class="guard-title-wrap">
+        <div class="guard-level">VERIFICATION 6</div>
+        <div class="guard-title">자본 재시드 테스트</div>
+      </div>
+    </div>
+    <div class="guard-body">
+      실전 전환 시작 자본은 <strong>"잃어도 생활에 지장 없는 금액"</strong>.<br><br>
+      권장 단계:
+      <ol style="margin-left:18px;font-size:12px;line-height:1.9">
+        <li>1개월차: 총 자산의 1~2% (예: 100만원)</li>
+        <li>2~3개월차: 3~5% (안정 시 증액)</li>
+        <li>4~6개월차: 5~10%</li>
+        <li>6개월 이후: 본인 리스크 판단</li>
+      </ol>
+      <div class="callout red" style="margin-top:10px">
+        <strong>🚨 절대 금지:</strong> 대출·카드론으로 자동매매 자본 조달. 잃어도 되는 돈만.
+      </div>
+    </div>
+  </div>
+
+  <div class="guard-card critical">
+    <div class="guard-head">
+      <div class="guard-number">7</div>
+      <div class="guard-title-wrap">
+        <div class="guard-level">VERIFICATION 7</div>
+        <div class="guard-title">Kill Switch 접근성 + 모바일 알림</div>
+      </div>
+    </div>
+    <div class="guard-body">
+      <strong>언제든 30초 내</strong>에 시스템 완전 중단 가능해야:
+      <ul class="check-list">
+        <li>n8n Active 토글 OFF — 모바일에서 가능</li>
+        <li>전체 포지션 즉시 청산 명령 — 별도 워크플로 준비</li>
+        <li>Discord 모바일 앱 알림 설정 — 긴급 알림 즉시 인지</li>
+        <li>가족/지인에게도 Kill Switch 방법 공유 (본인 부재 시)</li>
+        <li>물리적 Kill Switch: "모든 주문 취소" SOS 버튼 구현</li>
+      </ul>
+      
+      <pre class="code-block" style="margin-top:10px"><span class="cm"># Kill Switch — 전 포지션 즉시 청산</span>
+<span class="kw">def</span> <span class="fn">emergency_close_all</span>():
+    <span class="str">"""모든 포지션 시장가 청산 + 워크플로 중단."""</span>
+    <span class="cm"># 1. 대기 주문 전량 취소</span>
+    requests.<span class="fn">delete</span>(<span class="str">f'{BASE_URL}/v2/orders'</span>, headers=HEADERS)
+    
+    <span class="cm"># 2. 모든 포지션 청산</span>
+    positions = <span class="fn">get_positions</span>()
+    <span class="kw">for</span> p <span class="kw">in</span> positions:
+        requests.<span class="fn">delete</span>(<span class="str">f'{BASE_URL}/v2/positions/{p.symbol}'</span>, headers=HEADERS)
+    
+    <span class="cm"># 3. Discord 알림</span>
+    <span class="fn">notify</span>(<span class="str">'🚨 Emergency close executed'</span>)</pre>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ═══ 6. 사고 대응 ═══ -->
+<section id="s6" data-section="6. 사고 대응">
+  <div class="eyebrow">Section 6</div>
+  <h2>6. 사고 대응 프로토콜</h2>
+
+  <p>사고는 <strong>준비된 사람만이</strong> 빠르게 복구합니다. 아래 순서를 <strong>사전에 반복 연습</strong>하세요.</p>
+
+  <h3>🚨 즉시 중단 프로토콜 (10분 내 완료)</h3>
+
+  <div class="protocol-step">
+    <div><span class="protocol-num">T+0</span><span class="protocol-title">이상 탐지 (0초)</span></div>
+    <div class="protocol-desc">
+      Discord 긴급 알림 수신 / 수동 발견 / Guard 4번 발동 등. 당황하지 말고 일단 <strong>심호흡</strong>.
+    </div>
+  </div>
+
+  <div class="protocol-step">
+    <div><span class="protocol-num">T+30s</span><span class="protocol-title">n8n Workflow 중단 (30초)</span></div>
+    <div class="protocol-desc">
+      n8n 웹/모바일 접속 → 관련 워크플로 Active 토글 <strong>OFF</strong>. 신규 주문 발생 차단.
+    </div>
+  </div>
+
+  <div class="protocol-step">
+    <div><span class="protocol-num">T+2m</span><span class="protocol-title">현재 포지션 확인 (2분)</span></div>
+    <div class="protocol-desc">
+      증권사 공식 앱에서 <strong>직접 확인</strong>. n8n 로그가 아니라 실제 계좌 상태를 우선. 대기 주문도 확인.
+    </div>
+  </div>
+
+  <div class="protocol-step">
+    <div><span class="protocol-num">T+3m</span><span class="protocol-title">대기 주문 전량 취소 (3분)</span></div>
+    <div class="protocol-desc">
+      증권사 앱에서 직접 전량 취소. API 호출은 아직 쓰지 말 것 (버그가 있을 수 있음).
+    </div>
+  </div>
+
+  <div class="protocol-step">
+    <div><span class="protocol-num">T+5m</span><span class="protocol-title">포지션 청산 여부 결정 (5분)</span></div>
+    <div class="protocol-desc">
+      상황에 따라:
+      <ul style="margin-left:18px;margin-top:4px;font-size:11px">
+        <li><strong>시스템 버그</strong>인 경우: 즉시 전량 청산 (재해킹/재실행 리스크)</li>
+        <li><strong>시장 이상</strong>인 경우: 기존 포지션은 유지, 손절선만 재확인</li>
+        <li><strong>의심스러운 거래</strong> 발견 시: 증권사 고객센터 즉시 연락</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="protocol-step">
+    <div><span class="protocol-num">T+10m</span><span class="protocol-title">로그 스냅샷 보존 (10분)</span></div>
+    <div class="protocol-desc">
+      n8n Executions 탭 스크린샷. Decision Log + Order Log CSV export. 사고 원인 분석용.
+    </div>
+  </div>
+
+  <h3>사고 유형별 대응</h3>
+
+  <table class="param-table">
+    <thead>
+      <tr><th>증상</th><th>가능한 원인</th><th>1차 대응</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>예상 외 주문 체결</td>
+        <td>프롬프트 버그 / AI 오판</td>
+        <td>해당 워크플로 중단 → 포지션 유지 가능성 판단</td>
+      </tr>
+      <tr>
+        <td>연속 Guard 4 발동</td>
+        <td>시장 급변 / 전략 부적합</td>
+        <td>시스템 중단 → 1주일 이상 관망 → 전략 재검토</td>
+      </tr>
+      <tr>
+        <td>주문 중복 체결</td>
+        <td>Rate Limit 대응 재시도 실수</td>
+        <td>즉시 중단 → 중복 분량 수동 청산</td>
+      </tr>
+      <tr>
+        <td>API 인증 에러 폭주</td>
+        <td>토큰 만료 / 키 유출</td>
+        <td>API 키 <strong>즉시 재발급</strong> → 보안 점검</td>
+      </tr>
+      <tr>
+        <td>계정 접근 불가</td>
+        <td>해킹 가능성</td>
+        <td>증권사 고객센터 긴급 연락 → 모든 키 교체</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout red">
+    <strong>🚨 가장 중요한 원칙:</strong> 사고 발생 시 <strong>절대 "해결책"을 즉흥적으로 추가하지 말 것</strong>. 스트레스 상태의 코드 수정은 사고를 키웁니다. 중단 → 분석 → 개선 → 테스트 → 재배포 순서를 지키세요.
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ═══ 7. 최종 배포 체크리스트 ═══ -->
+<section id="s7" data-section="7. 최종 체크리스트">
+  <div class="eyebrow">Section 7</div>
+  <h2>7. 최종 배포 체크리스트</h2>
+
+  <p>모의투자 단계에서도 <strong>배포 전 이 리스트를 전부 체크</strong>하는 습관을 들이세요. 실전에서는 필수입니다.</p>
+
+  <h3>🔐 보안 체크</h3>
+  <ul class="check-list">
+    <li><strong>API 키 .env 분리</strong> — 코드에 하드코딩 금지, GitHub commit 전 .gitignore 확인</li>
+    <li><strong>n8n Credential 암호화</strong> — Self-hosted면 N8N_ENCRYPTION_KEY 필수</li>
+    <li><strong>모의/실전 환경 명확 분리</strong> — Credential 이름에 "모의"/"실전" 표기</li>
+    <li><strong>Discord Webhook 비공개</strong> — 채널 URL 스크린샷 공유 시 모자이크</li>
+    <li><strong>Git 저장소 Private</strong> — Public으로 실수 업로드 주의</li>
+  </ul>
+
+  <h3>⚙️ 시스템 체크</h3>
+  <ul class="check-list">
+    <li><strong>모든 워크플로 Timezone Asia/Seoul</strong> — 한국 시간 기준 스케줄</li>
+    <li><strong>Error Workflow 연결</strong> — 주요 워크플로 Settings에서 지정</li>
+    <li><strong>타임아웃 설정</strong> — HTTP Request 10~30초</li>
+    <li><strong>재시도 로직</strong> — Rate Limit (EGW00201), 네트워크 에러</li>
+    <li><strong>Manual Trigger 유지</strong> — 긴급 수동 실행 경로</li>
+    <li><strong>테스트 데이터와 실데이터 분리</strong> — 테스트용 종목과 실제 종목 헷갈림 방지</li>
+  </ul>
+
+  <h3>🛡️ 안전장치 체크</h3>
+  <ul class="check-list">
+    <li><strong>Risk Guards 4개 모두 활성화</strong> — Position Size, Stop, Profit, Daily Loss</li>
+    <li><strong>Bracket Order 사용</strong> — 매수와 동시에 Stop/Profit 걸기</li>
+    <li><strong>2단계 승인 시스템</strong> (L2 이상) — Discord 버튼 승인 검증</li>
+    <li><strong>Kill Switch 테스트</strong> — 실제 작동 확인 (월 1회)</li>
+    <li><strong>Emergency Close 함수</strong> — 전 포지션 즉시 청산 로직</li>
+  </ul>
+
+  <h3>📊 모니터링 체크</h3>
+  <ul class="check-list">
+    <li><strong>일일 성과 로그</strong> — 매일 18:00 자동 집계 + CSV 저장</li>
+    <li><strong>Decision Log + Order Log + Error Log</strong> — 3단계 분리</li>
+    <li><strong>Discord 실시간 알림</strong> — 주요 이벤트별 채널 분리</li>
+    <li><strong>주간 리포트</strong> — 매주 월요일 아침 주간 요약</li>
+    <li><strong>월간 백업</strong> — CSV를 로컬 or Drive에 중복 저장</li>
+  </ul>
+
+  <h3>📋 문서화 체크</h3>
+  <ul class="check-list">
+    <li><strong>워크플로 설명 Sticky Note</strong> — 각 n8n 워크플로에 용도 주석</li>
+    <li><strong>버전 관리</strong> — 주요 변경 전 duplicate → v1, v2 네이밍</li>
+    <li><strong>README 작성</strong> — API 키 발급 방법, 환경 변수 목록, 복구 방법</li>
+    <li><strong>긴급 연락처 목록</strong> — 증권사 고객센터, Anthropic 지원, 본인 외 담당자</li>
+  </ul>
+
+  <div class="callout green">
+    <strong>✅ 이 체크리스트를 완료하면:</strong> 8주 과정의 교육용 시스템을 <strong>프로덕션 품질</strong>로 끌어올린 상태입니다. 안전장치 없이 자동매매를 돌리는 건 브레이크 없는 자동차를 타는 것과 같습니다. 느리더라도 안전한 길을 가세요.
+  </div>
+
+  <div class="danger-box">
+    <div class="danger-title">최종 당부의 말</div>
+    <div class="danger-body">
+      자동매매는 <strong>돈을 벌기 위한 도구가 아니라 돈을 벌 수 있는 구조를 만드는 도구</strong>입니다. 전략 없이 자동화만 한다고 수익이 나지 않습니다. 본 강의에서 만든 시스템은 <strong>교육용 프로토타입</strong>이며, 실전 수익 창출은 별개의 영역입니다.<br><br>
+      <strong>시장에는 여러분보다 자본·기술·경험이 수십 배 많은 전문 트레이더들이 있습니다.</strong> 초보가 8주 학습으로 그들을 이기기는 어렵습니다. 자동매매를 <strong>"수익 수단"이 아니라 "AI/엔지니어링 학습 경험"</strong>으로 접근하면, 훨씬 많은 것을 얻을 수 있습니다.<br><br>
+      건강하고 지속 가능한 여정이 되기를 바랍니다. 🙏
+    </div>
+  </div>
+</section>
+
+<div style="background:linear-gradient(135deg,#dc2626,#450a0a);color:#fff;text-align:center;padding:32px 20px;margin:36px -15px 0;margin-bottom:var(--fh)">
+  <div style="font-size:10px;letter-spacing:2px;color:#fca5a5;margin-bottom:8px;font-weight:700">📘 APPENDIX E COMPLETE</div>
+  <div style="font-size:14px;font-weight:700;margin-bottom:5px">안전장치 체크리스트</div>
+  <div style="font-size:11px;color:rgba(255,255,255,.7);line-height:1.7">4 Risk Guards · 3 Auto Levels · 7 Verifications<br>2026 · ZeroOneAI Education</div>
+</div>
+
+</div>
+
+<script>
+const sections = document.querySelectorAll('[data-section]');
+const sfT = document.getElementById('sf-t');
+const sfP = document.getElementById('sf-p');
+function update(){
+  const sy = window.scrollY;
+  const dh = document.documentElement.scrollHeight - window.innerHeight;
+  sfP.textContent = Math.round((sy / Math.max(dh, 1)) * 100) + '%';
+  let cur = sections[0]?.dataset.section || '';
+  sections.forEach(s => {
+    if(sy >= s.getBoundingClientRect().top + sy - 110) cur = s.dataset.section;
+  });
+  if(sfT.textContent !== cur) sfT.textContent = cur;
+}
+window.addEventListener('scroll', update, {passive:true});
+update();
+</script>
+</body>
+</html>

@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>W5 — 스케줄 확장 + 멀티채널 + RAG 1 기초</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;600&display=swap');
+:root{
+  --black:#0d0d0d;--gray:#6b6b6b;--light:#f3f3f3;--border:#e6e6e6;--white:#fff;
+  --fh:46px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Noto Sans KR',-apple-system,sans-serif;background:#fff;color:var(--black);font-size:14px;line-height:1.75;padding-bottom:var(--fh)}
+
+#sf{position:fixed;bottom:0;left:0;right:0;height:var(--fh);background:var(--black);display:flex;align-items:center;justify-content:space-between;padding:0 16px;z-index:999}
+#sf .lbl{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:#555}
+#sf .ttl{font-size:12px;font-weight:700;color:#fff;max-width:60%;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#sf .pct{font-size:10px;color:#555;white-space:nowrap}
+
+.hero{background:var(--black);color:#fff;padding:48px 20px 40px;text-align:center;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;top:-80px;right:-80px;width:260px;height:260px;border:1px solid rgba(255,255,255,.05);border-radius:50%}
+.hero-badge{display:inline-block;border:1px solid rgba(255,255,255,.18);border-radius:20px;padding:4px 14px;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#aaa;margin-bottom:14px}
+.hero h1{font-size:22px;font-weight:900;line-height:1.35;margin-bottom:8px;letter-spacing:-.5px}
+.hero-sub{font-size:12px;color:#777;margin-bottom:22px}
+.hero-meta{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:rgba(255,255,255,.07);border-radius:10px;overflow:hidden;margin-top:18px}
+.hero-meta-item{background:rgba(255,255,255,.04);padding:12px 5px;text-align:center}
+.hero-meta-num{font-size:15px;font-weight:900;color:#fff;display:block}
+.hero-meta-lbl{font-size:9px;color:#555;margin-top:2px;line-height:1.3}
+
+.container{max-width:720px;margin:0 auto;padding:0 15px}
+section{padding:36px 0 0}
+.divider{height:1px;background:var(--border);margin:34px 0 0}
+.eyebrow{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--gray);margin-bottom:5px}
+h2{font-size:19px;font-weight:900;letter-spacing:-.3px;margin-bottom:12px;line-height:1.3}
+h3{font-size:14px;font-weight:700;margin:20px 0 8px}
+h4{font-size:12px;font-weight:700;margin:14px 0 6px;color:#333}
+p{color:#333;margin-bottom:8px;font-size:13px}
+strong{color:var(--black);font-weight:700}
+code{font-family:'JetBrains Mono','Courier New',monospace;background:#eef;padding:1px 5px;border-radius:3px;font-size:11px;color:#1d4ed8}
+
+.callout{background:var(--light);border-left:3px solid var(--black);padding:13px 15px;border-radius:0 8px 8px 0;margin:10px 0;font-size:13px;line-height:1.65}
+.callout.orange{background:#fff8ed;border-left-color:#d97706}
+.callout.blue{background:#eff6ff;border-left-color:#1d4ed8}
+.callout.green{background:#f0fdf4;border-left-color:#15803d}
+.callout.purple{background:#faf5ff;border-left-color:#7c3aed}
+.callout.red{background:#fef2f2;border-left-color:#dc2626}
+
+.lesson-meta{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:14px 0 4px}
+.meta-card{background:var(--light);border:1px solid var(--border);border-radius:8px;padding:10px 8px;text-align:center}
+.meta-card-lbl{font-size:9px;font-weight:700;letter-spacing:1px;color:#aaa;text-transform:uppercase;margin-bottom:3px}
+.meta-card-val{font-size:12px;font-weight:700;color:var(--black);line-height:1.3}
+
+.goals{display:flex;flex-direction:column;gap:7px;margin:12px 0}
+.goal{display:flex;gap:11px;align-items:flex-start;background:var(--light);border-radius:9px;padding:11px 13px;border:1px solid var(--border)}
+.goal-chk{width:20px;height:20px;background:var(--black);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;flex-shrink:0}
+.goal-text{font-size:12px;line-height:1.55}
+
+/* PHASE TRANSITION */
+.phase-transition{background:linear-gradient(135deg,#1e3a5f,#0f172a);color:#fff;border-radius:12px;padding:18px 16px;margin:14px 0}
+.pt-label{font-size:9px;font-weight:900;letter-spacing:2px;color:#7dd3fc;margin-bottom:5px}
+.pt-title{font-size:15px;font-weight:700;margin-bottom:5px}
+.pt-sub{font-size:11px;color:rgba(255,255,255,.75);line-height:1.6}
+
+/* CODE BLOCK 표준 */
+.code-block{background:#0d1117;color:#e6edf3;border-radius:9px;padding:14px 16px;margin:10px 0;font-family:'JetBrains Mono','Courier New',monospace;font-size:11px;line-height:1.7;overflow-x:auto;white-space:pre;tab-size:2;-moz-tab-size:2;word-wrap:normal}
+.code-block code{background:transparent;padding:0;color:inherit;font-size:inherit}
+.code-block .cm{color:#8b949e;font-style:italic}
+.code-block .kw{color:#ff7b72}
+.code-block .str{color:#a5d6ff}
+.code-block .num{color:#79c0ff}
+.code-block .fn{color:#d2a8ff}
+
+.step-block{background:#fffbeb;border:1px solid #fcd34d;border-radius:11px;padding:14px 15px;margin:12px 0}
+.step-title{font-size:11px;font-weight:700;color:#92400e;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.step-title::before{content:'▶';font-size:9px}
+.step-list{counter-reset:s;list-style:none;padding:0}
+.step-list li{counter-increment:s;position:relative;padding:6px 0 6px 30px;font-size:12px;line-height:1.65;color:#78350f;border-bottom:1px dashed #fcd34d}
+.step-list li:last-child{border-bottom:none}
+.step-list li::before{content:counter(s);position:absolute;left:0;top:8px;width:20px;height:20px;background:#d97706;color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:900}
+
+.node-card{border:1px solid var(--border);border-radius:10px;margin:10px 0;overflow:hidden}
+.node-head{background:var(--black);color:#fff;padding:10px 14px;display:flex;align-items:center;gap:9px}
+.node-icon{font-size:16px}
+.node-name{font-size:12px;font-weight:700}
+.node-tag{background:rgba(255,255,255,.15);border-radius:3px;padding:2px 7px;font-size:9px;font-weight:700;margin-left:auto;letter-spacing:.5px}
+.node-body{padding:12px 14px;background:var(--light);font-size:12px;line-height:1.6}
+.node-config{background:#fff;border:1px solid var(--border);border-radius:6px;padding:10px 12px;margin-top:8px;font-size:11px;font-family:'JetBrains Mono','Courier New',monospace}
+.node-config-row{padding:3px 0;border-bottom:1px dashed #eee}
+.node-config-row:last-child{border-bottom:none}
+.ncr-k{color:#6b6b6b;display:inline-block;min-width:130px}
+.ncr-v{color:#1d4ed8;font-weight:600}
+
+.n8n-flow{background:#fffbeb;border:1px solid #fcd34d;border-radius:11px;padding:14px;margin:14px 0}
+.n8n-title{font-size:11px;font-weight:700;color:#92400e;margin-bottom:10px}
+.n8n-steps{display:flex;flex-direction:column;gap:4px}
+.n8n-step{display:flex;align-items:flex-start;gap:8px;padding:4px 0}
+.n8n-node{border-radius:5px;padding:3px 9px;font-size:10px;font-weight:700;white-space:nowrap;flex-shrink:0;margin-top:1px}
+.nn-t{background:#dc2626;color:#fff}
+.nn-a{background:#2563eb;color:#fff}
+.nn-ai{background:#7c3aed;color:#fff}
+.nn-o{background:#059669;color:#fff}
+.nn-c{background:#374151;color:#fff}
+.n8n-edge{font-size:10px;color:#bbb;padding-top:5px;flex-shrink:0}
+.n8n-desc{font-size:11px;color:#78350f;flex:1;line-height:1.6;padding-top:3px}
+
+.dtable{width:100%;border-collapse:collapse;margin:10px 0;font-size:11px}
+.dtable th{background:var(--black);color:#fff;padding:8px 10px;text-align:left;font-size:10px;font-weight:700}
+.dtable td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.5}
+.dtable tr:nth-child(even) td{background:var(--light)}
+.dtable code{font-size:10px}
+
+/* ROUTINE SCHEDULE */
+.routine-grid{display:grid;grid-template-columns:1fr;gap:8px;margin:12px 0}
+.routine-card{border:1px solid var(--border);border-radius:10px;padding:11px 13px;background:var(--light);display:flex;gap:10px;align-items:flex-start}
+.routine-time{background:var(--black);color:#fff;border-radius:6px;padding:5px 9px;font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;flex-shrink:0;min-width:62px;text-align:center}
+.routine-info{flex:1}
+.routine-name{font-size:12px;font-weight:700;margin-bottom:3px}
+.routine-desc{font-size:10px;color:var(--gray);line-height:1.5}
+
+/* CHANNEL CARDS */
+.channel-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0}
+.ch-card{border:1px solid var(--border);border-radius:10px;padding:12px 10px;text-align:center;background:var(--light)}
+.ch-icon{font-size:26px;margin-bottom:4px}
+.ch-name{font-size:11px;font-weight:700;margin-bottom:3px}
+.ch-purpose{font-size:9px;color:var(--gray);line-height:1.4}
+
+/* DB CHOICE */
+.db-compare{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}
+.db-card{border:2px solid var(--border);border-radius:10px;overflow:hidden}
+.db-card.supabase{border-color:#3ecf8e}
+.db-card.qdrant{border-color:#dc2626}
+.db-head{padding:11px 13px;color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;gap:6px}
+.db-head.supabase{background:#3ecf8e}
+.db-head.qdrant{background:#dc2626}
+.db-body{padding:12px;background:#fff;font-size:11px;line-height:1.6}
+.db-body li{list-style:none;padding:4px 0 4px 16px;position:relative}
+.db-body li::before{content:'✓';position:absolute;left:0;color:#15803d;font-weight:700}
+
+/* RAG FLOW */
+.rag-block{background:var(--light);border-radius:12px;padding:15px;margin:12px 0;border:1px solid var(--border)}
+.rag-title{font-size:12px;font-weight:700;margin-bottom:10px}
+.rag-row{display:flex;align-items:center;gap:7px;margin-bottom:6px;flex-wrap:wrap}
+.rag-box{background:#fff;border:1px solid var(--border);border-radius:6px;padding:6px 10px;font-size:11px;font-weight:600;flex:1;min-width:80px;text-align:center;line-height:1.4}
+.rag-box.b-dark{background:var(--black);color:#fff;border-color:var(--black)}
+.rag-box.b-blue{background:#1d4ed8;color:#fff;border-color:#1d4ed8}
+.rag-box.b-orange{background:#d97706;color:#fff;border-color:#d97706}
+.rag-box.b-purple{background:#7c3aed;color:#fff;border-color:#7c3aed}
+.rag-box.b-green{background:#059669;color:#fff;border-color:#059669}
+.rag-arrow{color:#bbb;font-size:13px;flex-shrink:0}
+
+/* AGENT BOX */
+.agent-box{background:#faf5ff;border:1px solid #e9d5ff;border-radius:10px;padding:13px 15px;margin:10px 0}
+.ag-title{font-size:11px;font-weight:700;color:#5b21b6;margin-bottom:6px;display:flex;align-items:center;gap:5px}
+.ag-body{font-size:12px;color:#5b21b6;line-height:1.65}
+
+/* SQL BLOCK */
+.sql-block{background:#0d1117;color:#e6edf3;border-radius:9px;padding:14px 16px;margin:10px 0;font-family:'JetBrains Mono','Courier New',monospace;font-size:11px;line-height:1.7;overflow-x:auto;white-space:pre;border-left:3px solid #3ecf8e}
+
+.ts-block{background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:13px 15px;margin:10px 0}
+.ts-item{padding:8px 0;border-bottom:1px dashed #fecaca}
+.ts-item:last-child{border-bottom:none}
+.ts-q{font-size:12px;font-weight:700;color:#991b1b;margin-bottom:4px}
+.ts-q::before{content:'Q. ';color:#dc2626}
+.ts-a{font-size:11px;color:#7f1d1d;line-height:1.6;padding-left:14px}
+.ts-a::before{content:'A. ';font-weight:700}
+
+.checklist{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:13px 15px;margin:12px 0}
+.ck-title{font-size:11px;font-weight:700;color:#14532d;margin-bottom:8px}
+.ck-item{padding:5px 0 5px 22px;font-size:12px;line-height:1.5;color:#166534;position:relative}
+.ck-item::before{content:'☐';position:absolute;left:0;top:3px;font-size:14px;color:#15803d}
+
+.hw-block{background:linear-gradient(135deg,#7c3aed,#1d4ed8);color:#fff;border-radius:11px;padding:16px;margin:14px 0}
+.hw-tag{display:inline-block;background:rgba(255,255,255,.2);border-radius:4px;padding:2px 8px;font-size:9px;font-weight:900;letter-spacing:1.5px;margin-bottom:8px}
+.hw-title{font-size:14px;font-weight:700;margin-bottom:8px}
+.hw-list{list-style:none;padding:0}
+.hw-list li{padding:5px 0 5px 16px;font-size:12px;line-height:1.55;position:relative;color:rgba(255,255,255,.9)}
+.hw-list li::before{content:'▸';position:absolute;left:0;color:#c4b5fd}
+
+@media(max-width:400px){
+  .lesson-meta{grid-template-columns:repeat(2,1fr)}
+  .channel-grid{grid-template-columns:1fr}
+  .db-compare{grid-template-columns:1fr}
+  .hero h1{font-size:19px}
+}
+</style>
+</head>
+<body>
+
+<div id="sf">
+  <span class="lbl">W5 강의노트</span>
+  <span class="ttl" id="sf-t">스케줄 + 멀티채널 + RAG 기초</span>
+  <span class="pct" id="sf-p">0%</span>
+</div>
+
+<!-- HERO -->
+<div class="hero" data-section="W5 강의노트">
+  <div class="hero-badge">Week 05 · Phase 3 · 고급 자동화</div>
+  <h1>스케줄 확장 + 멀티채널 + RAG 1 기초</h1>
+  <p class="hero-sub">24/7 무인 운영 시스템 + 에이전트의 장기 기억 만들기</p>
+  <div class="hero-meta">
+    <div class="hero-meta-item"><span class="hero-meta-num">3시간</span><span class="hero-meta-lbl">수업<br>시간</span></div>
+    <div class="hero-meta-item"><span class="hero-meta-num">4루틴</span><span class="hero-meta-lbl">장중·장마감<br>해외장</span></div>
+    <div class="hero-meta-item"><span class="hero-meta-num">RAG 1</span><span class="hero-meta-lbl">Vector DB<br>첫 도입</span></div>
+  </div>
+</div>
+
+<div class="container">
+
+<!-- Phase 전환 -->
+<section data-section="Phase 3 시작">
+  <div class="phase-transition">
+    <div class="pt-label">▶ PHASE 3 SIMULATION — W5 & W6</div>
+    <div class="pt-title">3D 에이전트를 24/7 자율 시스템으로 확장</div>
+    <div class="pt-sub">Phase 2에서 3D 분석 에이전트를 만들었다면, Phase 3는 그 에이전트를 <strong>무인 운영 시스템</strong>으로 바꾸고 <strong>장기 기억(RAG)</strong>을 심어주는 단계입니다.</div>
+  </div>
+</section>
+
+<!-- 학습 목표 -->
+<section data-section="학습 목표">
+  <div class="eyebrow">Learning Objectives</div>
+  <h2>이번 주 학습 목표</h2>
+
+  <div class="lesson-meta">
+    <div class="meta-card"><div class="meta-card-lbl">레벨</div><div class="meta-card-val">중급+</div></div>
+    <div class="meta-card"><div class="meta-card-lbl">선수지식</div><div class="meta-card-val">W1~W4</div></div>
+    <div class="meta-card"><div class="meta-card-lbl">실습</div><div class="meta-card-val">130분</div></div>
+    <div class="meta-card"><div class="meta-card-lbl">과제</div><div class="meta-card-val">확장 1개</div></div>
+  </div>
+
+  <div class="goals">
+    <div class="goal"><div class="goal-chk">1</div><div class="goal-text"><strong>한국장·미국장·암호화폐 24시간</strong> 3가지 시장 특성에 맞는 멀티 스케줄 루틴을 설계할 수 있다</div></div>
+    <div class="goal"><div class="goal-chk">2</div><div class="goal-text"><strong>Webhook 노드</strong>로 외부 이벤트(TradingView 알림 등)를 수신하고 <strong>Error Trigger</strong>로 장애 복구 자동화할 수 있다</div></div>
+    <div class="goal"><div class="goal-chk">3</div><div class="goal-text"><strong>Discord·텔레그램·Gmail</strong> 3개 채널에 상황별로 분기 발송하는 멀티채널 시스템을 완성할 수 있다</div></div>
+    <div class="goal"><div class="goal-chk">4</div><div class="goal-text"><strong>Supabase 또는 Qdrant</strong> 벡터 DB를 무료 티어로 구축하고 <strong>임베딩 생성·저장</strong>의 기초 흐름을 이해할 수 있다</div></div>
+  </div>
+
+  <div class="callout green">
+    <strong>이번 주의 한 문장:</strong> "에이전트가 잠들지 않는다." W5는 W4까지 만든 3D 에이전트를 진짜 24/7 시스템으로 운영 상태로 만들고, 에이전트의 "장기 기억"인 Vector DB의 첫 씨앗을 심습니다.
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- 1교시: 멀티 스케줄 루틴 -->
+<section data-section="1교시: 멀티 스케줄">
+  <div class="eyebrow">Session 1 · 40min</div>
+  <h2>1교시 — 시장 특성별 멀티 스케줄 루틴</h2>
+
+  <p>투자 자산군마다 작동 시간이 다릅니다. 한국장은 9시~15:30, 미국장은 한국시간 밤 10:30~새벽 5시, 암호화폐는 24시간. 각 시장에 <strong>다른 Schedule Trigger</strong>를 따로 두는 것이 올바른 설계입니다.</p>
+
+  <h3>4대 루틴 설계</h3>
+  <div class="routine-grid">
+    <div class="routine-card">
+      <div class="routine-time">08:30<br>KST</div>
+      <div class="routine-info">
+        <div class="routine-name">🇰🇷 한국장 개장 브리핑</div>
+        <div class="routine-desc">W4 3D 에이전트 + 관심 한국 종목. 개장 30분 전 Discord로 오늘의 판단 발송.<br>Cron: <code>30 8 * * 1-5</code></div>
+      </div>
+    </div>
+    <div class="routine-card">
+      <div class="routine-time">15:45<br>KST</div>
+      <div class="routine-info">
+        <div class="routine-name">🇰🇷 한국장 마감 리포트</div>
+        <div class="routine-desc">당일 수익률·지표 변동 Gmail HTML 발송. 장 마감 후 15분 여유를 두고 정리.<br>Cron: <code>45 15 * * 1-5</code></div>
+      </div>
+    </div>
+    <div class="routine-card">
+      <div class="routine-time">22:00<br>KST</div>
+      <div class="routine-info">
+        <div class="routine-name">🇺🇸 미국장 개장 브리핑</div>
+        <div class="routine-desc">미국 관심 종목(AAPL, SPY 등) 3D 에이전트 실행. 개장 30분 전 알림.<br>Cron: <code>0 22 * * 1-5</code></div>
+      </div>
+    </div>
+    <div class="routine-card">
+      <div class="routine-time">4h<br>주기</div>
+      <div class="routine-info">
+        <div class="routine-name">🪙 암호화폐 모니터링</div>
+        <div class="routine-desc">BTC·ETH는 24시간 시장. 4시간마다 급등락(±5%) 체크 → 조건 만족 시에만 알림.<br>Cron: <code>0 */4 * * *</code></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="callout orange">
+    <strong>⚠️ 타임존 재확인:</strong> n8n Cloud의 워크플로 타임존이 <strong>Asia/Seoul</strong>로 설정됐는지 확인. Workflow Settings → Timezone. Docker 셀프호스팅은 <code>GENERIC_TIMEZONE=Asia/Seoul</code> 환경변수 필수. 타임존이 틀리면 장 열리기 전에 알림이 와서 의미가 없어집니다.
+  </div>
+
+  <h3>워크플로 재사용 — Execute Workflow 노드</h3>
+  <p>4개 루틴이 모두 <strong>동일한 3D 에이전트 로직</strong>을 호출합니다. 각 루틴에 전체 로직을 복사하면 유지보수 악몽. <strong>Execute Workflow 노드</strong>로 W4의 3D 에이전트를 모듈처럼 재사용합니다.</p>
+
+  <div class="node-card">
+    <div class="node-head">
+      <span class="node-icon">🔗</span>
+      <span class="node-name">Execute Workflow — W4 에이전트 호출</span>
+      <span class="node-tag">CALL</span>
+    </div>
+    <div class="node-body">
+      W4의 3D 에이전트 워크플로를 함수처럼 호출. 티커 리스트를 파라미터로 전달.
+      <div class="node-config">
+        <div class="node-config-row"><span class="ncr-k">Source:</span> <span class="ncr-v">Database</span></div>
+        <div class="node-config-row"><span class="ncr-k">Workflow:</span> <span class="ncr-v">W4_3D_Agent (기존 워크플로)</span></div>
+        <div class="node-config-row"><span class="ncr-k">Input Data:</span> <span class="ncr-v">{{ tickers: ["005930.KS", "000660.KS"] }}</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- 2교시: Webhook + Error Trigger -->
+<section data-section="2교시: Webhook + 장애 복구">
+  <div class="eyebrow">Session 2 · 35min</div>
+  <h2>2교시 — Webhook 외부 수신 + 장애 자동 복구</h2>
+
+  <h3>Webhook 노드 — 외부 이벤트 수신</h3>
+  <p>Schedule는 "시간" 기반이지만, Webhook은 "이벤트" 기반입니다. TradingView 알림, 거래소 이상 감지, 외부 서비스에서 n8n을 호출할 때 사용합니다.</p>
+
+  <div class="node-card">
+    <div class="node-head">
+      <span class="node-icon">🔌</span>
+      <span class="node-name">Webhook Trigger — 외부 호출 받기</span>
+      <span class="node-tag">TRIGGER</span>
+    </div>
+    <div class="node-body">
+      워크플로를 열면 고유 URL 자동 생성. 외부 서비스가 이 URL로 POST하면 워크플로 실행.
+      <div class="node-config">
+        <div class="node-config-row"><span class="ncr-k">HTTP Method:</span> <span class="ncr-v">POST</span></div>
+        <div class="node-config-row"><span class="ncr-k">Path:</span> <span class="ncr-v">tradingview-alert (자유 경로)</span></div>
+        <div class="node-config-row"><span class="ncr-k">Authentication:</span> <span class="ncr-v">Header Auth (보안 강화)</span></div>
+        <div class="node-config-row"><span class="ncr-k">Response Mode:</span> <span class="ncr-v">Immediately (바로 200 OK)</span></div>
+      </div>
+    </div>
+  </div>
+
+  <h3>활용 예 — TradingView 알림 연동</h3>
+  <p>TradingView에서 "AAPL이 200달러 돌파하면 알려줘"를 설정하면 TradingView가 n8n Webhook URL로 POST를 보냅니다. 그 다음은 여러분의 워크플로가 알아서 처리 — 3D 에이전트 호출 + Discord 알림 + Sheets 기록.</p>
+
+  <div class="callout blue">
+    <strong>💡 실전 팁 — Header Auth 필수:</strong> Webhook URL이 공개되면 악성 호출이 올 수 있습니다. 반드시 Header Authentication을 설정해 특정 헤더(예: <code>x-secret-key: MYKEY</code>)가 있는 요청만 수락하도록 하세요.
+  </div>
+
+  <h3>Error Trigger — 장애 자동 감지</h3>
+  <p>자동화 시스템의 최대 적은 <strong>조용한 실패</strong>입니다. API 호출이 실패했는데 알지 못하면 며칠간 "의사결정 없는 상태"로 방치됩니다. Error Trigger가 이를 해결합니다.</p>
+
+  <div class="node-card">
+    <div class="node-head">
+      <span class="node-icon">🚨</span>
+      <span class="node-name">Error Trigger — 워크플로 장애 감지</span>
+      <span class="node-tag">TRIGGER</span>
+    </div>
+    <div class="node-body">
+      <strong>별도 워크플로</strong>로 만듭니다. 다른 워크플로에서 오류 발생 시 자동 실행.
+      <div class="node-config">
+        <div class="node-config-row"><span class="ncr-k">Trigger 대상:</span> <span class="ncr-v">워크플로 Settings → Error Workflow에 지정</span></div>
+        <div class="node-config-row"><span class="ncr-k">받는 데이터:</span> <span class="ncr-v">실행 ID, 실패 노드, 에러 메시지 전체</span></div>
+      </div>
+    </div>
+  </div>
+
+  <h3>Error 복구 워크플로 예시</h3>
+  <div class="n8n-flow">
+    <div class="n8n-title">🔧 장애 대응 워크플로 (별도 생성)</div>
+    <div class="n8n-steps">
+      <div class="n8n-step"><span class="n8n-node nn-t">Error Trigger</span><span class="n8n-edge">→</span><span class="n8n-desc">워크플로 오류 발생 시 자동 실행</span></div>
+      <div class="n8n-step"><span class="n8n-node nn-c">Code (분류)</span><span class="n8n-edge">→</span><span class="n8n-desc">에러 메시지로 유형 판단 (API timeout / 인증 오류 / rate limit)</span></div>
+      <div class="n8n-step"><span class="n8n-node nn-c">Switch</span><span class="n8n-edge">→</span><span class="n8n-desc">복구 가능(재시도) / 수동 개입 필요 분기</span></div>
+      <div class="n8n-step"><span class="n8n-node nn-o">Discord 관리자</span><span class="n8n-edge">→</span><span class="n8n-desc">전용 알림 채널로 에러 상세 + 워크플로 링크</span></div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- 3교시: 멀티채널 -->
+<section data-section="3교시: 멀티채널 발송">
+  <div class="eyebrow">Session 3 · 30min</div>
+  <h2>3교시 — 멀티채널 알림 전략</h2>
+
+  <p>모든 알림을 Discord 하나로만 보내면 <strong>중요한 신호가 묻힙니다</strong>. 채널별 특성에 맞게 용도를 분리합니다.</p>
+
+  <div class="channel-grid">
+    <div class="ch-card">
+      <div class="ch-icon">💬</div>
+      <div class="ch-name">Discord</div>
+      <div class="ch-purpose">모든 일상 알림 + 차트 이미지 첨부<br>(메인 채널)</div>
+    </div>
+    <div class="ch-card">
+      <div class="ch-icon">✈️</div>
+      <div class="ch-name">Telegram</div>
+      <div class="ch-purpose">모바일 즉시 푸시<br>긴급 알림(BUY/AVOID 강신호) 전용</div>
+    </div>
+    <div class="ch-card">
+      <div class="ch-icon">📧</div>
+      <div class="ch-name">Gmail</div>
+      <div class="ch-purpose">일일/주간 HTML 리포트<br>장기 이력 보관용</div>
+    </div>
+  </div>
+
+  <div class="callout purple">
+    <strong>💡 채널별 분기 설계 원칙:</strong><br>
+    <strong>Discord</strong>: 모든 verdict (BUY / WATCH / HOLD / AVOID) — 히스토리 쌓기 목적<br>
+    <strong>Telegram</strong>: confidence 4~5 + BUY/AVOID만 — 알림 피로 방지<br>
+    <strong>Gmail</strong>: 매일 장마감 후 1회 전체 리포트 — 주말에 돌아보기용<br>
+  </div>
+
+  <h3>Telegram Bot 설정</h3>
+  <div class="step-block">
+    <div class="step-title">Telegram Bot 5분 세팅</div>
+    <ol class="step-list">
+      <li>Telegram 앱에서 <code>@BotFather</code> 검색 → 대화 시작 → <code>/newbot</code> 명령</li>
+      <li>Bot 이름 입력 → 토큰(HTTP API) 발급 — <strong>안전하게 복사</strong></li>
+      <li>본인 Bot과 대화 시작 (아무 메시지 1회 전송)</li>
+      <li>브라우저에서 <code>https://api.telegram.org/bot{TOKEN}/getUpdates</code> 접속 → <code>chat.id</code> 복사</li>
+      <li>n8n Credentials → <strong>Telegram API</strong> → Access Token 입력</li>
+    </ol>
+  </div>
+
+  <h3>Gmail HTML 일일 리포트 템플릿</h3>
+  <p>텍스트보다 구조화된 HTML이 가독성 압도적입니다. Code 노드에서 HTML 문자열을 생성한 뒤 Gmail 노드의 HTML Body로 전달.</p>
+
+<pre class="code-block"><span class="cm">// 일일 리포트 HTML 생성 (Code 노드)</span>
+<span class="kw">const</span> verdicts = $input.all();
+<span class="kw">const</span> buyCount = verdicts.<span class="fn">filter</span>(v =&gt; v.json.verdict === <span class="str">'BUY'</span>).length;
+<span class="kw">const</span> sellCount = verdicts.<span class="fn">filter</span>(v =&gt; v.json.verdict === <span class="str">'AVOID'</span>).length;
+
+<span class="kw">let</span> rows = <span class="str">''</span>;
+<span class="kw">for</span> (<span class="kw">let</span> i = <span class="num">0</span>; i &lt; verdicts.length; i++) {
+  <span class="kw">const</span> v = verdicts[i].json;
+  <span class="kw">const</span> color = v.verdict === <span class="str">'BUY'</span> ? <span class="str">'#15803d'</span>
+    : v.verdict === <span class="str">'AVOID'</span> ? <span class="str">'#dc2626'</span> : <span class="str">'#666'</span>;
+  rows += <span class="str">`&lt;tr&gt;
+    &lt;td&gt;${v.ticker}&lt;/td&gt;
+    &lt;td style="color:${color};font-weight:700"&gt;${v.verdict}&lt;/td&gt;
+    &lt;td&gt;${v.confidence}/5&lt;/td&gt;
+    &lt;td&gt;${v.summary}&lt;/td&gt;
+  &lt;/tr&gt;`</span>;
+}
+
+<span class="kw">const</span> html = <span class="str">`
+&lt;div style="font-family:sans-serif;max-width:600px"&gt;
+  &lt;h2&gt;📊 오늘의 3D 투자 브리핑&lt;/h2&gt;
+  &lt;p&gt;BUY ${buyCount}건 · AVOID ${sellCount}건&lt;/p&gt;
+  &lt;table style="width:100%;border-collapse:collapse" border="1"&gt;
+    &lt;tr style="background:#f3f3f3"&gt;
+      &lt;th&gt;종목&lt;/th&gt;&lt;th&gt;판단&lt;/th&gt;&lt;th&gt;신뢰도&lt;/th&gt;&lt;th&gt;요약&lt;/th&gt;
+    &lt;/tr&gt;
+    ${rows}
+  &lt;/table&gt;
+  &lt;p style="color:#999;font-size:11px"&gt;교육 목적 분석. 투자 판단은 본인 책임.&lt;/p&gt;
+&lt;/div&gt;`</span>;
+
+<span class="kw">return</span> { html: html, buy_count: buyCount, sell_count: sellCount };
+</pre>
+</section>
+
+<div class="divider"></div>
+
+<!-- 4교시: RAG 기초 -->
+<section data-section="4교시: RAG 기초">
+  <div class="eyebrow">Session 4 · 75min</div>
+  <h2>4교시 — RAG(Retrieval-Augmented Generation) 기초</h2>
+
+  <p>지금까지 에이전트는 <strong>현재 데이터만</strong> 봅니다. 하지만 <strong>"지난 FOMC에서 연준이 뭐라고 했는지"</strong>, <strong>"이 증권사 리포트에 BBB등급 기업 매수 조건이 뭐였는지"</strong>를 기억하지 못합니다. 이를 해결하는 것이 RAG입니다.</p>
+
+  <div class="agent-box">
+    <div class="ag-title">🤖 왜 RAG가 "장기 기억"인가</div>
+    <div class="ag-body">Claude의 컨텍스트 윈도우(200K 토큰)는 <strong>대화 1회에만 유효</strong>한 단기 기억입니다. 하지만 Vector DB에 미리 저장해두면 에이전트가 <strong>필요할 때마다 검색</strong>해 꺼내 쓸 수 있습니다. 이것이 에이전트의 장기 기억입니다. RAG를 붙인 에이전트는 "연준은 왜 이번에 금리를 안 내렸나?"라는 질문에 과거 의사록을 인용하며 답합니다.</div>
+  </div>
+
+  <h3>RAG의 기본 흐름</h3>
+  <div class="rag-block">
+    <div class="rag-title">🧠 RAG 파이프라인 — 저장과 검색 두 단계</div>
+    <div class="rag-row">
+      <div class="rag-box b-dark">PDF·문서</div>
+      <span class="rag-arrow">→</span>
+      <div class="rag-box">청킹 (Split)</div>
+      <span class="rag-arrow">→</span>
+      <div class="rag-box b-purple">Embedding</div>
+      <span class="rag-arrow">→</span>
+      <div class="rag-box b-green">Vector DB 저장</div>
+    </div>
+    <div style="font-size:10px;color:#999;margin:8px 0;text-align:center">⬇ 질의 시</div>
+    <div class="rag-row">
+      <div class="rag-box b-blue">사용자 질문</div>
+      <span class="rag-arrow">→</span>
+      <div class="rag-box b-purple">Query Embedding</div>
+      <span class="rag-arrow">→</span>
+      <div class="rag-box">유사 Top 5 검색</div>
+      <span class="rag-arrow">→</span>
+      <div class="rag-box b-dark">Claude + 컨텍스트</div>
+    </div>
+  </div>
+
+  <h3>Vector DB 선택 — Supabase vs Qdrant</h3>
+  <p>두 옵션 모두 <strong>무료 티어로 대학생 과정 전체</strong>를 커버 가능합니다. 본인 선호대로 선택하세요.</p>
+
+  <div class="db-compare">
+    <div class="db-card supabase">
+      <div class="db-head supabase">🟢 Supabase + pgvector</div>
+      <div class="db-body">
+        <ul>
+          <li><strong>무료 500MB DB</strong> (결제 정보 불필요)</li>
+          <li>PostgreSQL 기반 → SQL 익숙한 사람에 유리</li>
+          <li>대시보드에서 데이터 직접 보기 쉬움</li>
+          <li>pgvector 확장 활성화 필요 (SQL 1줄)</li>
+          <li>n8n 공식 <strong>Supabase Vector Store</strong> 노드</li>
+          <li>추천 대상: DB 공부하고 싶은 학생</li>
+        </ul>
+      </div>
+    </div>
+    <div class="db-card qdrant">
+      <div class="db-head qdrant">🔴 Qdrant Cloud</div>
+      <div class="db-body">
+        <ul>
+          <li><strong>무료 4GB 디스크·1GB RAM</strong> (결제 정보 불필요)</li>
+          <li>벡터 전용 DB — 검색 속도 최적화</li>
+          <li>768차원 벡터 약 100만 개 저장 가능</li>
+          <li>설정 간단 — 클러스터 생성 1분</li>
+          <li>n8n 공식 <strong>Qdrant Vector Store</strong> 노드</li>
+          <li>추천 대상: 빠르게 시작하고 싶은 학생</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <h3>옵션 A: Supabase 세팅</h3>
+  <div class="step-block">
+    <div class="step-title">Supabase 프로젝트 생성 + pgvector 활성화 (5분)</div>
+    <ol class="step-list">
+      <li><code>https://supabase.com</code> 접속 → GitHub 계정으로 가입</li>
+      <li><strong>New Project</strong> → 이름 <code>invest-rag</code>, DB 비밀번호 설정, Region: Northeast Asia (Seoul)</li>
+      <li>프로젝트 준비 후 좌측 <strong>SQL Editor</strong> → 아래 SQL 실행</li>
+      <li>Settings → API → <strong>Project URL</strong>과 <strong>service_role key</strong> 복사</li>
+      <li>n8n Credentials → <strong>Supabase</strong> → URL + Service Role Key 입력</li>
+    </ol>
+  </div>
+
+<pre class="sql-block"><span class="cm">-- Supabase SQL Editor에서 실행</span>
+<span class="cm">-- 1. pgvector 확장 활성화</span>
+<span class="kw">CREATE EXTENSION IF NOT EXISTS</span> vector;
+
+<span class="cm">-- 2. 문서 테이블 생성 (1536차원 = OpenAI 임베딩)</span>
+<span class="kw">CREATE TABLE</span> documents (
+  id uuid <span class="kw">PRIMARY KEY DEFAULT</span> gen_random_uuid(),
+  content text,
+  metadata jsonb,
+  embedding vector(<span class="num">1536</span>)
+);
+
+<span class="cm">-- 3. 유사도 검색 함수</span>
+<span class="kw">CREATE OR REPLACE FUNCTION</span> match_documents (
+  query_embedding vector(<span class="num">1536</span>),
+  match_count int <span class="kw">DEFAULT</span> <span class="num">5</span>
+)
+<span class="kw">RETURNS TABLE</span> (id uuid, content text, metadata jsonb, similarity float)
+<span class="kw">LANGUAGE</span> plpgsql
+<span class="kw">AS</span> $$
+<span class="kw">BEGIN</span>
+  <span class="kw">RETURN QUERY</span>
+  <span class="kw">SELECT</span>
+    documents.id,
+    documents.content,
+    documents.metadata,
+    <span class="num">1</span> - (documents.embedding &lt;=&gt; query_embedding) <span class="kw">AS</span> similarity
+  <span class="kw">FROM</span> documents
+  <span class="kw">ORDER BY</span> documents.embedding &lt;=&gt; query_embedding
+  <span class="kw">LIMIT</span> match_count;
+<span class="kw">END</span>;
+$$;
+</pre>
+
+  <h3>옵션 B: Qdrant Cloud 세팅</h3>
+  <div class="step-block">
+    <div class="step-title">Qdrant Cloud 클러스터 생성 (3분)</div>
+    <ol class="step-list">
+      <li><code>https://cloud.qdrant.io</code> 접속 → Google 계정 가입 (결제정보 불필요)</li>
+      <li>로그인 후 <strong>Create Cluster</strong> → Name: <code>invest-rag</code>, Region: Germany/Frankfurt 또는 가까운 곳, Plan: <strong>Free</strong></li>
+      <li>클러스터 생성 완료 (1~2분) → 클러스터 URL 복사</li>
+      <li>좌측 <strong>API Keys</strong> → Create Key → 키 복사</li>
+      <li>n8n Credentials → <strong>Qdrant API</strong> → URL + API Key 입력</li>
+    </ol>
+  </div>
+
+  <h3>실습 — 첫 문서를 Vector DB에 저장</h3>
+  <p>이번 주는 "최소 1건" 저장까지만 합니다. 본격적 PDF 수백 페이지 검색은 <strong>W6에서 완성</strong>합니다.</p>
+
+  <div class="n8n-flow">
+    <div class="n8n-title">🔧 W5 실습 — FOMC 의사록 한 페이지 저장·검색 테스트</div>
+    <div class="n8n-steps">
+      <div class="n8n-step"><span class="n8n-node nn-t">Manual Trigger</span><span class="n8n-edge">→</span><span class="n8n-desc">수업 중 테스트용 수동 실행</span></div>
+      <div class="n8n-step"><span class="n8n-node nn-a">HTTP/Form</span><span class="n8n-edge">→</span><span class="n8n-desc">FOMC 의사록 1페이지 텍스트 입력 (샘플 텍스트)</span></div>
+      <div class="n8n-step"><span class="n8n-node nn-c">Default Data Loader</span><span class="n8n-edge">→</span><span class="n8n-desc">텍스트를 LangChain 문서 형식으로 변환</span></div>
+      <div class="n8n-step"><span class="n8n-node nn-c">Text Splitter</span><span class="n8n-edge">→</span><span class="n8n-desc">500자 단위 청킹 (겹침 50자)</span></div>
+      <div class="n8n-step"><span class="n8n-node nn-ai">OpenAI Embedding</span><span class="n8n-edge">→</span><span class="n8n-desc">text-embedding-3-small 모델로 1536차원 벡터 생성</span></div>
+      <div class="n8n-step"><span class="n8n-node nn-o">Vector Store Insert</span><span class="n8n-edge">→</span><span class="n8n-desc">Supabase 또는 Qdrant에 저장</span></div>
+    </div>
+  </div>
+
+  <div class="node-card">
+    <div class="node-head">
+      <span class="node-icon">💾</span>
+      <span class="node-name">Vector Store — Insert Documents (공용)</span>
+      <span class="node-tag">INSERT</span>
+    </div>
+    <div class="node-body">
+      Supabase / Qdrant 둘 다 <strong>동일한 n8n 노드 패턴</strong>으로 작동. 공식 Vector Store 노드 사용.
+      <div class="node-config">
+        <div class="node-config-row"><span class="ncr-k">Operation Mode:</span> <span class="ncr-v">Insert Documents</span></div>
+        <div class="node-config-row"><span class="ncr-k">Embedding:</span> <span class="ncr-v">Embeddings OpenAI (sub-node)</span></div>
+        <div class="node-config-row"><span class="ncr-k">Model:</span> <span class="ncr-v">text-embedding-3-small</span></div>
+        <div class="node-config-row"><span class="ncr-k">Data Loader:</span> <span class="ncr-v">Default Data Loader (sub-node)</span></div>
+        <div class="node-config-row"><span class="ncr-k">Text Splitter:</span> <span class="ncr-v">Recursive Character (500, 50)</span></div>
+        <div class="node-config-row"><span class="ncr-k">Collection/Table:</span> <span class="ncr-v">documents</span></div>
+      </div>
+    </div>
+  </div>
+
+  <h3>임베딩이란 무엇인가 — 30초 설명</h3>
+  <p>"임베딩"은 텍스트를 <strong>숫자 배열(벡터)</strong>로 변환하는 과정입니다. 비슷한 의미의 텍스트는 비슷한 벡터가 됩니다.</p>
+
+<pre class="code-block"><span class="cm">// 임베딩 예시 (실제는 1536차원)</span>
+<span class="str">"연준이 금리를 동결했다"</span>  -&gt; [<span class="num">0.12</span>, -<span class="num">0.04</span>, <span class="num">0.89</span>, <span class="num">0.23</span>, ...]
+<span class="str">"FOMC에서 기준금리 유지"</span>   -&gt; [<span class="num">0.11</span>, -<span class="num">0.05</span>, <span class="num">0.87</span>, <span class="num">0.24</span>, ...]  <span class="cm">// 비슷한 벡터!</span>
+<span class="str">"사과 주식이 올랐다"</span>         -&gt; [-<span class="num">0.33</span>, <span class="num">0.71</span>, -<span class="num">0.12</span>, <span class="num">0.45</span>, ...]  <span class="cm">// 전혀 다른 벡터</span>
+</pre>
+
+  <div class="callout blue">
+    <strong>💡 임베딩 모델 비용:</strong> OpenAI <code>text-embedding-3-small</code>은 100만 토큰당 $0.02. FOMC 의사록 50페이지 = 약 2만 토큰 = $0.0004. <strong>거의 공짜.</strong> 수업 전체 임베딩 비용 $1 이내.
+  </div>
+
+  <h3>검증 — 검색 테스트</h3>
+  <p>저장이 끝났으면 간단한 검색 테스트로 RAG가 작동하는지 확인합니다.</p>
+
+  <div class="n8n-flow">
+    <div class="n8n-title">🔧 검색 테스트 워크플로</div>
+    <div class="n8n-steps">
+      <div class="n8n-step"><span class="n8n-node nn-t">Manual</span><span class="n8n-edge">→</span><span class="n8n-desc">"금리 동결 이유는?" 질문 입력</span></div>
+      <div class="n8n-step"><span class="n8n-node nn-ai">Embedding</span><span class="n8n-edge">→</span><span class="n8n-desc">질문 문장도 벡터로 변환</span></div>
+      <div class="n8n-step"><span class="n8n-node nn-a">Vector Store Query</span><span class="n8n-edge">→</span><span class="n8n-desc">유사도 Top 3 결과 반환</span></div>
+      <div class="n8n-step"><span class="n8n-node nn-c">확인</span><span class="n8n-edge">→</span><span class="n8n-desc">관련 청크가 출력되면 성공</span></div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- 디버깅 -->
+<section data-section="테스트와 디버깅">
+  <div class="eyebrow">Test &amp; Debug</div>
+  <h2>실행 테스트와 디버깅</h2>
+
+  <div class="ts-block">
+    <div style="font-size:11px;font-weight:700;color:#991b1b;margin-bottom:6px">🚨 이번 주 자주 발생하는 오류</div>
+    <div class="ts-item">
+      <div class="ts-q">Supabase에 Insert하는데 "relation documents does not exist"</div>
+      <div class="ts-a">SQL Editor에서 <code>CREATE TABLE documents</code> 실행 안 한 경우. 4교시 SQL 블록을 순서대로 모두 실행. <code>CREATE EXTENSION vector</code>도 먼저 해야 함.</div>
+    </div>
+    <div class="ts-item">
+      <div class="ts-q">Qdrant가 401 Unauthorized</div>
+      <div class="ts-a">API Key가 틀렸거나 URL에 포트 누락. URL 형식: <code>https://{cluster-id}.cloud.qdrant.io</code> (포트 없음). Credentials에서 재입력.</div>
+    </div>
+    <div class="ts-item">
+      <div class="ts-q">임베딩 노드에서 OpenAI rate limit 오류</div>
+      <div class="ts-a">무료 OpenAI 티어는 분당 제한이 있음. Text Splitter로 청크 크기를 500~1000자로 조정하거나 Batch를 줄임. 유료 ($5 충전) 권장.</div>
+    </div>
+    <div class="ts-item">
+      <div class="ts-q">Execute Workflow 노드가 sub-workflow를 못 찾음</div>
+      <div class="ts-a">W4 워크플로의 Settings → Execute Workflow Trigger 노드를 첫 노드로 두고 저장. 외부 호출을 받으려면 "Called by Another Workflow" 트리거 필요.</div>
+    </div>
+    <div class="ts-item">
+      <div class="ts-q">Error Trigger가 작동 안 함</div>
+      <div class="ts-a">메인 워크플로의 Settings → Error Workflow에 Error 워크플로를 명시적으로 지정. Error 워크플로 자체는 Active 상태여야 함.</div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- 체크리스트 -->
+<section data-section="완료 체크리스트">
+  <div class="eyebrow">Completion Checklist</div>
+  <h2>이번 주 완료 체크리스트</h2>
+
+  <div class="checklist">
+    <div class="ck-title">✅ 아래 항목이 모두 체크되면 W5 완료</div>
+    <div class="ck-item">4대 루틴(한국장 개장·마감·미국장 개장·크립토 4시간) Schedule Trigger 설정</div>
+    <div class="ck-item">Execute Workflow 노드로 W4 에이전트 모듈 호출 확인</div>
+    <div class="ck-item">Webhook Trigger로 외부 POST 요청 수신 테스트 성공</div>
+    <div class="ck-item">별도 Error 워크플로 생성 + 메인 워크플로 Settings에 연결</div>
+    <div class="ck-item">Telegram Bot 생성 + chat_id 획득 + n8n Credentials 등록</div>
+    <div class="ck-item">Gmail 또는 Telegram 노드로 HTML/텍스트 알림 발송 성공</div>
+    <div class="ck-item">Supabase 또는 Qdrant 중 <strong>하나 선택</strong> → 클러스터 생성 + n8n Credentials 등록</div>
+    <div class="ck-item">OpenAI API 키 발급 + Embedding 노드로 첫 벡터 생성</div>
+    <div class="ck-item">샘플 텍스트 1건을 Vector Store에 Insert + 검색 결과 확인</div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- 과제 -->
+<section data-section="이번 주 과제">
+  <div class="eyebrow">Homework</div>
+  <h2>이번 주 과제</h2>
+
+  <div class="hw-block">
+    <span class="hw-tag">📝 HOMEWORK · W5</span>
+    <div class="hw-title">개인용 24/7 투자 자동화 시스템 만들기</div>
+    <ul class="hw-list">
+      <li>본인 <strong>타임존·관심 자산군 맞춤 4대 루틴</strong> 설계 및 활성화 (예: 미국장 집중 학생은 미국장 루틴 더 세분화)</li>
+      <li>Telegram Bot에 <strong>/status 명령어</strong> 추가 — 현재 모니터링 중인 종목 리스트 즉시 조회 (Webhook + Telegram Trigger)</li>
+      <li><strong>Vector DB에 관심 종목 3개의 최근 분기 실적 보고서 1페이지 요약 저장</strong> — W6 본격 RAG 준비</li>
+      <li><strong>선택 챌린지 A:</strong> 1주일간 시스템 운영 로그를 Google Sheets에 기록 → 주말 회고</li>
+      <li><strong>선택 챌린지 B:</strong> Supabase와 Qdrant 둘 다 셋업 → 같은 문서로 검색 속도·결과 품질 비교 에세이</li>
+    </ul>
+  </div>
+
+  <div class="callout green" style="margin-top:12px">
+    <strong>💡 W6 미리보기:</strong> 다음 주에는 <strong>Vector RAG 본격 구축</strong>입니다. 이번 주가 "DB 그릇 준비"였다면, W6은 "<strong>증권사 리포트 PDF 수십 개·FOMC 의사록 전체</strong>를 자동으로 임베딩해 저장하고 <strong>출처 페이지까지 인용하는 Q&amp;A 시스템</strong>"을 만듭니다. Discord에서 "/ask 최근 FOMC에서 점도표 어떻게 바뀌었어?"라고 물으면 원문 인용 답변이 옵니다.
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- 참고 자료 -->
+<section data-section="참고 자료">
+  <div class="eyebrow">References</div>
+  <h2>참고 자료</h2>
+  <table class="dtable">
+    <thead><tr><th>자료</th><th>용도</th></tr></thead>
+    <tbody>
+      <tr><td><strong>n8n Schedule Trigger Docs</strong><br><code>docs.n8n.io/integrations/builtin/core-nodes/n8n-nodes-base.scheduletrigger</code></td><td>Cron 표현식, Timezone 설정 상세</td></tr>
+      <tr><td><strong>n8n Error Trigger Docs</strong><br><code>docs.n8n.io/integrations/builtin/core-nodes/n8n-nodes-base.errortrigger</code></td><td>장애 복구 워크플로 설계 공식 가이드</td></tr>
+      <tr><td><strong>Supabase pgvector</strong><br><code>supabase.com/docs/guides/ai/vector-columns</code></td><td>Vector 컬럼, 유사도 검색 함수 SQL</td></tr>
+      <tr><td><strong>Qdrant Cloud Getting Started</strong><br><code>qdrant.tech/documentation/cloud-getting-started</code></td><td>클러스터 생성·API 키 발급 공식</td></tr>
+      <tr><td><strong>n8n Vector Store Docs</strong><br><code>docs.n8n.io/advanced-ai/examples/vector-store-data</code></td><td>Insert/Query operation 상세</td></tr>
+      <tr><td><strong>OpenAI Embeddings Pricing</strong><br><code>openai.com/api/pricing</code></td><td>text-embedding-3-small 단가</td></tr>
+      <tr><td><strong>TradingView Alert Webhook</strong> 공식 가이드</td><td>Webhook으로 n8n 연동 (과제 B)</td></tr>
+    </tbody>
+  </table>
+</section>
+
+</div>
+
+<div style="background:var(--black);color:#888;text-align:center;padding:24px 20px;font-size:11px;line-height:2;margin-bottom:var(--fh)">
+  W5 강의노트 · 스케줄 확장 + 멀티채널 + RAG 기초 · 대학생 투자 자동화 과정 · 2026
+</div>
+
+<script>
+const sections = document.querySelectorAll('[data-section]');
+const sfT = document.getElementById('sf-t');
+const sfP = document.getElementById('sf-p');
+function update(){
+  const sy = window.scrollY;
+  const dh = document.documentElement.scrollHeight - window.innerHeight;
+  sfP.textContent = Math.round((sy / Math.max(dh, 1)) * 100) + '%';
+  let cur = sections[0]?.dataset.section || '';
+  sections.forEach(s => {
+    if(sy >= s.getBoundingClientRect().top + sy - 110) cur = s.dataset.section;
+  });
+  if(sfT.textContent !== cur) sfT.textContent = cur;
+}
+window.addEventListener('scroll', update, {passive:true});
+update();
+</script>
+</body>
+</html>

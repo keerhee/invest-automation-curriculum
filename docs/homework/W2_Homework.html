@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>W2 과제 워크북 — 기술적 지표 자동화</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;600&display=swap');
+:root{
+  --black:#0d0d0d;--gray:#6b6b6b;--light:#f3f3f3;--border:#e6e6e6;
+  --hw-orange:#f97316;--hw-dark:#431407;--hw-amber:#fbbf24;
+  --required:#ef4444;--advanced:#8b5cf6;
+  --fh:46px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Noto Sans KR',sans-serif;background:#fff;color:var(--black);font-size:14px;line-height:1.75;padding-bottom:var(--fh)}
+#sf{position:fixed;bottom:0;left:0;right:0;height:var(--fh);background:var(--hw-dark);display:flex;align-items:center;justify-content:space-between;padding:0 16px;z-index:999}
+#sf .lbl{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:#fed7aa}
+#sf .ttl{font-size:12px;font-weight:700;color:#fff;max-width:50%;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#sf .score{font-size:11px;color:var(--hw-amber);white-space:nowrap;font-weight:700}
+.hero{background:linear-gradient(135deg,#f97316,#431407);color:#fff;padding:40px 20px 36px;text-align:center;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;top:-80px;right:-80px;width:260px;height:260px;border:1px solid rgba(255,255,255,.08);border-radius:50%}
+.hero-badge{display:inline-block;border:1px solid rgba(255,255,255,.25);border-radius:20px;padding:4px 14px;font-size:10px;letter-spacing:2px;color:#fed7aa;margin-bottom:10px;font-weight:700}
+.hero-week{font-size:13px;color:rgba(255,255,255,.7);margin-bottom:4px;letter-spacing:3px;font-weight:700}
+.hero h1{font-size:20px;font-weight:900;line-height:1.35;margin-bottom:12px;letter-spacing:-.5px}
+.hero-score-box{display:inline-flex;align-items:center;gap:8px;background:rgba(0,0,0,.2);border:1px solid rgba(255,255,255,.2);border-radius:30px;padding:6px 16px;margin-top:8px}
+.hero-score-box strong{color:var(--hw-amber);font-weight:900;font-size:14px}
+.container{max-width:720px;margin:0 auto;padding:0 15px}
+section{padding:30px 0 0}
+.divider{height:1px;background:var(--border);margin:28px 0 0}
+.eyebrow{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--gray);margin-bottom:5px}
+h2{font-size:18px;font-weight:900;letter-spacing:-.3px;margin-bottom:10px;line-height:1.3}
+h3{font-size:13px;font-weight:700;margin:16px 0 6px}
+h4{font-size:12px;font-weight:700;margin:12px 0 6px;color:#333}
+p{color:#333;margin-bottom:8px;font-size:13px}
+strong{color:var(--black);font-weight:700}
+code{font-family:'JetBrains Mono',monospace;background:#fff7ed;padding:1px 5px;border-radius:3px;font-size:11px;color:var(--hw-orange)}
+.overview{background:linear-gradient(135deg,#fff7ed,#ffedd5);border:1px solid var(--hw-orange);border-radius:12px;padding:14px 16px;margin:14px 0}
+.ov-title{font-size:11px;font-weight:700;color:var(--hw-dark);letter-spacing:1px;margin-bottom:8px}
+.ov-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.ov-item{background:#fff;border-radius:6px;padding:6px 10px;font-size:11px}
+.ov-label{font-size:9px;color:var(--hw-orange);font-weight:700;text-transform:uppercase;margin-bottom:2px}
+.ov-value{font-weight:600;color:#333}
+.score-summary{background:#0d1117;color:#fff;border-radius:12px;padding:16px;margin:12px 0}
+.ss-title{font-size:10px;color:var(--hw-amber);letter-spacing:2px;font-weight:700;margin-bottom:10px}
+.ss-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:8px}
+.ss-item{background:rgba(255,255,255,.08);border-radius:6px;padding:8px 4px;text-align:center}
+.ss-num{font-size:10px;color:#94a3b8;margin-bottom:2px}
+.ss-pts{font-size:14px;font-weight:900;color:#fff}
+.ss-pts-amber{color:var(--hw-amber)}
+.ss-pts-purple{color:#c4b5fd}
+.ss-total{text-align:center;margin-top:12px;padding-top:12px;border-top:1px dashed rgba(255,255,255,.2);font-size:13px;color:#fff}
+.ss-total strong{color:var(--hw-amber);font-size:18px}
+.task-card{background:#fff;border:2px solid var(--border);border-radius:12px;margin:14px 0;overflow:hidden;position:relative}
+.task-card.required{border-color:var(--required)}
+.task-card.advanced{border-color:var(--advanced)}
+.task-head{padding:12px 14px;display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap;border-bottom:1px solid var(--border)}
+.required .task-head{background:#fef2f2}
+.advanced .task-head{background:#f5f3ff}
+.task-title-wrap{flex:1;min-width:0}
+.task-level{font-size:9px;letter-spacing:2px;font-weight:700;margin-bottom:3px}
+.required .task-level{color:var(--required)}
+.advanced .task-level{color:var(--advanced)}
+.task-title{font-size:13px;font-weight:700;line-height:1.35;color:#333}
+.task-points{display:flex;align-items:center;gap:6px;background:#fff;border:1px solid var(--border);border-radius:20px;padding:4px 12px;font-size:11px;font-weight:700;white-space:nowrap}
+.task-points strong{font-size:14px;color:var(--hw-orange)}
+.task-body{padding:14px}
+.task-desc{font-size:12px;line-height:1.7;color:#333;margin-bottom:10px}
+.task-requirements{background:var(--light);border-left:3px solid var(--hw-orange);border-radius:0 8px 8px 0;padding:10px 14px;margin:10px 0;font-size:12px;line-height:1.65}
+.tr-title{font-size:10px;color:var(--hw-orange);font-weight:700;margin-bottom:5px;letter-spacing:1px}
+.tr-list{margin:0;padding-left:16px}
+.tr-list li{margin-bottom:4px;color:#333}
+.code-block{background:#0d1117;color:#e6edf3;border-radius:9px;padding:12px 14px;margin:10px 0;font-family:'JetBrains Mono',monospace;font-size:11px;line-height:1.7;overflow-x:auto;white-space:pre;tab-size:2;-moz-tab-size:2;word-wrap:normal}
+.code-block .cm{color:#8b949e;font-style:italic}
+.code-block .kw{color:#ff7b72}
+.code-block .str{color:#a5d6ff}
+.code-block .num{color:#79c0ff}
+.code-block .fn{color:#d2a8ff}
+.submit-list{background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:10px 12px;margin:10px 0}
+.sl-title{font-size:10px;color:#166534;font-weight:700;margin-bottom:6px;letter-spacing:1px}
+.sl-item{display:flex;align-items:flex-start;gap:8px;padding:4px 0;font-size:12px;color:#333;line-height:1.55;cursor:pointer;user-select:none}
+.sl-item input[type="checkbox"]{flex-shrink:0;margin-top:3px;width:14px;height:14px;accent-color:#16a34a;cursor:pointer}
+.sl-item.checked{color:#888;text-decoration:line-through}
+.rubric{margin:12px 0}
+.rubric-title{font-size:10px;color:var(--hw-orange);font-weight:700;letter-spacing:1px;margin-bottom:6px;display:flex;align-items:center;gap:5px}
+.rubric-title::before{content:'📊';font-size:13px}
+.rubric-table{width:100%;border-collapse:collapse;font-size:11px}
+.rubric-table th{background:var(--hw-dark);color:#fff;padding:7px 8px;text-align:left;font-size:10px;font-weight:700}
+.rubric-table td{padding:7px 8px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.5}
+.rubric-table tr:nth-child(even) td{background:var(--light)}
+.rubric-table td:first-child{font-weight:700;color:var(--hw-orange);white-space:nowrap;font-family:'JetBrains Mono',monospace;font-size:10px}
+.rubric-table td:last-child{text-align:right;font-weight:700;color:#333;white-space:nowrap}
+.hint-block{background:#eff6ff;border:1px solid #93c5fd;border-radius:8px;margin:10px 0;overflow:hidden}
+.hint-summary{padding:10px 12px;cursor:pointer;font-size:11px;font-weight:700;color:#1e40af;display:flex;align-items:center;gap:6px;user-select:none;list-style:none}
+.hint-summary::before{content:'💡';font-size:13px}
+.hint-summary::after{content:'▼';font-size:10px;margin-left:auto;transition:transform .2s}
+.hint-block[open] .hint-summary::after{transform:rotate(180deg)}
+.hint-content{padding:0 12px 12px;font-size:11px;color:#1e3a8a;line-height:1.7}
+.hint-content code{background:#dbeafe;color:#1e40af}
+.warning{background:#fff8ed;border-left:3px solid var(--hw-amber);padding:10px 13px;border-radius:0 8px 8px 0;margin:10px 0;font-size:12px;line-height:1.65;color:#78350f}
+.warning strong{color:#92400e}
+.deliverable{background:#fff;border:2px dashed var(--hw-orange);border-radius:10px;padding:12px;margin:10px 0}
+.dv-title{font-size:10px;color:var(--hw-orange);letter-spacing:1px;font-weight:700;margin-bottom:4px}
+.dv-desc{font-size:11px;color:#333;line-height:1.6}
+.section-nav{background:var(--light);border-radius:10px;padding:12px;margin:10px 0}
+.sn-title{font-size:10px;color:var(--gray);font-weight:700;letter-spacing:1px;margin-bottom:8px}
+.sn-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:4px}
+.sn-link{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px 4px;background:#fff;border:1px solid var(--border);border-radius:6px;font-size:10px;color:#333;text-decoration:none;text-align:center}
+.sn-link:hover{border-color:var(--hw-orange);color:var(--hw-orange)}
+.sn-link.req{border-left:3px solid var(--required)}
+.sn-link.adv{border-left:3px solid var(--advanced)}
+.sn-num{font-size:14px;font-weight:900;color:#333;font-family:'JetBrains Mono',monospace}
+.sn-pts{font-size:9px;color:var(--gray);margin-top:2px}
+.formula-box{background:#1e293b;color:#fff;border-radius:8px;padding:12px 14px;margin:10px 0;text-align:center;font-family:'JetBrains Mono',monospace}
+.formula-label{font-size:9px;color:#94a3b8;letter-spacing:2px;margin-bottom:6px}
+.formula-eq{font-size:13px;line-height:1.7;color:#fde68a}
+@media(max-width:400px){
+  .ov-grid{grid-template-columns:1fr}
+  .ss-grid{grid-template-columns:repeat(5,1fr);gap:3px}
+  .ss-pts{font-size:12px}
+}
+</style>
+</head>
+<body>
+
+<div id="sf">
+  <span class="lbl">W2 Homework</span>
+  <span class="ttl" id="sf-t">W2 과제 워크북</span>
+  <span class="score" id="sf-s">0 / 100 점</span>
+</div>
+
+<div class="hero" data-section="개요">
+  <div class="hero-badge">📝 HOMEWORK</div>
+  <div class="hero-week">WEEK 2</div>
+  <h1>기술적 지표 자동화<br>RSI · MA · Bollinger Bands</h1>
+  <div class="hero-score-box">총점 <strong>100점</strong> · 필수 60 + 심화 40</div>
+</div>
+
+<div class="container">
+
+<section data-section="학습 목표">
+  <div class="overview">
+    <div class="ov-title">🎯 W2 학습 목표 복습</div>
+    <p style="font-size:12px;margin:4px 0 8px;color:#431407">Code 노드에서 <strong>순수 JavaScript로 기술적 지표를 직접 구현</strong>. 외부 라이브러리 없이 RSI·이동평균·볼린저 밴드의 수학적 원리 체득.</p>
+    <div class="ov-grid">
+      <div class="ov-item">
+        <div class="ov-label">🔧 핵심 개념</div>
+        <div class="ov-value">과거 30일 데이터<br>이동 윈도우 계산<br>매수/매도 시그널</div>
+      </div>
+      <div class="ov-item">
+        <div class="ov-label">⏱ 예상 시간</div>
+        <div class="ov-value">필수 4~5시간<br>심화 +3시간</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="score-summary">
+    <div class="ss-title">📊 과제 배점표</div>
+    <div class="ss-grid">
+      <div class="ss-item"><div class="ss-num">과제 1</div><div class="ss-pts ss-pts-amber">20</div></div>
+      <div class="ss-item"><div class="ss-num">과제 2</div><div class="ss-pts ss-pts-amber">20</div></div>
+      <div class="ss-item"><div class="ss-num">과제 3</div><div class="ss-pts ss-pts-amber">20</div></div>
+      <div class="ss-item"><div class="ss-num">과제 4</div><div class="ss-pts ss-pts-purple">20</div></div>
+      <div class="ss-item"><div class="ss-num">과제 5</div><div class="ss-pts ss-pts-purple">20</div></div>
+    </div>
+    <div class="ss-total">합계 <strong>100점</strong> · 필수 60 + 심화 40</div>
+  </div>
+
+  <div class="section-nav">
+    <div class="sn-title">📍 빠른 이동</div>
+    <div class="sn-grid">
+      <a class="sn-link req" href="#t1"><span class="sn-num">1</span><span class="sn-pts">20pt</span></a>
+      <a class="sn-link req" href="#t2"><span class="sn-num">2</span><span class="sn-pts">20pt</span></a>
+      <a class="sn-link req" href="#t3"><span class="sn-num">3</span><span class="sn-pts">20pt</span></a>
+      <a class="sn-link adv" href="#t4"><span class="sn-num">4</span><span class="sn-pts">20pt</span></a>
+      <a class="sn-link adv" href="#t5"><span class="sn-num">5</span><span class="sn-pts">20pt</span></a>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- TASK 1 -->
+<section id="t1" data-section="과제 1">
+  <div class="task-card required">
+    <div class="task-head">
+      <div class="task-title-wrap">
+        <div class="task-level">🔴 REQUIRED — 과제 1</div>
+        <div class="task-title">RSI(14) 직접 구현 + 5종목 계산</div>
+      </div>
+      <div class="task-points">배점 <strong>20</strong> 점</div>
+    </div>
+    <div class="task-body">
+      <p class="task-desc">Code 노드에서 <strong>RSI(Relative Strength Index) 14일 기간</strong>을 직접 계산하는 함수를 작성하고, 관심 종목 5개에 적용합니다.</p>
+
+      <div class="formula-box">
+        <div class="formula-label">RSI 공식</div>
+        <div class="formula-eq">RSI = 100 − (100 / (1 + RS))<br>RS = 평균 상승폭 / 평균 하락폭</div>
+      </div>
+
+      <div class="task-requirements">
+        <div class="tr-title">필수 요구사항</div>
+        <ul class="tr-list">
+          <li>Yahoo Finance에서 최근 <strong>30일 일봉 데이터</strong> 수집 (Chart API interval=1d)</li>
+          <li>Code 노드에서 RSI(14) 계산 함수 직접 작성 — <strong>외부 라이브러리 금지</strong></li>
+          <li>5개 종목에 대해 RSI 계산 후 Google Sheets 저장</li>
+          <li>RSI ≤ 30 → "과매도", ≥ 70 → "과매수", 그 외 → "중립" 자동 라벨링</li>
+          <li>매일 한국 장 마감 후 <strong>16:00</strong> 자동 실행</li>
+        </ul>
+      </div>
+
+      <h4>Starter Code (Code 노드)</h4>
+      <pre class="code-block"><span class="cm">// RSI 계산 함수 — 이 코드의 빈칸을 완성하세요</span>
+<span class="kw">function</span> <span class="fn">calculateRSI</span>(closes, period = <span class="num">14</span>) {
+  <span class="kw">if</span> (closes.length &lt; period + <span class="num">1</span>) <span class="kw">return</span> <span class="kw">null</span>;
+  
+  <span class="kw">let</span> gains = <span class="num">0</span>, losses = <span class="num">0</span>;
+  
+  <span class="cm">// TODO: 첫 period 기간의 평균 상승/하락 계산</span>
+  <span class="kw">for</span> (<span class="kw">let</span> i = <span class="num">1</span>; i &lt;= period; i++) {
+    <span class="kw">const</span> diff = closes[i] - closes[i - <span class="num">1</span>];
+    <span class="kw">if</span> (diff &gt; <span class="num">0</span>) gains += diff;
+    <span class="kw">else</span> losses += <span class="fn">Math.abs</span>(diff);
+  }
+  
+  <span class="kw">const</span> avgGain = gains / period;
+  <span class="kw">const</span> avgLoss = losses / period;
+  
+  <span class="kw">if</span> (avgLoss === <span class="num">0</span>) <span class="kw">return</span> <span class="num">100</span>;
+  
+  <span class="kw">const</span> rs = avgGain / avgLoss;
+  <span class="kw">return</span> <span class="num">100</span> - (<span class="num">100</span> / (<span class="num">1</span> + rs));
+}
+
+<span class="cm">// 사용 예</span>
+<span class="kw">const</span> closes = $input.first().json.closes;  <span class="cm">// 30일 종가 배열</span>
+<span class="kw">const</span> rsi = <span class="fn">calculateRSI</span>(closes, <span class="num">14</span>);
+
+<span class="kw">return</span> [{ json: { rsi: rsi.<span class="fn">toFixed</span>(<span class="num">2</span>), zone: rsi &lt;= <span class="num">30</span> ? <span class="str">'oversold'</span> : rsi &gt;= <span class="num">70</span> ? <span class="str">'overbought'</span> : <span class="str">'neutral'</span> } }];</pre>
+
+      <details class="hint-block">
+        <summary class="hint-summary">Yahoo 응답에서 종가 배열 추출하기</summary>
+        <div class="hint-content">
+          Yahoo Chart API 응답 구조가 복잡합니다:
+          <pre style="margin-top:6px;background:#1e293b;color:#e6edf3;padding:8px;border-radius:4px;font-size:10px">const result = $input.first().json.chart.result[0];
+const closes = result.indicators.quote[0].close.filter(c => c !== null);
+
+// 또는 안전하게:
+const closes = ($json.chart?.result?.[0]?.indicators?.quote?.[0]?.close || [])
+  .filter(c => c !== null);</pre>
+          null 값 필터링이 필수 (휴장일 데이터). 30일 중 실제 유효한 종가가 22~25개 정도.
+        </div>
+      </details>
+
+      <div class="rubric">
+        <div class="rubric-title">채점 기준 (20점 만점)</div>
+        <table class="rubric-table">
+          <tbody>
+            <tr><td>A. RSI 계산 함수 정확성</td><td>7점</td></tr>
+            <tr><td>B. 5종목 모두 적용</td><td>4점</td></tr>
+            <tr><td>C. 과매수/과매도 자동 라벨링</td><td>4점</td></tr>
+            <tr><td>D. Sheets 저장 형식 (RSI · Zone · Date)</td><td>3점</td></tr>
+            <tr><td>E. 16:00 자동 실행 설정</td><td>2점</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="deliverable">
+        <div class="dv-title">📦 제출물</div>
+        <div class="dv-desc">
+          1. 워크플로 JSON<br>
+          2. 5일 이상 누적된 RSI 기록 Sheets 링크<br>
+          3. 과매도/과매수 구간 발생 시점 스크린샷 (하나라도)
+        </div>
+      </div>
+
+      <div class="submit-list">
+        <div class="sl-title">✓ 제출 전 체크</div>
+        <label class="sl-item"><input type="checkbox"> <span>RSI 값이 0~100 범위에 있는지 검증</span></label>
+        <label class="sl-item"><input type="checkbox"> <span>TradingView 등에서 동일 종목의 RSI와 비교 (±2% 이내)</span></label>
+        <label class="sl-item"><input type="checkbox"> <span>null 값 필터링 처리 확인</span></label>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TASK 2 -->
+<section id="t2" data-section="과제 2">
+  <div class="task-card required">
+    <div class="task-head">
+      <div class="task-title-wrap">
+        <div class="task-level">🔴 REQUIRED — 과제 2</div>
+        <div class="task-title">이동평균(MA) 3종 골든크로스 탐지기</div>
+      </div>
+      <div class="task-points">배점 <strong>20</strong> 점</div>
+    </div>
+    <div class="task-body">
+      <p class="task-desc"><strong>MA5, MA20, MA60</strong>을 동시 계산하고, 단기선이 장기선을 상향 돌파하는 <strong>골든 크로스</strong> 시그널을 자동 탐지합니다.</p>
+
+      <div class="formula-box">
+        <div class="formula-label">이동평균 정의</div>
+        <div class="formula-eq">MA(N) = (최근 N일 종가의 합) / N</div>
+      </div>
+
+      <div class="task-requirements">
+        <div class="tr-title">필수 요구사항</div>
+        <ul class="tr-list">
+          <li>과거 <strong>70일</strong> 이상 데이터 수집 (MA60 계산 위해)</li>
+          <li>MA5, MA20, MA60 동시 계산 함수 작성</li>
+          <li><strong>현재 MA5 &gt; MA20</strong> AND <strong>전일 MA5 ≤ MA20</strong> → "골든크로스" 탐지</li>
+          <li>반대 조건 → "데드크로스" 탐지</li>
+          <li>시그널 발생 시 <strong>Discord 알림</strong> 발송</li>
+        </ul>
+      </div>
+
+      <h4>MA 계산 함수 Starter</h4>
+      <pre class="code-block"><span class="kw">function</span> <span class="fn">calculateMA</span>(closes, period) {
+  <span class="kw">if</span> (closes.length &lt; period) <span class="kw">return</span> <span class="kw">null</span>;
+  <span class="kw">const</span> recent = closes.<span class="fn">slice</span>(-period);
+  <span class="kw">return</span> recent.<span class="fn">reduce</span>((a, b) =&gt; a + b, <span class="num">0</span>) / period;
+}
+
+<span class="cm">// 현재와 어제 두 시점의 MA를 계산해 크로스 탐지</span>
+<span class="kw">const</span> ma5_today = <span class="fn">calculateMA</span>(closes, <span class="num">5</span>);
+<span class="kw">const</span> ma5_yesterday = <span class="fn">calculateMA</span>(closes.<span class="fn">slice</span>(<span class="num">0</span>, -<span class="num">1</span>), <span class="num">5</span>);
+<span class="kw">const</span> ma20_today = <span class="fn">calculateMA</span>(closes, <span class="num">20</span>);
+<span class="kw">const</span> ma20_yesterday = <span class="fn">calculateMA</span>(closes.<span class="fn">slice</span>(<span class="num">0</span>, -<span class="num">1</span>), <span class="num">20</span>);
+
+<span class="kw">const</span> isGoldenCross = ma5_today &gt; ma20_today &amp;&amp; ma5_yesterday &lt;= ma20_yesterday;
+<span class="kw">const</span> isDeadCross  = ma5_today &lt; ma20_today &amp;&amp; ma5_yesterday &gt;= ma20_yesterday;</pre>
+
+      <div class="warning">
+        <strong>⚠️ 자주 하는 실수:</strong> MA60 계산에 60일 데이터만 있으면 "당일 MA"는 가능하지만 "전일 MA"가 불가능. 최소 <strong>61일</strong> 이상 필요. 여유있게 <strong>70~80일</strong> 수집 권장.
+      </div>
+
+      <div class="rubric">
+        <div class="rubric-title">채점 기준 (20점 만점)</div>
+        <table class="rubric-table">
+          <tbody>
+            <tr><td>A. MA 3종 정확 계산</td><td>6점</td></tr>
+            <tr><td>B. 골든/데드크로스 탐지 로직</td><td>6점</td></tr>
+            <tr><td>C. Discord 시그널 알림</td><td>4점</td></tr>
+            <tr><td>D. IF 노드로 분기 처리</td><td>2점</td></tr>
+            <tr><td>E. 시그널 로그 Sheets 저장</td><td>2점</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="deliverable">
+        <div class="dv-title">📦 제출물</div>
+        <div class="dv-desc">
+          1. 워크플로 JSON<br>
+          2. 실제 발생한 골든/데드크로스 Discord 캡처 (과거 데이터 backfill 해서라도)<br>
+          3. MA5/20/60 3개 라인을 그린 시각화 (Sheets 차트 or 외부 도구)
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TASK 3 -->
+<section id="t3" data-section="과제 3">
+  <div class="task-card required">
+    <div class="task-head">
+      <div class="task-title-wrap">
+        <div class="task-level">🔴 REQUIRED — 과제 3</div>
+        <div class="task-title">볼린저 밴드 + 밴드 돌파 알림</div>
+      </div>
+      <div class="task-points">배점 <strong>20</strong> 점</div>
+    </div>
+    <div class="task-body">
+      <p class="task-desc">볼린저 밴드(20, 2σ)를 계산하고, 현재가가 상단/하단 밴드를 돌파하면 Discord에 알림 발송.</p>
+
+      <div class="formula-box">
+        <div class="formula-label">볼린저 밴드 공식</div>
+        <div class="formula-eq">Middle = MA(20)<br>Upper = Middle + 2σ<br>Lower = Middle − 2σ</div>
+      </div>
+
+      <div class="task-requirements">
+        <div class="tr-title">필수 요구사항</div>
+        <ul class="tr-list">
+          <li>표준편차(σ) 계산 함수 작성 — <strong>외부 라이브러리 금지</strong></li>
+          <li>Upper, Middle, Lower 밴드 3개 동시 계산</li>
+          <li><strong>현재가가 Upper 초과</strong> → "상단 돌파 경고"</li>
+          <li><strong>현재가가 Lower 이하</strong> → "하단 이탈 경고"</li>
+          <li>Band Width (밴드 폭) 계산: <code>(Upper - Lower) / Middle × 100</code></li>
+        </ul>
+      </div>
+
+      <details class="hint-block">
+        <summary class="hint-summary">표준편차 계산 함수</summary>
+        <div class="hint-content">
+<pre style="margin-top:6px;background:#1e293b;color:#e6edf3;padding:8px;border-radius:4px;font-size:10px">function calculateStdDev(values) {
+  const mean = values.reduce((a,b) => a+b, 0) / values.length;
+  const sqDiff = values.map(v => Math.pow(v - mean, 2));
+  const variance = sqDiff.reduce((a,b) => a+b, 0) / values.length;
+  return Math.sqrt(variance);
+}
+
+const recent20 = closes.slice(-20);
+const middle = calculateMA(recent20, 20);
+const std = calculateStdDev(recent20);
+const upper = middle + 2 * std;
+const lower = middle - 2 * std;</pre>
+        </div>
+      </details>
+
+      <div class="rubric">
+        <div class="rubric-title">채점 기준 (20점 만점)</div>
+        <table class="rubric-table">
+          <tbody>
+            <tr><td>A. 표준편차 + 밴드 3종 정확성</td><td>7점</td></tr>
+            <tr><td>B. 돌파/이탈 탐지</td><td>5점</td></tr>
+            <tr><td>C. Band Width 계산 + 저장</td><td>3점</td></tr>
+            <tr><td>D. Discord Embed 디자인</td><td>3점</td></tr>
+            <tr><td>E. Switch 노드로 상/하단 분기</td><td>2점</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="deliverable">
+        <div class="dv-title">📦 제출물</div>
+        <div class="dv-desc">
+          1. 워크플로 JSON<br>
+          2. 실제 밴드 돌파 Discord 캡처<br>
+          3. Band Width의 <strong>시간 변화</strong> (스퀴즈 구간 발견되면 별점)
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- TASK 4 (심화) -->
+<section id="t4" data-section="과제 4 (심화)">
+  <div class="task-card advanced">
+    <div class="task-head">
+      <div class="task-title-wrap">
+        <div class="task-level">🟣 ADVANCED — 과제 4</div>
+        <div class="task-title">3지표 종합 시그널 엔진</div>
+      </div>
+      <div class="task-points">배점 <strong>20</strong> 점</div>
+    </div>
+    <div class="task-body">
+      <p class="task-desc">과제 1~3의 <strong>RSI + MA + 볼린저 3개 지표</strong>를 모두 합쳐, 각 지표의 시그널에 가중치를 부여한 종합 점수를 만듭니다.</p>
+
+      <div class="task-requirements">
+        <div class="tr-title">필수 요구사항</div>
+        <ul class="tr-list">
+          <li>각 지표에서 -1 (강한 매도) ~ +1 (강한 매수) 점수 산출</li>
+          <li>가중 평균: <code>RSI × 0.4 + MA × 0.4 + Bollinger × 0.2</code></li>
+          <li>종합 점수에 따라 <strong>5단계</strong> 분류: 강력매수 / 매수 / 중립 / 매도 / 강력매도</li>
+          <li>결과를 Discord Embed에 <strong>색상 구분</strong>으로 발송 (강력매수=진녹, 매수=연녹, ...)</li>
+          <li>매일 16:00 장 마감 후 실행</li>
+        </ul>
+      </div>
+
+      <h4>점수 산정 예시</h4>
+      <pre class="code-block"><span class="cm">// RSI 점수 (-1 ~ +1)</span>
+<span class="kw">function</span> <span class="fn">rsiScore</span>(rsi) {
+  <span class="kw">if</span> (rsi &lt;= <span class="num">30</span>) <span class="kw">return</span> +<span class="num">1</span>;       <span class="cm">// 과매도 → 매수</span>
+  <span class="kw">if</span> (rsi &lt;= <span class="num">40</span>) <span class="kw">return</span> +<span class="num">0.5</span>;
+  <span class="kw">if</span> (rsi &lt; <span class="num">60</span>)  <span class="kw">return</span>  <span class="num">0</span>;       <span class="cm">// 중립</span>
+  <span class="kw">if</span> (rsi &lt; <span class="num">70</span>)  <span class="kw">return</span> -<span class="num">0.5</span>;
+  <span class="kw">return</span> -<span class="num">1</span>;                           <span class="cm">// 과매수 → 매도</span>
+}
+
+<span class="cm">// MA 점수 — 정배열/역배열 판단</span>
+<span class="kw">function</span> <span class="fn">maScore</span>(ma5, ma20, ma60) {
+  <span class="kw">if</span> (ma5 &gt; ma20 &amp;&amp; ma20 &gt; ma60) <span class="kw">return</span> +<span class="num">1</span>;   <span class="cm">// 완전 정배열</span>
+  <span class="kw">if</span> (ma5 &gt; ma20) <span class="kw">return</span> +<span class="num">0.5</span>;
+  <span class="kw">if</span> (ma5 &lt; ma20 &amp;&amp; ma20 &lt; ma60) <span class="kw">return</span> -<span class="num">1</span>;   <span class="cm">// 완전 역배열</span>
+  <span class="kw">if</span> (ma5 &lt; ma20) <span class="kw">return</span> -<span class="num">0.5</span>;
+  <span class="kw">return</span> <span class="num">0</span>;
+}
+
+<span class="kw">const</span> total = rsiScore * <span class="num">0.4</span> + maScore * <span class="num">0.4</span> + bollScore * <span class="num">0.2</span>;
+<span class="cm">// -1.0 ~ +1.0 사이 값</span></pre>
+
+      <div class="rubric">
+        <div class="rubric-title">채점 기준 (20점 만점)</div>
+        <table class="rubric-table">
+          <tbody>
+            <tr><td>A. 3지표 통합 로직 품질</td><td>6점</td></tr>
+            <tr><td>B. 가중치 체계 타당성</td><td>4점</td></tr>
+            <tr><td>C. 5단계 분류 정확성</td><td>4점</td></tr>
+            <tr><td>D. Discord 색상 Embed 구현</td><td>4점</td></tr>
+            <tr><td>E. 실제 발생 시그널 기록</td><td>2점</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TASK 5 (심화) -->
+<section id="t5" data-section="과제 5 (심화)">
+  <div class="task-card advanced">
+    <div class="task-head">
+      <div class="task-title-wrap">
+        <div class="task-level">🟣 ADVANCED — 과제 5</div>
+        <div class="task-title">간이 백테스트 — 1년치 시그널 승률 측정</div>
+      </div>
+      <div class="task-points">배점 <strong>20</strong> 점</div>
+    </div>
+    <div class="task-body">
+      <p class="task-desc">과거 1년 데이터로 과제 4의 시그널을 <strong>백테스트</strong>해 승률을 측정합니다. "이 전략이 실제로 수익이 날까?"를 실증.</p>
+
+      <div class="task-requirements">
+        <div class="tr-title">필수 요구사항</div>
+        <ul class="tr-list">
+          <li>Yahoo Finance에서 <strong>1년치 일봉</strong> 수집 (interval=1d, range=1y)</li>
+          <li>모든 거래일마다 시그널 계산 (~250개 데이터 포인트)</li>
+          <li>"강력매수" 시그널 발생 시 <strong>5일 후 종가 수익률</strong> 기록</li>
+          <li>승률, 평균수익률, 최대손실, 샤프 비율 계산</li>
+          <li>결과를 Google Sheets에 <strong>리포트 형식</strong>으로 정리</li>
+        </ul>
+      </div>
+
+      <h4>백테스트 결과 템플릿</h4>
+      <pre class="code-block"><span class="cm">Backtest Report — {ticker}</span>
+
+Period: 2025-04 ~ 2026-04
+Signals fired: 23 (BUY) / 19 (SELL)
+
+Win Rate (BUY):  61% (14/23)
+Avg Return:      +2.3%
+Max Drawdown:    -7.1%
+Sharpe Ratio:    0.89
+
+Conclusion: 전략이 유효하지만 승률이 낮아 개선 필요</pre>
+
+      <div class="warning">
+        <strong>⚠️ 주의:</strong> 백테스트 결과가 좋다고 미래에도 좋다는 보장 없음. <strong>Look-ahead bias</strong>에 주의 — "미래 데이터로 과거 시그널을 만들면 안됨". 계산할 때 각 시점에서 그 시점까지의 데이터만 사용.
+      </div>
+
+      <div class="rubric">
+        <div class="rubric-title">채점 기준 (20점 만점)</div>
+        <table class="rubric-table">
+          <tbody>
+            <tr><td>A. 1년치 데이터 순회 로직</td><td>5점</td></tr>
+            <tr><td>B. Look-ahead 없이 시그널 생성</td><td>5점</td></tr>
+            <tr><td>C. 4개 메트릭 계산 정확성</td><td>5점</td></tr>
+            <tr><td>D. 리포트 가독성·시각화</td><td>3점</td></tr>
+            <tr><td>E. 시그널 개선 제안</td><td>2점</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<section id="submit" data-section="제출">
+  <div class="eyebrow">Submit</div>
+  <h2>📤 제출 방법 + 기한</h2>
+  <div class="warning"><strong>⏰ 제출 기한:</strong> W3 수업 시작 전까지. 지연 시 하루당 -2점.</div>
+  <div style="background:linear-gradient(135deg,#f97316,#431407);color:#fff;text-align:center;padding:24px 20px;border-radius:12px;margin:20px 0">
+    <div style="font-size:10px;letter-spacing:2px;color:#fbbf24;margin-bottom:6px;font-weight:700">📝 W2 HOMEWORK COMPLETE</div>
+    <div style="font-size:14px;font-weight:700;margin-bottom:4px">기술적 지표 · 매매 시그널 엔진</div>
+    <div style="font-size:11px;color:rgba(255,255,255,.75);line-height:1.7">5 tasks · 100 pt · 4~8 hours<br>데이터 → 지표 → 시그널 → 알림, 의사결정 자동화의 기초가 완성됩니다</div>
+  </div>
+</section>
+
+</div>
+
+<script>
+document.querySelectorAll('.sl-item input[type="checkbox"]').forEach(cb => {
+  cb.addEventListener('change', () => cb.parentElement.classList.toggle('checked', cb.checked));
+});
+const sections = document.querySelectorAll('[data-section]');
+const sfT = document.getElementById('sf-t');
+function update(){
+  const sy = window.scrollY;
+  let cur = sections[0]?.dataset.section || '';
+  sections.forEach(s => { if(sy >= s.getBoundingClientRect().top + sy - 110) cur = s.dataset.section; });
+  if(sfT.textContent !== cur) sfT.textContent = cur;
+}
+window.addEventListener('scroll', update, {passive:true});
+update();
+</script>
+</body>
+</html>

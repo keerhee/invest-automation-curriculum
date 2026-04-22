@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>부록 A — n8n 실전 매뉴얼</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;600&display=swap');
+:root{
+  --black:#0d0d0d;--gray:#6b6b6b;--light:#f3f3f3;--border:#e6e6e6;--white:#fff;
+  --n8n-red:#ea4b71;--n8n-dark:#1a1b23;
+  --fh:46px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Noto Sans KR',-apple-system,sans-serif;background:#fff;color:var(--black);font-size:14px;line-height:1.75;padding-bottom:var(--fh)}
+
+#sf{position:fixed;bottom:0;left:0;right:0;height:var(--fh);background:var(--n8n-dark);display:flex;align-items:center;justify-content:space-between;padding:0 16px;z-index:999}
+#sf .lbl{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:#666}
+#sf .ttl{font-size:12px;font-weight:700;color:#fff;max-width:60%;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#sf .pct{font-size:10px;color:#666;white-space:nowrap}
+
+.hero{background:linear-gradient(135deg,#ea4b71,#1a1b23);color:#fff;padding:48px 20px 40px;text-align:center;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;top:-80px;right:-80px;width:260px;height:260px;border:1px solid rgba(255,255,255,.08);border-radius:50%}
+.hero-badge{display:inline-block;border:1px solid rgba(255,255,255,.25);border-radius:20px;padding:4px 14px;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#fbbf24;margin-bottom:14px;font-weight:700}
+.hero h1{font-size:22px;font-weight:900;line-height:1.35;margin-bottom:8px;letter-spacing:-.5px}
+.hero-sub{font-size:12px;color:rgba(255,255,255,.8);margin-bottom:22px}
+
+.container{max-width:720px;margin:0 auto;padding:0 15px}
+section{padding:36px 0 0}
+.divider{height:1px;background:var(--border);margin:34px 0 0}
+.eyebrow{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--gray);margin-bottom:5px}
+h2{font-size:19px;font-weight:900;letter-spacing:-.3px;margin-bottom:12px;line-height:1.3}
+h3{font-size:14px;font-weight:700;margin:20px 0 8px}
+h4{font-size:12px;font-weight:700;margin:14px 0 6px;color:#333}
+p{color:#333;margin-bottom:8px;font-size:13px}
+strong{color:var(--black);font-weight:700}
+code{font-family:'JetBrains Mono',monospace;background:#fef2f2;padding:1px 5px;border-radius:3px;font-size:11px;color:var(--n8n-red)}
+
+/* TOC */
+.toc{background:var(--light);border-radius:12px;padding:16px 18px;margin:14px 0;border:1px solid var(--border)}
+.toc-title{font-size:11px;font-weight:700;color:var(--gray);letter-spacing:1px;margin-bottom:10px;text-transform:uppercase}
+.toc-item{display:block;padding:6px 0;font-size:12px;color:#333;text-decoration:none;border-bottom:1px dashed #e5e5e5;transition:color .15s}
+.toc-item:last-child{border-bottom:none}
+.toc-item:hover{color:var(--n8n-red)}
+.toc-num{display:inline-block;width:22px;color:var(--n8n-red);font-weight:700;font-family:'JetBrains Mono',monospace}
+
+.callout{background:var(--light);border-left:3px solid var(--black);padding:13px 15px;border-radius:0 8px 8px 0;margin:10px 0;font-size:13px;line-height:1.65}
+.callout.red{background:#fef2f2;border-left-color:var(--n8n-red)}
+.callout.blue{background:#eff6ff;border-left-color:#2563eb}
+.callout.green{background:#f0fdf4;border-left-color:#15803d}
+.callout.orange{background:#fff8ed;border-left-color:#d97706}
+
+/* NODE CARD */
+.node-ref{background:#fff;border:1px solid var(--border);border-radius:10px;margin:14px 0;overflow:hidden}
+.node-ref-head{background:var(--n8n-dark);color:#fff;padding:10px 14px;display:flex;align-items:center;gap:9px}
+.node-ref-icon{font-size:16px}
+.node-ref-name{font-size:13px;font-weight:700;flex:1}
+.node-ref-tag{background:var(--n8n-red);border-radius:3px;padding:2px 7px;font-size:9px;font-weight:700;letter-spacing:.5px}
+.node-ref-body{padding:12px 14px}
+.node-ref-desc{font-size:12px;line-height:1.6;color:#333;margin-bottom:10px}
+
+.field-list{background:var(--light);border-radius:6px;padding:10px 12px;font-size:11px;font-family:'JetBrains Mono',monospace;margin-top:8px}
+.field-row{padding:4px 0;border-bottom:1px dashed #ddd;display:grid;grid-template-columns:140px 1fr;gap:8px}
+.field-row:last-child{border-bottom:none}
+.field-k{color:#666;font-weight:600}
+.field-v{color:var(--n8n-red)}
+
+/* CODE BLOCK */
+.code-block{background:#0d1117;color:#e6edf3;border-radius:9px;padding:14px 16px;margin:10px 0;font-family:'JetBrains Mono',monospace;font-size:11px;line-height:1.7;overflow-x:auto;white-space:pre;tab-size:2;-moz-tab-size:2;word-wrap:normal}
+.code-block .cm{color:#8b949e;font-style:italic}
+.code-block .kw{color:#ff7b72}
+.code-block .str{color:#a5d6ff}
+.code-block .num{color:#79c0ff}
+.code-block .fn{color:#d2a8ff}
+
+/* ERROR TABLE */
+.err-table{width:100%;border-collapse:collapse;margin:10px 0;font-size:11px}
+.err-table th{background:var(--n8n-dark);color:#fff;padding:8px 10px;text-align:left;font-size:10px;font-weight:700}
+.err-table td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.5}
+.err-table tr:nth-child(even) td{background:var(--light)}
+.err-table code{font-size:10px;background:#fef2f2}
+
+/* TIP CARD */
+.tip-card{background:#fffbeb;border:1px solid #fcd34d;border-radius:10px;padding:12px 15px;margin:10px 0}
+.tip-title{font-size:11px;font-weight:700;color:#92400e;margin-bottom:6px;display:flex;align-items:center;gap:5px}
+.tip-title::before{content:'💡';font-size:13px}
+.tip-body{font-size:11px;color:#78350f;line-height:1.65}
+
+/* EXPRESSION REF */
+.expr-row{background:var(--light);border-radius:6px;padding:8px 12px;margin:6px 0;display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center}
+.expr-code{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--n8n-red);font-weight:600;overflow-x:auto}
+.expr-desc{font-size:11px;color:#333;text-align:right}
+
+/* FAQ */
+.faq-block{background:#fff;border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin:8px 0}
+.faq-q{font-size:12px;font-weight:700;color:#333;margin-bottom:6px}
+.faq-q::before{content:'Q. ';color:var(--n8n-red);font-weight:900}
+.faq-a{font-size:11px;color:#555;line-height:1.65;padding-left:16px}
+.faq-a::before{content:'A. ';font-weight:700;color:#333;margin-left:-16px}
+
+/* SIDE-BY-SIDE */
+.comparison{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:10px 0}
+.comparison-box{border-radius:8px;padding:12px;font-size:11px;line-height:1.6}
+.comp-bad{background:#fef2f2;border:1px solid #fecaca}
+.comp-good{background:#f0fdf4;border:1px solid #86efac}
+.comp-label{font-size:10px;font-weight:700;margin-bottom:5px}
+.comp-bad .comp-label{color:#991b1b}
+.comp-good .comp-label{color:#166534}
+
+@media(max-width:400px){
+  .field-row{grid-template-columns:1fr}
+  .comparison{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<div id="sf">
+  <span class="lbl">Appendix A · n8n</span>
+  <span class="ttl" id="sf-t">n8n 실전 매뉴얼</span>
+  <span class="pct" id="sf-p">0%</span>
+</div>
+
+<!-- HERO -->
+<div class="hero" data-section="n8n 매뉴얼">
+  <div class="hero-badge">📘 APPENDIX A</div>
+  <h1>n8n 실전 매뉴얼</h1>
+  <p class="hero-sub">노드 레퍼런스 · 표현식 치트시트 · 에러 대처법 · 운영 팁</p>
+</div>
+
+<div class="container">
+
+<!-- TOC -->
+<section data-section="목차">
+  <div class="toc">
+    <div class="toc-title">📚 목차</div>
+    <a class="toc-item" href="#s1"><span class="toc-num">1.</span> n8n 기본 개념과 환경</a>
+    <a class="toc-item" href="#s2"><span class="toc-num">2.</span> 핵심 노드 레퍼런스 12선</a>
+    <a class="toc-item" href="#s3"><span class="toc-num">3.</span> 표현식 문법 치트시트</a>
+    <a class="toc-item" href="#s4"><span class="toc-num">4.</span> Credentials 안전한 관리</a>
+    <a class="toc-item" href="#s5"><span class="toc-num">5.</span> 디버깅 + 에러 대처</a>
+    <a class="toc-item" href="#s6"><span class="toc-num">6.</span> 운영 팁 + FAQ</a>
+  </div>
+</section>
+
+<!-- ═══ 1. 기본 개념 ═══ -->
+<section id="s1" data-section="1. 기본 개념">
+  <div class="eyebrow">Section 1</div>
+  <h2>1. n8n 기본 개념과 환경</h2>
+
+  <h3>n8n이란?</h3>
+  <p><strong>Node-based workflow automation 도구.</strong> 드래그앤드롭으로 API·데이터베이스·메신저 등을 연결해 자동화를 만듭니다. Zapier·Make와 비슷하지만 <strong>오픈소스 + 무료</strong>, 고급 기능(Code 노드, 복잡한 분기) 강점.</p>
+
+  <h3>3가지 접속 옵션</h3>
+
+  <div class="node-ref">
+    <div class="node-ref-head">
+      <span class="node-ref-icon">☁️</span>
+      <span class="node-ref-name">① 강사 초청 (권장)</span>
+      <span class="node-ref-tag">EASY</span>
+    </div>
+    <div class="node-ref-body">
+      <div class="node-ref-desc">강사가 운영하는 n8n Cloud에 초청받아 바로 시작. 설정 0, 10초 내 로그인.</div>
+      <div class="field-list">
+        <div class="field-row"><span class="field-k">URL:</span><span class="field-v">hyeok2.app.n8n.cloud</span></div>
+        <div class="field-row"><span class="field-k">계정:</span><span class="field-v">강사 초청 이메일 수신</span></div>
+        <div class="field-row"><span class="field-k">비용:</span><span class="field-v">무료 (과정 종료 시 계정 회수)</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="node-ref">
+    <div class="node-ref-head">
+      <span class="node-ref-icon">🌐</span>
+      <span class="node-ref-name">② n8n Cloud 직접 가입</span>
+      <span class="node-ref-tag">MEDIUM</span>
+    </div>
+    <div class="node-ref-body">
+      <div class="node-ref-desc">본인 계정으로 자유롭게 사용. 14일 무료 후 월 $20~.</div>
+      <div class="field-list">
+        <div class="field-row"><span class="field-k">URL:</span><span class="field-v">n8n.io/cloud</span></div>
+        <div class="field-row"><span class="field-k">플랜:</span><span class="field-v">Starter $20/mo (5,000 실행)</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="node-ref">
+    <div class="node-ref-head">
+      <span class="node-ref-icon">🐳</span>
+      <span class="node-ref-name">③ Docker Self-Hosted</span>
+      <span class="node-ref-tag">ADVANCED</span>
+    </div>
+    <div class="node-ref-body">
+      <div class="node-ref-desc">로컬 Docker 또는 VPS에 직접 설치. 완전 무료, 무제한, 내 서버.</div>
+      <div class="code-block"><span class="cm"># Docker Compose 한 줄 실행</span>
+docker run -it --rm \
+  --name n8n \
+  -p <span class="num">5678</span>:<span class="num">5678</span> \
+  -v ~/.n8n:/home/node/.n8n \
+  docker.n8n.io/n8nio/n8n</div>
+      <div class="tip-card">
+        <div class="tip-title">학습 목적은 옵션 ① 또는 ②</div>
+        <div class="tip-body">Docker는 서버 지식 필요. 수업 진도 방해될 수 있음. 과정 완료 후 개인 프로젝트할 때 Docker로 전환 추천.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ═══ 2. 핵심 노드 12선 ═══ -->
+<section id="s2" data-section="2. 핵심 노드">
+  <div class="eyebrow">Section 2</div>
+  <h2>2. 핵심 노드 레퍼런스 12선</h2>
+
+  <p>8주 과정에서 반복적으로 사용하는 노드 12개의 <strong>필수 설정값</strong> 모음.</p>
+
+  <!-- 1. Schedule -->
+  <div class="node-ref">
+    <div class="node-ref-head">
+      <span class="node-ref-icon">⏰</span>
+      <span class="node-ref-name">Schedule Trigger</span>
+      <span class="node-ref-tag">W1~W8</span>
+    </div>
+    <div class="node-ref-body">
+      <div class="node-ref-desc">워크플로를 주기적으로 자동 실행. Cron 표현식 지원.</div>
+      <div class="field-list">
+        <div class="field-row"><span class="field-k">Mode:</span><span class="field-v">Every Day / Custom Cron Expression</span></div>
+        <div class="field-row"><span class="field-k">매일 아침 9시:</span><span class="field-v">0 9 * * *</span></div>
+        <div class="field-row"><span class="field-k">평일 8:30:</span><span class="field-v">30 8 * * 1-5</span></div>
+        <div class="field-row"><span class="field-k">4시간 간격:</span><span class="field-v">0 */4 * * *</span></div>
+        <div class="field-row"><span class="field-k">Timezone:</span><span class="field-v">Asia/Seoul (필수 설정)</span></div>
+      </div>
+      <div class="tip-card">
+        <div class="tip-title">Cron 표현식 암기 법</div>
+        <div class="tip-body">5자리: <code>분 시 일 월 요일</code>. <code>*</code>은 "매", <code>*/N</code>은 "N마다". 웹사이트 <strong>crontab.guru</strong>에서 실시간 의미 확인 가능.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. HTTP Request -->
+  <div class="node-ref">
+    <div class="node-ref-head">
+      <span class="node-ref-icon">🌐</span>
+      <span class="node-ref-name">HTTP Request</span>
+      <span class="node-ref-tag">CORE</span>
+    </div>
+    <div class="node-ref-body">
+      <div class="node-ref-desc">외부 API 호출. n8n의 가장 중요한 노드. 어떤 서비스든 HTTP면 연결 가능.</div>
+      <div class="field-list">
+        <div class="field-row"><span class="field-k">Method:</span><span class="field-v">GET / POST / PUT / DELETE / PATCH</span></div>
+        <div class="field-row"><span class="field-k">Authentication:</span><span class="field-v">Generic Credential Type 선택</span></div>
+        <div class="field-row"><span class="field-k">Send Query:</span><span class="field-v">Parameters 추가 버튼</span></div>
+        <div class="field-row"><span class="field-k">Send Headers:</span><span class="field-v">Specify Headers Using Fields</span></div>
+        <div class="field-row"><span class="field-k">Send Body:</span><span class="field-v">JSON / Form Data / Binary</span></div>
+        <div class="field-row"><span class="field-k">Options > Timeout:</span><span class="field-v">10000 ms (10초 권장)</span></div>
+      </div>
+      <div class="tip-card">
+        <div class="tip-title">흔한 실수</div>
+        <div class="tip-body">KIS API처럼 Body가 JSON인 경우 반드시 <strong>Content-Type: application/json</strong> 헤더 추가. Body Content Type을 "JSON"으로 명시하고 Send Body 토글 ON.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. Code -->
+  <div class="node-ref">
+    <div class="node-ref-head">
+      <span class="node-ref-icon">💻</span>
+      <span class="node-ref-name">Code</span>
+      <span class="node-ref-tag">FLEX</span>
+    </div>
+    <div class="node-ref-body">
+      <div class="node-ref-desc">JavaScript 또는 Python으로 데이터 가공. 표현식으로 해결 안 되는 복잡한 로직 담당.</div>
+      <div class="field-list">
+        <div class="field-row"><span class="field-k">Language:</span><span class="field-v">JavaScript (Node.js) / Python (Pyodide)</span></div>
+        <div class="field-row"><span class="field-k">Mode:</span><span class="field-v">Run Once for All Items / Once for Each Item</span></div>
+      </div>
+      <div class="code-block"><span class="cm">// Run Once for All Items 모드 예시</span>
+<span class="kw">const</span> data = $input.all();  <span class="cm">// 모든 item 가져오기</span>
+<span class="kw">const</span> prices = data.<span class="fn">map</span>(item =&gt; item.json.price);
+<span class="kw">const</span> avg = prices.<span class="fn">reduce</span>((a, b) =&gt; a + b) / prices.length;
+
+<span class="kw">return</span> [{ json: { average_price: avg } }];
+
+<span class="cm">// Run Once for Each Item 모드</span>
+<span class="kw">const</span> price = $input.item.json.price;
+$input.item.json.doubled = price * <span class="num">2</span>;
+<span class="kw">return</span> $input.item;</div>
+    </div>
+  </div>
+
+  <!-- 4. Set -->
+  <div class="node-ref">
+    <div class="node-ref-head">
+      <span class="node-ref-icon">📝</span>
+      <span class="node-ref-name">Set / Edit Fields</span>
+      <span class="node-ref-tag">TRANSFORM</span>
+    </div>
+    <div class="node-ref-body">
+      <div class="node-ref-desc">필드 이름 변경·추가·제거. Code보다 간단한 변환에 사용.</div>
+      <div class="field-list">
+        <div class="field-row"><span class="field-k">Mode:</span><span class="field-v">Manual Mapping / JSON</span></div>
+        <div class="field-row"><span class="field-k">Include Other Input Fields:</span><span class="field-v">Yes (기존 필드 유지)</span></div>
+        <div class="field-row"><span class="field-k">필드 타입:</span><span class="field-v">String / Number / Boolean / Array / Object</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. IF -->
+  <div class="node-ref">
+    <div class="node-ref-head">
+      <span class="node-ref-icon">🔀</span>
+      <span class="node-ref-name">IF</span>
+      <span class="node-ref-tag">BRANCH</span>
+    </div>
+    <div class="node-ref-body">
+      <div class="node-ref-desc">단순 true/false 분기. 두 갈래로 갈림.</div>
+      <div class="field-list">
+        <div class="field-row"><span class="field-k">Conditions:</span><span class="field-v">AND / OR 연결</span></div>
+        <div class="field-row"><span class="field-k">Types:</span><span class="field-v">String / Number / Boolean / DateTime</span></div>
+        <div class="field-row"><span class="field-k">Operations:</span><span class="field-v">Equals / Contains / Greater Than / Empty 등</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 6. Switch -->
+  <div class="node-ref">
+    <div class="node-ref-head">
+      <span class="node-ref-icon">🚦</span>
+      <span class="node-ref-name">Switch</span>
+      <span class="node-ref-tag">MULTI</span>
+    </div>
+    <div class="node-ref-body">
+      <div class="node-ref-desc">3개 이상의 분기. verdict가 BUY/SELL/WATCH/HOLD 등 다중 분기일 때.</div>
+      <div class="field-list">
+        <div class="field-row"><span class="field-k">Mode:</span><span class="field-v">Rules / Expression</span></div>
+        <div class="field-row"><span class="field-k">Output:</span><span class="field-v">최대 10개 분기 + Fallback</span></div>
+        <div class="field-row"><span class="field-k">표현식 예:</span><span class="field-v">{{ $json.verdict }}</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 7. Merge -->
+  <div class="node-ref">
+    <div class="node-ref-head">
+      <span class="node-ref-icon">🔗</span>
+      <span class="node-ref-name">Merge</span>
+      <span class="node-ref-tag">JOIN</span>
+    </div>
+    <div class="node-ref-body">
+      <div class="node-ref-desc">여러 브랜치의 데이터를 합침. W4에서 W1~W3 결과 통합할 때 핵심.</div>
+      <div class="field-list">
+        <div class="field-row"><span class="field-k">Mode:</span><span class="field-v">Append / Merge By Fields / Merge By Position</span></div>
+        <div class="field-row"><span class="field-k">Append:</span><span class="field-v">두 입력을 단순 연결 (row 합치기)</span></div>
+        <div class="field-row"><span class="field-k">Merge By Fields:</span><span class="field-v">공통 키(예: ticker)로 JOIN</span></div>
+        <div class="field-row"><span class="field-k">Merge By Position:</span><span class="field-v">index 기준으로 대응</span></div>
+      </div>
+      <div class="tip-card">
+        <div class="tip-title">Merge vs Aggregate</div>
+        <div class="tip-body">여러 브랜치 합치기 = Merge. 한 브랜치 내 여러 item을 하나로 압축 = Aggregate. 헷갈리기 쉬움.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 8. Google Sheets -->
+  <div class="node-ref">
+    <div class="node-ref-head">
+      <span class="node-ref-icon">📊</span>
+      <span class="node-ref-name">Google Sheets</span>
+      <span class="node-ref-tag">STORE</span>
+    </div>
+    <div class="node-ref-body">
+      <div class="node-ref-desc">결과를 스프레드시트에 저장. 학습용 DB로 최적.</div>
+      <div class="field-list">
+        <div class="field-row"><span class="field-k">Resource:</span><span class="field-v">Sheet Within Document</span></div>
+        <div class="field-row"><span class="field-k">Operation:</span><span class="field-v">Append Row / Update / Get All Rows</span></div>
+        <div class="field-row"><span class="field-k">Data Mode:</span><span class="field-v">Auto-map / Map Each Column Manually</span></div>
+        <div class="field-row"><span class="field-k">Credentials:</span><span class="field-v">OAuth2 (최초 1회 Google 로그인)</span></div>
+      </div>
+      <div class="tip-card">
+        <div class="tip-title">컬럼 이름 = JSON 키와 일치</div>
+        <div class="tip-body">Auto-map 모드에서 <code>$json.ticker</code>를 저장하려면 스프레드시트 첫 행에 <code>ticker</code> 헤더 필수. 정확히 일치해야 매핑됨.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 9. AI Agent -->
+  <div class="node-ref">
+    <div class="node-ref-head">
+      <span class="node-ref-icon">🤖</span>
+      <span class="node-ref-name">AI Agent (Tools Agent)</span>
+      <span class="node-ref-tag">W3+</span>
+    </div>
+    <div class="node-ref-body">
+      <div class="node-ref-desc">Claude·OpenAI 등 LLM 호출 + 도구 사용. W3부터 핵심 노드.</div>
+      <div class="field-list">
+        <div class="field-row"><span class="field-k">Agent:</span><span class="field-v">Tools Agent (추천)</span></div>
+        <div class="field-row"><span class="field-k">Prompt Source:</span><span class="field-v">Define below / From previous node</span></div>
+        <div class="field-row"><span class="field-k">System Message:</span><span class="field-v">에이전트 역할 정의</span></div>
+        <div class="field-row"><span class="field-k">Sub-nodes:</span><span class="field-v">Chat Model + Memory + Tools</span></div>
+      </div>
+      <div class="callout blue">
+        <strong>연결 구조:</strong> AI Agent 노드는 단독으로 못 씀. 반드시 아래 서브 노드 연결:<br>
+        • <strong>Chat Model</strong> (Anthropic Chat Model / OpenAI Chat Model) — 필수<br>
+        • <strong>Memory</strong> (Simple Memory 권장) — 대화 맥락 유지용<br>
+        • <strong>Tool</strong> (HTTP Tool / Code Tool / Vector Store 등) — 선택, 다중 가능
+      </div>
+    </div>
+  </div>
+
+  <!-- 10. Vector Store -->
+  <div class="node-ref">
+    <div class="node-ref-head">
+      <span class="node-ref-icon">🗂️</span>
+      <span class="node-ref-name">Vector Store (Supabase/Qdrant)</span>
+      <span class="node-ref-tag">W5~W6</span>
+    </div>
+    <div class="node-ref-body">
+      <div class="node-ref-desc">벡터 DB 저장/검색. RAG의 핵심.</div>
+      <div class="field-list">
+        <div class="field-row"><span class="field-k">Operation Mode:</span><span class="field-v">Insert / Retrieve / Load</span></div>
+        <div class="field-row"><span class="field-k">Table Name:</span><span class="field-v">documents (W5에서 생성)</span></div>
+        <div class="field-row"><span class="field-k">Query Name:</span><span class="field-v">match_documents (RPC 함수명)</span></div>
+        <div class="field-row"><span class="field-k">Sub-nodes:</span><span class="field-v">Embeddings + Data Loader + Splitter</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 11. Webhook -->
+  <div class="node-ref">
+    <div class="node-ref-head">
+      <span class="node-ref-icon">📨</span>
+      <span class="node-ref-name">Webhook</span>
+      <span class="node-ref-tag">TRIGGER</span>
+    </div>
+    <div class="node-ref-body">
+      <div class="node-ref-desc">외부에서 n8n을 호출하는 트리거. Discord bot 응답 받기에 필수.</div>
+      <div class="field-list">
+        <div class="field-row"><span class="field-k">HTTP Method:</span><span class="field-v">POST (대부분 경우)</span></div>
+        <div class="field-row"><span class="field-k">Path:</span><span class="field-v">영문 슬러그 (예: discord-ask)</span></div>
+        <div class="field-row"><span class="field-k">Respond:</span><span class="field-v">Immediately / When Last Node Finishes</span></div>
+        <div class="field-row"><span class="field-k">Test URL:</span><span class="field-v">개발용 (비활성화 시 404)</span></div>
+        <div class="field-row"><span class="field-k">Production URL:</span><span class="field-v">Activate 후 영구 사용</span></div>
+      </div>
+      <div class="tip-card">
+        <div class="tip-title">Test vs Production URL</div>
+        <div class="tip-body">Test URL은 "Listen for Test Event" 누를 때만 살아 있음. 진짜 배포 시 Workflow Active 토글 ON → Production URL로 전환 필수.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 12. Error Trigger -->
+  <div class="node-ref">
+    <div class="node-ref-head">
+      <span class="node-ref-icon">🚨</span>
+      <span class="node-ref-name">Error Trigger</span>
+      <span class="node-ref-tag">W5+</span>
+    </div>
+    <div class="node-ref-body">
+      <div class="node-ref-desc">다른 워크플로가 실패했을 때 자동 실행. 에러 알림 전용 워크플로에 사용.</div>
+      <div class="field-list">
+        <div class="field-row"><span class="field-k">Trigger:</span><span class="field-v">항상 첫 노드로 배치</span></div>
+        <div class="field-row"><span class="field-k">Output:</span><span class="field-v">$json.execution.error (실패 정보)</span></div>
+        <div class="field-row"><span class="field-k">연결 방법:</span><span class="field-v">대상 워크플로 Settings → Error Workflow 지정</span></div>
+      </div>
+      <div class="callout orange">
+        <strong>⚠ 흔한 실수:</strong> Error Trigger 워크플로를 만들어도 대상 워크플로의 Settings에서 <strong>Error Workflow로 지정</strong>하지 않으면 작동 안 함. 양방향 연결 필수.
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ═══ 3. 표현식 치트시트 ═══ -->
+<section id="s3" data-section="3. 표현식 치트시트">
+  <div class="eyebrow">Section 3</div>
+  <h2>3. 표현식 문법 치트시트</h2>
+
+  <p>표현식은 <code>{{ }}</code> 내부에 JavaScript 코드를 쓰는 방식. 노드 간 데이터 참조의 핵심.</p>
+
+  <h3>기본 참조</h3>
+  <div class="expr-row"><span class="expr-code">{{ $json.field }}</span><span class="expr-desc">현재 노드 입력의 필드</span></div>
+  <div class="expr-row"><span class="expr-code">{{ $json['field name'] }}</span><span class="expr-desc">공백이 있는 필드명</span></div>
+  <div class="expr-row"><span class="expr-code">{{ $node['노드명'].json.field }}</span><span class="expr-desc">특정 노드 참조</span></div>
+  <div class="expr-row"><span class="expr-code">{{ $input.all() }}</span><span class="expr-desc">모든 입력 item 배열</span></div>
+  <div class="expr-row"><span class="expr-code">{{ $input.first().json }}</span><span class="expr-desc">첫 번째 item</span></div>
+  <div class="expr-row"><span class="expr-code">{{ $binary.data }}</span><span class="expr-desc">바이너리 데이터 (이미지·PDF)</span></div>
+
+  <h3>자주 쓰는 변환</h3>
+  <div class="expr-row"><span class="expr-code">{{ $json.price.toFixed(2) }}</span><span class="expr-desc">소수점 2자리 반올림</span></div>
+  <div class="expr-row"><span class="expr-code">{{ Number($json.qty) }}</span><span class="expr-desc">문자열 → 숫자</span></div>
+  <div class="expr-row"><span class="expr-code">{{ String($json.id) }}</span><span class="expr-desc">숫자 → 문자열</span></div>
+  <div class="expr-row"><span class="expr-code">{{ $json.title.slice(0, 50) }}</span><span class="expr-desc">처음 50자 자르기</span></div>
+  <div class="expr-row"><span class="expr-code">{{ $json.text.toLowerCase() }}</span><span class="expr-desc">소문자 변환</span></div>
+  <div class="expr-row"><span class="expr-code">{{ $json.arr.join(', ') }}</span><span class="expr-desc">배열 → 콤마 문자열</span></div>
+
+  <h3>날짜·시간</h3>
+  <div class="expr-row"><span class="expr-code">{{ $now }}</span><span class="expr-desc">현재 시각 (Luxon DateTime)</span></div>
+  <div class="expr-row"><span class="expr-code">{{ $now.toISO() }}</span><span class="expr-desc">ISO 8601 포맷</span></div>
+  <div class="expr-row"><span class="expr-code">{{ $now.toFormat('yyyy-MM-dd') }}</span><span class="expr-desc">"2026-04-22" 형태</span></div>
+  <div class="expr-row"><span class="expr-code">{{ $now.minus({ days: 7 }) }}</span><span class="expr-desc">7일 전</span></div>
+  <div class="expr-row"><span class="expr-code">{{ $now.setZone('Asia/Seoul') }}</span><span class="expr-desc">한국 시간대 변환</span></div>
+
+  <h3>조건 표현식 (삼항연산자)</h3>
+  <div class="expr-row"><span class="expr-code">{{ $json.score &gt; 0 ? 'up' : 'down' }}</span><span class="expr-desc">조건부 값</span></div>
+  <div class="expr-row"><span class="expr-code">{{ $json.val || 'default' }}</span><span class="expr-desc">null/undefined 대체값</span></div>
+  <div class="expr-row"><span class="expr-code">{{ $json?.nested?.field }}</span><span class="expr-desc">옵셔널 체이닝 (안전 접근)</span></div>
+
+  <h3>배열 처리</h3>
+  <div class="expr-row"><span class="expr-code">{{ $json.items.length }}</span><span class="expr-desc">배열 길이</span></div>
+  <div class="expr-row"><span class="expr-code">{{ $json.items.map(i =&gt; i.price) }}</span><span class="expr-desc">가격만 추출</span></div>
+  <div class="expr-row"><span class="expr-code">{{ $json.items.filter(i =&gt; i.qty &gt; 0) }}</span><span class="expr-desc">조건 필터</span></div>
+  <div class="expr-row"><span class="expr-code">{{ $json.items.reduce((a,b)=&gt;a+b.v,0) }}</span><span class="expr-desc">합계</span></div>
+
+  <div class="tip-card">
+    <div class="tip-title">표현식 디버깅 꿀팁</div>
+    <div class="tip-body">
+      표현식 입력 필드 우측 상단 <strong>"Expression Editor"</strong> 아이콘 클릭 → 실시간 결과 미리보기 모달. 타입까지 표시됨. 실행 없이 검증 가능.
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ═══ 4. Credentials ═══ -->
+<section id="s4" data-section="4. Credentials">
+  <div class="eyebrow">Section 4</div>
+  <h2>4. Credentials 안전한 관리</h2>
+
+  <h3>Credential이란?</h3>
+  <p>API 키·비밀번호를 워크플로와 분리해 저장하는 n8n 기능. 암호화되어 DB에 저장되고, 워크플로에서는 이름만 참조합니다.</p>
+
+  <h3>3가지 Credential 타입</h3>
+
+  <div class="node-ref">
+    <div class="node-ref-head">
+      <span class="node-ref-icon">🔑</span>
+      <span class="node-ref-name">① Generic Credential Type</span>
+    </div>
+    <div class="node-ref-body">
+      <div class="node-ref-desc">가장 유연. Header Auth, Query Auth, Basic Auth, OAuth2 선택.</div>
+      <h4>KIS API 예시 (Header Auth)</h4>
+      <div class="field-list">
+        <div class="field-row"><span class="field-k">Credential Name:</span><span class="field-v">kis_paper_credentials</span></div>
+        <div class="field-row"><span class="field-k">Name:</span><span class="field-v">appkey</span></div>
+        <div class="field-row"><span class="field-k">Value:</span><span class="field-v">(36자리 키)</span></div>
+      </div>
+      <div class="callout red">
+        ⚠ Header Auth는 <strong>하나의 헤더만</strong> 설정 가능. KIS처럼 여러 헤더(appkey + appsecret + tr_id)가 필요하면 <strong>Send Headers를 Manual로</strong> 하고 각 필드에 <code>{{ $credentials.fieldName }}</code> 표현식 사용.
+      </div>
+    </div>
+  </div>
+
+  <div class="node-ref">
+    <div class="node-ref-head">
+      <span class="node-ref-icon">🤝</span>
+      <span class="node-ref-name">② 서비스 전용 Credential</span>
+    </div>
+    <div class="node-ref-body">
+      <div class="node-ref-desc">Google Sheets, Slack, Discord, OpenAI 등 공식 지원 서비스. 대부분 OAuth2.</div>
+      <ul style="margin-left:16px;font-size:12px;line-height:1.7">
+        <li><strong>Google Sheets</strong>: "Sign in with Google" 팝업 → 권한 승인 → 자동 저장</li>
+        <li><strong>Discord Webhook</strong>: Webhook URL 전체 붙여넣기</li>
+        <li><strong>OpenAI / Anthropic</strong>: API Key 한 줄</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="node-ref">
+    <div class="node-ref-head">
+      <span class="node-ref-icon">📁</span>
+      <span class="node-ref-name">③ Environment Variables</span>
+    </div>
+    <div class="node-ref-body">
+      <div class="node-ref-desc">Self-hosted에서만 사용. <code>.env</code>에 <code>N8N_ENCRYPTION_KEY</code>, 민감한 키 저장.</div>
+      <div class="code-block"><span class="cm"># ~/.n8n/.env</span>
+N8N_ENCRYPTION_KEY=<span class="str">your_random_32_char_key</span>
+ANTHROPIC_API_KEY=<span class="str">sk-ant-...</span>
+FRED_API_KEY=<span class="str">abc123...</span>
+
+<span class="cm"># 워크플로에서 참조</span>
+{{ $env.ANTHROPIC_API_KEY }}</div>
+    </div>
+  </div>
+
+  <h3>안전한 관리 원칙</h3>
+  <div class="callout red">
+    <strong>🚨 금기 사항:</strong><br>
+    1. <strong>워크플로 JSON export 시 Credential 포함 금지</strong> — 실수로 GitHub에 올리면 재앙<br>
+    2. <strong>스크린샷에 Credential 노출 금지</strong> — 강의 자료 배포 시 반드시 모자이크<br>
+    3. <strong>Credential 이름에 "실전/모의"</strong> 명시 — 섞이면 실계좌 사고<br>
+    4. <strong>주기적 재발급</strong> — 최소 3개월에 한 번
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ═══ 5. 디버깅 ═══ -->
+<section id="s5" data-section="5. 디버깅">
+  <div class="eyebrow">Section 5</div>
+  <h2>5. 디버깅 + 에러 대처</h2>
+
+  <h3>빈번한 에러 Top 10</h3>
+  <table class="err-table">
+    <thead>
+      <tr><th>에러 메시지</th><th>원인 + 해결</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>Request failed with status code 401</code></td>
+        <td>인증 실패. Credentials 키가 유효한지 확인. KIS는 토큰 만료 체크.</td>
+      </tr>
+      <tr>
+        <td><code>Request failed with status code 403</code></td>
+        <td>권한 부족 or 계정 차단. API 플랜 확인. KIS 모의투자에 실전 TR_ID 사용했는지 확인.</td>
+      </tr>
+      <tr>
+        <td><code>Request failed with status code 429</code></td>
+        <td>Rate limit 초과. Wait 노드 추가 or API 호출 간격 늘리기.</td>
+      </tr>
+      <tr>
+        <td><code>timeout of 10000ms exceeded</code></td>
+        <td>API 응답 느림. HTTP Request Options → Timeout 30000으로 증가.</td>
+      </tr>
+      <tr>
+        <td><code>Cannot read properties of undefined</code></td>
+        <td>표현식에서 존재하지 않는 필드 참조. <code>?.</code> 옵셔널 체이닝 사용: <code>{{ $json?.result?.data }}</code></td>
+      </tr>
+      <tr>
+        <td><code>JSON at position X</code></td>
+        <td>JSON 파싱 실패. Claude가 ```json\n ... \n``` 감싸서 반환. Code 노드에서 정리 후 파싱.</td>
+      </tr>
+      <tr>
+        <td><code>Payload too large</code></td>
+        <td>Body 1MB 초과. 긴 PDF는 청킹 후 전송.</td>
+      </tr>
+      <tr>
+        <td><code>Workflow execution timeout</code></td>
+        <td>워크플로 전체 10분 초과. Execute Workflow로 분할 or 비동기 처리.</td>
+      </tr>
+      <tr>
+        <td><code>SSL certificate error</code></td>
+        <td>KIS 일부 환경에서 발생. Options → SSL: Ignore SSL Issues 토글 (자체 서명 CA 대응).</td>
+      </tr>
+      <tr>
+        <td><code>No item to process</code></td>
+        <td>이전 노드 출력 비어있음. 테스트 데이터로 각 노드 확인. Merge 노드의 mode 확인.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>디버깅 체크리스트</h3>
+  <div class="callout green">
+    <strong>✅ 에러 발생 시 순서대로 확인:</strong><br>
+    1. 실패 노드 클릭 → 상단 "Error" 탭에서 정확한 메시지 읽기<br>
+    2. 이전 노드의 출력 데이터 확인 (테이블 뷰 / JSON 뷰 전환)<br>
+    3. Credentials이 올바른지 재확인 (특히 실전/모의 구분)<br>
+    4. 문제 노드만 "Execute Node" 버튼으로 단독 실행해 격리 테스트<br>
+    5. Code 노드에서 <code>console.log()</code> → Executions 탭에서 로그 확인<br>
+    6. 해결 안 되면 해당 노드 삭제 후 재생성 (드문 캐싱 버그)
+  </div>
+
+  <h3>테스트 vs 실행 구분</h3>
+  <div class="comparison">
+    <div class="comparison-box comp-bad">
+      <div class="comp-label">❌ 흔한 실수</div>
+      "Execute Workflow" 누르고 결과가 안 오는데 기다림 → 트리거가 Schedule인데 시간 안 됨. 
+    </div>
+    <div class="comparison-box comp-good">
+      <div class="comp-label">✓ 올바른 방법</div>
+      테스트 시 트리거 노드 "Execute Node" → 즉시 실행. 전체 워크플로 확인하려면 "Execute Workflow" 상단 버튼.
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ═══ 6. 운영 팁 + FAQ ═══ -->
+<section id="s6" data-section="6. 운영 팁 + FAQ">
+  <div class="eyebrow">Section 6</div>
+  <h2>6. 운영 팁 + FAQ</h2>
+
+  <h3>🌟 프로페셔널 운영 팁 10가지</h3>
+  <ol style="margin-left:18px;font-size:12px;line-height:1.9">
+    <li><strong>Sticky Note 적극 사용</strong> — 워크플로 에디터 우클릭 → "Add Sticky Note". 섹션 구분·설명 남기기. 한 달 뒤에 보면 감사함.</li>
+    <li><strong>워크플로 명명 규칙</strong> — <code>[카테고리]_[용도]</code>. 예: <code>[Price]_Daily_Snapshot</code>, <code>[Agent]_News_Processor</code>.</li>
+    <li><strong>Execute Workflow 노드로 모듈화</strong> — 같은 로직 반복되면 서브 워크플로로 분리. 재사용 + 유지보수 용이.</li>
+    <li><strong>Error Trigger 연결 필수</strong> — 배포된 워크플로마다 Settings → Error Workflow 지정. 조용한 실패 방지.</li>
+    <li><strong>Execution Log 주기적 확인</strong> — 좌측 메뉴 "Executions" → 실패율·평균 실행시간 체크. 이상 징후 조기 발견.</li>
+    <li><strong>Wait 노드로 Rate Limit 방어</strong> — CoinGecko Free는 30/분 제한. 루프에서 <code>Wait 2초</code> 추가.</li>
+    <li><strong>Max Iterations 설정</strong> — Code 노드의 while 루프는 반드시 카운터 + 최대 반복 수 안전장치.</li>
+    <li><strong>버전 관리</strong> — 주요 변경 전 Workflow Duplicate → 이름 뒤 <code>_v2</code> 붙여 백업.</li>
+    <li><strong>비활성화 후 편집</strong> — 운영 중 워크플로 편집하면 예기치 않은 실행. 편집 전 Active 토글 OFF.</li>
+    <li><strong>Manual Trigger 보존</strong> — 배포 후에도 Manual Trigger 노드 남겨두기. 테스트용으로 유용.</li>
+  </ol>
+
+  <h3>❓ FAQ</h3>
+
+  <div class="faq-block">
+    <div class="faq-q">워크플로가 실행 안 됨 — 스케줄 시간 됐는데도</div>
+    <div class="faq-a">Active 토글이 ON인지 확인. Test URL이 아닌 Production URL을 쓰는지. Timezone이 Asia/Seoul로 설정됐는지.</div>
+  </div>
+
+  <div class="faq-block">
+    <div class="faq-q">HTTP Request의 Body를 JSON으로 보냈는데 400 에러</div>
+    <div class="faq-a">Send Body 토글 ON + Body Content Type = "JSON" + Send Headers에 Content-Type: application/json. 3개 모두 필요.</div>
+  </div>
+
+  <div class="faq-block">
+    <div class="faq-q">Code 노드에서 npm 라이브러리 쓸 수 있나?</div>
+    <div class="faq-a">n8n Cloud는 제한됨 (Lodash 등 일부만). Self-hosted Docker면 <code>NODE_FUNCTION_ALLOW_EXTERNAL</code> 환경변수로 허용 가능. 학습 단계에서는 기본 JS만으로 충분.</div>
+  </div>
+
+  <div class="faq-block">
+    <div class="faq-q">AI Agent가 계속 같은 실수를 반복함</div>
+    <div class="faq-a">System Message 프롬프트를 더 구체화. "반드시 JSON만 출력", "설명 금지" 같은 명시적 제약 추가. Memory가 이전 실수를 기억하고 있다면 Memory 비우기.</div>
+  </div>
+
+  <div class="faq-block">
+    <div class="faq-q">Vector Store Retrieve가 엉뚱한 문서 반환</div>
+    <div class="faq-a">(1) match_documents RPC가 제대로 만들어졌는지, (2) 임베딩 차원(1536)이 맞는지, (3) 데이터가 충분히 저장됐는지 확인. W6 Reranker로 보정 가능.</div>
+  </div>
+
+  <div class="faq-block">
+    <div class="faq-q">Discord 메시지가 안 보내짐</div>
+    <div class="faq-a">(1) Webhook URL 정확한지, (2) Discord 채널 접근 권한, (3) 메시지 길이 2000자 초과 여부. embed 대신 content만 테스트해보기.</div>
+  </div>
+
+  <div class="faq-block">
+    <div class="faq-q">실행 비용이 폭발적으로 증가함</div>
+    <div class="faq-a">Chat Model이 Claude Opus면 즉시 Sonnet 또는 Haiku로 교체. Tool Use가 무한 루프에 빠지지 않는지 Max Iterations 확인. Cohere Rerank는 매우 저렴하므로 문제 아닐 가능성 큼.</div>
+  </div>
+
+  <div class="faq-block">
+    <div class="faq-q">n8n Cloud vs Self-hosted 전환 시기는?</div>
+    <div class="faq-a">월 실행 5,000회 이상이거나, 개인정보/보안이 중요한 데이터를 다룰 때 Self-hosted 고려. 초기 학습·개인 프로젝트는 Cloud가 압도적으로 편함.</div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<div style="background:linear-gradient(135deg,#ea4b71,#1a1b23);color:#fff;text-align:center;padding:32px 20px;margin:36px -15px 0;margin-bottom:var(--fh)">
+  <div style="font-size:10px;letter-spacing:2px;color:#fbbf24;margin-bottom:8px;font-weight:700">📘 APPENDIX A COMPLETE</div>
+  <div style="font-size:14px;font-weight:700;margin-bottom:5px">n8n 실전 매뉴얼</div>
+  <div style="font-size:11px;color:rgba(255,255,255,.7);line-height:1.7">12 nodes · 50+ expressions · Top 10 errors<br>2026 · ZeroOneAI Education</div>
+</div>
+
+</div>
+
+<script>
+const sections = document.querySelectorAll('[data-section]');
+const sfT = document.getElementById('sf-t');
+const sfP = document.getElementById('sf-p');
+function update(){
+  const sy = window.scrollY;
+  const dh = document.documentElement.scrollHeight - window.innerHeight;
+  sfP.textContent = Math.round((sy / Math.max(dh, 1)) * 100) + '%';
+  let cur = sections[0]?.dataset.section || '';
+  sections.forEach(s => {
+    if(sy >= s.getBoundingClientRect().top + sy - 110) cur = s.dataset.section;
+  });
+  if(sfT.textContent !== cur) sfT.textContent = cur;
+}
+window.addEventListener('scroll', update, {passive:true});
+update();
+</script>
+</body>
+</html>

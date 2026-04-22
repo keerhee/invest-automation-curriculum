@@ -1,0 +1,171 @@
+# ═══════════════════════════════════════════════
+# 환경 변수 · API 키 (절대 커밋 금지)
+# ═══════════════════════════════════════════════
+.env
+.env.local
+.env.*.local
+*.key
+*.pem
+credentials.json
+secrets/
+!templates/env/.env.example
+
+# ═══════════════════════════════════════════════
+# 학생 제출물 (개인정보 포함)
+# ═══════════════════════════════════════════════
+submissions/
+homework_submissions/
+student_work/
+*.submission
+
+# ═══════════════════════════════════════════════
+# n8n 워크플로 JSON (개인 설정 포함 가능)
+# ═══════════════════════════════════════════════
+my_workflows/
+personal_flows/
+n8n-data/
+.n8n/
+
+# ═══════════════════════════════════════════════
+# Python
+# ═══════════════════════════════════════════════
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+.eggs/
+pip-log.txt
+pip-delete-this-directory.txt
+
+# 가상환경
+venv/
+env/
+.venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb_backup
+
+# 테스팅
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# ═══════════════════════════════════════════════
+# 데이터 (대용량 또는 개인)
+# ═══════════════════════════════════════════════
+*.csv
+*.parquet
+*.feather
+*.h5
+*.pkl
+*.pickle
+data/
+datasets/
+
+# 단, 예시용 작은 데이터는 포함
+!templates/**/*.csv
+!docs/labs/sample_data/*.csv
+
+# ═══════════════════════════════════════════════
+# 로그
+# ═══════════════════════════════════════════════
+*.log
+logs/
+trading_logs/
+error_logs/
+
+# ═══════════════════════════════════════════════
+# OS 시스템 파일
+# ═══════════════════════════════════════════════
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# ═══════════════════════════════════════════════
+# IDE · 에디터
+# ═══════════════════════════════════════════════
+# VS Code
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# JetBrains
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# Sublime
+*.sublime-workspace
+*.sublime-project
+
+# Vim
+*.swp
+*.swo
+*~
+
+# ═══════════════════════════════════════════════
+# 임시 파일
+# ═══════════════════════════════════════════════
+*.tmp
+*.temp
+tmp/
+temp/
+.cache/
+*.bak
+*.backup
+
+# ═══════════════════════════════════════════════
+# 빌드 · 배포
+# ═══════════════════════════════════════════════
+node_modules/
+.next/
+out/
+*.tgz
+
+# ═══════════════════════════════════════════════
+# 학습 자료 개인화본 (선택적으로 제외)
+# ═══════════════════════════════════════════════
+my_notes/
+personal_notes/
+my_experiments/
+scratch/
+
+# ═══════════════════════════════════════════════
+# 원본 배포 아카이브 (레포 자체가 전개된 내용)
+# ═══════════════════════════════════════════════
+invest-automation-curriculum.zip
+REPO_STRUCTURE.txt
+

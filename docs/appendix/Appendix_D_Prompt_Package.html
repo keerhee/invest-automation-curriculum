@@ -1,0 +1,1223 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>부록 D — 프롬프트 패키지</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;600&display=swap');
+:root{
+  --black:#0d0d0d;--gray:#6b6b6b;--light:#f3f3f3;--border:#e6e6e6;
+  --pr-green:#059669;--pr-dark:#064e3b;--pr-accent:#34d399;
+  --fh:46px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Noto Sans KR',sans-serif;background:#fff;color:var(--black);font-size:14px;line-height:1.75;padding-bottom:var(--fh)}
+
+#sf{position:fixed;bottom:0;left:0;right:0;height:var(--fh);background:var(--pr-dark);display:flex;align-items:center;justify-content:space-between;padding:0 16px;z-index:999}
+#sf .lbl{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:#34d399}
+#sf .ttl{font-size:12px;font-weight:700;color:#fff;max-width:60%;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#sf .pct{font-size:10px;color:#34d399;white-space:nowrap}
+
+.hero{background:linear-gradient(135deg,#059669,#064e3b);color:#fff;padding:48px 20px 40px;text-align:center;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;top:-80px;right:-80px;width:260px;height:260px;border:1px solid rgba(255,255,255,.08);border-radius:50%}
+.hero-badge{display:inline-block;border:1px solid rgba(255,255,255,.25);border-radius:20px;padding:4px 14px;font-size:10px;letter-spacing:2px;color:#6ee7b7;margin-bottom:14px;font-weight:700}
+.hero h1{font-size:22px;font-weight:900;line-height:1.35;margin-bottom:8px;letter-spacing:-.5px}
+.hero-sub{font-size:12px;color:rgba(255,255,255,.85);margin-bottom:22px}
+
+.container{max-width:720px;margin:0 auto;padding:0 15px}
+section{padding:36px 0 0}
+.divider{height:1px;background:var(--border);margin:34px 0 0}
+.eyebrow{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--gray);margin-bottom:5px}
+h2{font-size:19px;font-weight:900;letter-spacing:-.3px;margin-bottom:12px;line-height:1.3}
+h3{font-size:14px;font-weight:700;margin:20px 0 8px}
+h4{font-size:12px;font-weight:700;margin:14px 0 6px;color:#333}
+p{color:#333;margin-bottom:8px;font-size:13px}
+strong{color:var(--black);font-weight:700}
+code{font-family:'JetBrains Mono',monospace;background:#ecfdf5;padding:1px 5px;border-radius:3px;font-size:11px;color:var(--pr-green)}
+
+/* TOC */
+.toc{background:var(--light);border-radius:12px;padding:16px 18px;margin:14px 0;border:1px solid var(--border)}
+.toc-title{font-size:11px;font-weight:700;color:var(--gray);letter-spacing:1px;margin-bottom:10px;text-transform:uppercase}
+.toc-item{display:block;padding:6px 0;font-size:12px;color:#333;text-decoration:none;border-bottom:1px dashed #e5e5e5}
+.toc-item:last-child{border-bottom:none}
+.toc-item:hover{color:var(--pr-green)}
+.toc-num{display:inline-block;width:26px;color:var(--pr-green);font-weight:700;font-family:'JetBrains Mono',monospace}
+
+.callout{background:var(--light);border-left:3px solid var(--black);padding:13px 15px;border-radius:0 8px 8px 0;margin:10px 0;font-size:13px;line-height:1.65}
+.callout.green{background:#f0fdf4;border-left-color:var(--pr-green)}
+.callout.blue{background:#eff6ff;border-left-color:#2563eb}
+.callout.orange{background:#fff8ed;border-left-color:#d97706}
+.callout.red{background:#fef2f2;border-left-color:#dc2626}
+
+/* PROMPT CARD — 핵심 컴포넌트 */
+.prompt-card{background:#fff;border:1px solid var(--border);border-radius:12px;margin:14px 0;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.04)}
+.pc-head{background:linear-gradient(135deg,var(--pr-dark),var(--pr-green));color:#fff;padding:12px 14px;display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap}
+.pc-title-wrap{flex:1;min-width:0}
+.pc-tag{font-size:9px;color:#6ee7b7;letter-spacing:2px;font-weight:700;margin-bottom:3px}
+.pc-title{font-size:13px;font-weight:700;line-height:1.35}
+.pc-meta{display:flex;gap:6px;flex-wrap:wrap}
+.pc-badge{background:rgba(255,255,255,.2);border-radius:4px;padding:3px 8px;font-size:9px;font-weight:700;letter-spacing:.5px;white-space:nowrap}
+.pc-badge.model{background:#fbbf24;color:#78350f}
+
+.pc-context{padding:10px 14px;background:#f0fdf4;border-bottom:1px solid #d1fae5;font-size:11px;color:#064e3b;line-height:1.65}
+.pc-context strong{color:#064e3b}
+
+.pc-body{position:relative}
+.pc-code{background:#0d1117;color:#e6edf3;padding:14px 16px 16px;font-family:'JetBrains Mono',monospace;font-size:11px;line-height:1.7;overflow-x:auto;white-space:pre;tab-size:2;-moz-tab-size:2;word-wrap:normal;max-height:500px;overflow-y:auto}
+.pc-code .cm{color:#8b949e;font-style:italic}
+.pc-code .kw{color:#ff7b72}
+.pc-code .str{color:#a5d6ff}
+.pc-code .num{color:#79c0ff}
+.pc-code .var{color:#fbbf24;font-weight:600}
+.pc-code .hl{color:#7ee787;font-weight:600}
+
+.copy-btn{position:absolute;top:8px;right:8px;background:rgba(255,255,255,.1);color:#e6edf3;border:1px solid rgba(255,255,255,.2);border-radius:5px;padding:4px 10px;font-size:10px;font-family:'Noto Sans KR',sans-serif;font-weight:600;cursor:pointer;z-index:2;transition:all .15s}
+.copy-btn:hover{background:rgba(255,255,255,.2)}
+.copy-btn.copied{background:var(--pr-green);border-color:var(--pr-green);color:#fff}
+
+.pc-notes{padding:10px 14px;background:#fffbeb;border-top:1px solid #fde68a;font-size:11px;color:#78350f;line-height:1.65}
+.pc-notes strong{color:#92400e}
+
+/* VARIABLE GUIDE */
+.var-guide{background:#fef3c7;border:1px solid #fbbf24;border-radius:8px;padding:11px 14px;margin:10px 0;font-size:11px;line-height:1.65}
+.var-guide-title{font-weight:700;color:#78350f;margin-bottom:5px;display:flex;align-items:center;gap:5px}
+.var-guide-title::before{content:'🔧';font-size:13px}
+.var-list{display:grid;grid-template-columns:140px 1fr;gap:6px 12px;margin-top:6px}
+.var-k{font-family:'JetBrains Mono',monospace;color:#b45309;font-weight:600}
+.var-d{color:#78350f}
+
+/* MODEL GUIDE TABLE */
+.model-table{width:100%;border-collapse:collapse;margin:10px 0;font-size:11px}
+.model-table th{background:var(--pr-dark);color:#fff;padding:8px 10px;text-align:left;font-size:10px;font-weight:700}
+.model-table td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.5}
+.model-table tr:nth-child(even) td{background:var(--light)}
+.model-table code{font-size:10px;background:#ecfdf5}
+
+/* TIP */
+.tip-card{background:#eff6ff;border:1px solid #93c5fd;border-radius:10px;padding:12px 15px;margin:10px 0}
+.tip-title{font-size:11px;font-weight:700;color:#1e40af;margin-bottom:6px;display:flex;align-items:center;gap:5px}
+.tip-title::before{content:'💡';font-size:13px}
+.tip-body{font-size:11px;color:#1e3a8a;line-height:1.65}
+
+/* TUNING PATTERN */
+.pattern-box{background:#fff;border:2px dashed var(--pr-green);border-radius:10px;padding:12px 14px;margin:10px 0}
+.pattern-label{font-size:9px;color:var(--pr-green);font-weight:700;letter-spacing:2px;margin-bottom:4px}
+.pattern-title{font-size:12px;font-weight:700;color:#064e3b;margin-bottom:6px}
+.pattern-body{font-size:11px;color:#333;line-height:1.7}
+
+@media(max-width:400px){
+  .pc-head{flex-direction:column;align-items:flex-start}
+  .pc-meta{width:100%}
+  .var-list{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<div id="sf">
+  <span class="lbl">Appendix D · Prompts</span>
+  <span class="ttl" id="sf-t">프롬프트 패키지</span>
+  <span class="pct" id="sf-p">0%</span>
+</div>
+
+<!-- HERO -->
+<div class="hero" data-section="프롬프트 패키지">
+  <div class="hero-badge">📘 APPENDIX D</div>
+  <h1>프롬프트 패키지</h1>
+  <p class="hero-sub">강의에서 사용한 모든 프롬프트 · 복사 붙여넣기용 템플릿</p>
+</div>
+
+<div class="container">
+
+<section data-section="목차">
+  <div class="toc">
+    <div class="toc-title">📚 목차</div>
+    <a class="toc-item" href="#s0"><span class="toc-num">0.</span> 사용법 + 모델 선택 기준</a>
+    <a class="toc-item" href="#s1"><span class="toc-num">1.</span> W3 뉴스 센티먼트 분석</a>
+    <a class="toc-item" href="#s2"><span class="toc-num">2.</span> W4 차트 Vision 판독</a>
+    <a class="toc-item" href="#s3"><span class="toc-num">3.</span> W4 3D Verdict 에이전트</a>
+    <a class="toc-item" href="#s4"><span class="toc-num">4.</span> W5 스케줄별 브리핑</a>
+    <a class="toc-item" href="#s5"><span class="toc-num">5.</span> W6 RAG 출처 인용 Q&amp;A</a>
+    <a class="toc-item" href="#s6"><span class="toc-num">6.</span> W7 Orchestrator + Sub-agents</a>
+    <a class="toc-item" href="#s7"><span class="toc-num">7.</span> W8 주문 결정 프롬프트</a>
+    <a class="toc-item" href="#s8"><span class="toc-num">8.</span> SP KIS 모의투자</a>
+    <a class="toc-item" href="#s9"><span class="toc-num">9.</span> 프롬프트 튜닝 가이드</a>
+  </div>
+</section>
+
+<!-- ═══ 0. 사용법 ═══ -->
+<section id="s0" data-section="0. 사용법">
+  <div class="eyebrow">Section 0</div>
+  <h2>0. 사용법 + 모델 선택 기준</h2>
+
+  <h3>이 문서 읽는 법</h3>
+  <p>각 프롬프트 카드에는 <strong>용도 · 권장 모델 · 입력 변수 · 복붙 코드 · 튜닝 노트</strong>가 포함됩니다. 바로 복사해서 쓰거나, 변수 설명을 보고 본인 용도에 맞게 수정하세요.</p>
+
+  <h3>모델 선택 기준 (Claude 4.7 family)</h3>
+  <table class="model-table">
+    <thead>
+      <tr><th>모델</th><th>언제 사용</th><th>비용 (1M tokens)</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>claude-haiku-4-5</code></td>
+        <td>간단한 분류·추출·센티먼트·JSON 파싱. <strong>빠르고 저렴</strong></td>
+        <td>$1 / $5</td>
+      </tr>
+      <tr>
+        <td><code>claude-sonnet-4-6</code></td>
+        <td><strong>강의 기본값.</strong> 에이전트·RAG·복잡한 추론·툴 사용</td>
+        <td>$3 / $15</td>
+      </tr>
+      <tr>
+        <td><code>claude-opus-4-7</code></td>
+        <td>최상급 판단 필요 시 (실계좌 주문 최종 결정 등)</td>
+        <td>$15 / $75</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout green">
+    <strong>🎯 비용 최적화 원칙:</strong> 서브태스크는 Haiku, 최종 판단은 Sonnet. Opus는 정말 고도의 추론이 필요할 때만. 8주 전체 교육비를 월 $10 이하로 유지하는 핵심 전략입니다.
+  </div>
+
+  <h3>프롬프트 작성 5대 원칙</h3>
+  <ol style="margin-left:18px;font-size:12px;line-height:1.8">
+    <li><strong>역할 먼저</strong> — "당신은 ~전문가입니다"로 시작</li>
+    <li><strong>출력 형식 명시</strong> — "JSON만 출력. 설명 금지."</li>
+    <li><strong>스키마 제공</strong> — 필드명 + 타입 + 예시값</li>
+    <li><strong>금지 사항 명시</strong> — 환각 방지에 강력</li>
+    <li><strong>Few-shot 1~2개</strong> — 모호한 영역에 효과적</li>
+  </ol>
+</section>
+
+<div class="divider"></div>
+
+<!-- ═══ 1. W3 뉴스 센티먼트 ═══ -->
+<section id="s1" data-section="1. W3 뉴스 센티먼트">
+  <div class="eyebrow">Section 1</div>
+  <h2>1. W3 뉴스 센티먼트 분석</h2>
+
+  <div class="prompt-card">
+    <div class="pc-head">
+      <div class="pc-title-wrap">
+        <div class="pc-tag">W3 · NEWS</div>
+        <div class="pc-title">단일 뉴스 헤드라인 센티먼트 분석</div>
+      </div>
+      <div class="pc-meta">
+        <span class="pc-badge model">Haiku</span>
+        <span class="pc-badge">JSON</span>
+      </div>
+    </div>
+    <div class="pc-context">
+      <strong>용도:</strong> Alpha Vantage 뉴스 피드의 개별 헤드라인을 받아 -1 ~ +1 사이 센티먼트 점수와 카테고리 분류. 배치 처리 전용 (1건당).
+    </div>
+    <div class="pc-body">
+      <button class="copy-btn" data-target="p1">📋 복사</button>
+      <pre class="pc-code" id="p1">당신은 금융 뉴스 분석 전문가입니다. 주어진 헤드라인과 요약을 읽고 투자 관점에서 센티먼트를 판단하세요.
+
+<span class="hl">&lt;입력&gt;</span>
+Ticker: <span class="var">{{ticker}}</span>
+Headline: <span class="var">{{headline}}</span>
+Summary: <span class="var">{{summary}}</span>
+Source: <span class="var">{{source}}</span>
+<span class="hl">&lt;/입력&gt;</span>
+
+다음 JSON 스키마로만 답변하세요. 설명·preamble 금지.
+
+{
+  "sentiment_score": -1.0 ~ 1.0 사이 float (-1=매우 부정, 0=중립, 1=매우 긍정),
+  "category": "earnings" | "macro" | "product" | "regulation" | "m_and_a" | "other",
+  "impact_horizon": "immediate" | "short_term" | "long_term",
+  "confidence": 1-5 정수,
+  "key_entities": [관련 회사/인물 리스트, 최대 3개],
+  "reasoning": "한 문장 근거"
+}
+
+<span class="hl">규칙:</span>
+- 근거가 부족하면 sentiment_score를 0에 가깝게
+- 루머·미확인 정보는 confidence 1~2
+- 공식 발표는 confidence 4~5
+- JSON 외 다른 출력 절대 금지</pre>
+    </div>
+    <div class="var-guide">
+      <div class="var-guide-title">입력 변수</div>
+      <div class="var-list">
+        <span class="var-k">{{ticker}}</span><span class="var-d">종목 코드 (예: AAPL)</span>
+        <span class="var-k">{{headline}}</span><span class="var-d">뉴스 제목</span>
+        <span class="var-k">{{summary}}</span><span class="var-d">요약 (없으면 빈 문자열)</span>
+        <span class="var-k">{{source}}</span><span class="var-d">매체명 (Reuters, Bloomberg 등)</span>
+      </div>
+    </div>
+    <div class="pc-notes">
+      <strong>💡 튜닝 노트:</strong> Haiku는 sentiment_score를 0.3처럼 애매한 값 자주 반환. 더 선명한 결과 원하면 "극단적으로 판단" 같은 지시 추가. 반대로 보수적 판단 원하면 "보수적으로, 확실하지 않으면 0" 추가.
+    </div>
+  </div>
+
+  <div class="prompt-card">
+    <div class="pc-head">
+      <div class="pc-title-wrap">
+        <div class="pc-tag">W3 · AGGREGATE</div>
+        <div class="pc-title">다중 뉴스 종합 브리핑</div>
+      </div>
+      <div class="pc-meta">
+        <span class="pc-badge model">Sonnet</span>
+        <span class="pc-badge">MARKDOWN</span>
+      </div>
+    </div>
+    <div class="pc-context">
+      <strong>용도:</strong> 한 종목에 대한 10~20개 뉴스를 종합해 Discord에 발송할 브리핑 생성. 일일 모닝 루틴에 사용.
+    </div>
+    <div class="pc-body">
+      <button class="copy-btn" data-target="p2">📋 복사</button>
+      <pre class="pc-code" id="p2">당신은 애널리스트입니다. <span class="var">{{ticker}}</span>에 대한 최근 24시간 뉴스 <span class="var">{{count}}</span>건을 종합해 모닝 브리핑을 작성하세요.
+
+<span class="hl">&lt;뉴스 데이터&gt;</span>
+<span class="var">{{news_json}}</span>
+<span class="hl">&lt;/뉴스 데이터&gt;</span>
+
+다음 형식의 마크다운으로 답변:
+
+## 📰 <span class="var">{{ticker}}</span> 모닝 브리핑
+
+**한줄 요약:** (1~2문장, 가장 중요한 변화)
+
+**핵심 이슈 Top 3:**
+1. [카테고리] 제목 — 짧은 설명 (영향: 긍정/부정/중립)
+2. [카테고리] 제목 — 짧은 설명
+3. [카테고리] 제목 — 짧은 설명
+
+**종합 센티먼트:** <span class="hl">[수치]</span> / 5.0
+**주목 포인트:** 트레이더가 오늘 모니터링할 것
+
+<span class="hl">규칙:</span>
+- 센티먼트 점수는 -5(극부정) ~ +5(극긍정)
+- 루머와 확정 사실 구분
+- 여러 뉴스가 충돌하면 "혼조" 표시
+- 모든 출처는 뉴스 데이터에 있는 것만 사용 (추측·환각 금지)
+- 400자 이내로 간결하게</pre>
+    </div>
+    <div class="var-guide">
+      <div class="var-guide-title">입력 변수</div>
+      <div class="var-list">
+        <span class="var-k">{{ticker}}</span><span class="var-d">종목 코드</span>
+        <span class="var-k">{{count}}</span><span class="var-d">뉴스 개수 (숫자)</span>
+        <span class="var-k">{{news_json}}</span><span class="var-d">뉴스 리스트 JSON 문자열</span>
+      </div>
+    </div>
+    <div class="pc-notes">
+      <strong>💡 튜닝 노트:</strong> "한줄 요약"을 먼저 쓰게 하면 Claude가 메인 메시지를 더 명확히 잡음. Chain-of-Thought 효과.
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ═══ 2. W4 차트 Vision ═══ -->
+<section id="s2" data-section="2. W4 차트 Vision">
+  <div class="eyebrow">Section 2</div>
+  <h2>2. W4 차트 Vision 판독</h2>
+
+  <div class="prompt-card">
+    <div class="pc-head">
+      <div class="pc-title-wrap">
+        <div class="pc-tag">W4 · VISION</div>
+        <div class="pc-title">TradingView 차트 패턴 판독</div>
+      </div>
+      <div class="pc-meta">
+        <span class="pc-badge model">Haiku</span>
+        <span class="pc-badge">MULTIMODAL</span>
+      </div>
+    </div>
+    <div class="pc-context">
+      <strong>용도:</strong> Chart-IMG로 다운로드한 PNG를 Claude Vision에 전달. 추세·패턴·RSI 영역·매매 시그널 자동 추출.
+    </div>
+    <div class="pc-body">
+      <button class="copy-btn" data-target="p3">📋 복사</button>
+      <pre class="pc-code" id="p3"><span class="cm"># API 호출 시 image block + text block 함께 전달</span>
+<span class="cm"># text 부분에 들어갈 프롬프트:</span>
+
+이 차트는 <span class="var">{{ticker}}</span>의 <span class="var">{{interval}}</span> 봉입니다. RSI(14)와 MA(20)가 함께 표시되어 있습니다.
+
+다음 항목을 JSON으로 답하세요:
+
+{
+  "trend": "UPTREND" | "DOWNTREND" | "SIDEWAYS",
+  "trend_strength": 1-5,
+  "pattern": "헤드앤숄더" | "역헤드앤숄더" | "삼각수렴" | "이중바닥" | "이중천장" | "돌파" | "조정" | "NONE",
+  "rsi_zone": "OVERSOLD" | "NEUTRAL" | "OVERBOUGHT",
+  "rsi_value_estimate": 대략적 RSI 값 (숫자),
+  "ma_relation": "ABOVE_MA" | "AT_MA" | "BELOW_MA",
+  "support_level": 지지선 가격 (숫자 또는 null),
+  "resistance_level": 저항선 가격 (숫자 또는 null),
+  "signal": "BUY" | "SELL" | "HOLD",
+  "confidence": 1-5,
+  "reasoning": "한 문장 근거 (관찰 가능한 패턴만 언급)"
+}
+
+<span class="hl">규칙:</span>
+- 차트에서 실제로 보이는 것만 분석 (추측 금지)
+- 가격이 읽기 어려우면 support/resistance는 null
+- RSI가 표시되지 않았으면 rsi_value_estimate를 null
+- JSON만 출력</pre>
+    </div>
+    <div class="var-guide">
+      <div class="var-guide-title">입력 변수</div>
+      <div class="var-list">
+        <span class="var-k">{{ticker}}</span><span class="var-d">종목 코드 (AAPL)</span>
+        <span class="var-k">{{interval}}</span><span class="var-d">시간 단위 (1D, 4H, 15m 등)</span>
+        <span class="var-k">image (base64)</span><span class="var-d">Chart-IMG PNG를 base64 인코딩해서 image block에</span>
+      </div>
+    </div>
+    <div class="pc-notes">
+      <strong>💡 튜닝 노트:</strong> "차트에서 실제로 보이는 것만" 강조 중요. Claude가 차트를 못 봐도 그럴듯하게 지어내는 경향 있음. Vision은 <code>claude-haiku-4-5</code>로도 충분.
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ═══ 3. W4 3D Verdict ═══ -->
+<section id="s3" data-section="3. W4 3D Verdict">
+  <div class="eyebrow">Section 3</div>
+  <h2>3. W4 3D Verdict 에이전트</h2>
+
+  <div class="prompt-card">
+    <div class="pc-head">
+      <div class="pc-title-wrap">
+        <div class="pc-tag">W4 · AGENT</div>
+        <div class="pc-title">3차원 통합 최종 판단</div>
+      </div>
+      <div class="pc-meta">
+        <span class="pc-badge model">Sonnet</span>
+        <span class="pc-badge">SYSTEM</span>
+      </div>
+    </div>
+    <div class="pc-context">
+      <strong>용도:</strong> W1(가격) + W3(뉴스) + W4(차트) 세 결과를 통합해 최종 verdict 생성. AI Agent 노드의 System Message로.
+    </div>
+    <div class="pc-body">
+      <button class="copy-btn" data-target="p4">📋 복사</button>
+      <pre class="pc-code" id="p4"><span class="hl">[SYSTEM MESSAGE]</span>
+
+당신은 3차원 분석(Price · News · Chart)을 종합하는 수석 애널리스트입니다. 세 차원의 결과를 받아 최종 투자 판단을 내리세요.
+
+<span class="hl">판단 원칙:</span>
+1. 세 차원이 모두 같은 방향이면 confidence 5
+2. 두 차원이 일치하고 하나가 중립이면 confidence 4
+3. 두 차원이 일치하고 하나가 반대면 confidence 2~3 (WATCH)
+4. 세 차원이 모두 다르면 confidence 1 (HOLD)
+5. 어떤 차원이라도 데이터 오류/결측이면 confidence -1 감점
+
+<span class="hl">출력 형식 (JSON):</span>
+{
+  "verdict": "BUY" | "SELL" | "WATCH" | "HOLD",
+  "confidence": 1-5,
+  "consensus": "ALIGNED" | "MIXED" | "CONFLICTED",
+  "dimensions": {
+    "price": {"signal": "...", "weight": 0.0-1.0},
+    "news": {"signal": "...", "weight": 0.0-1.0},
+    "chart": {"signal": "...", "weight": 0.0-1.0}
+  },
+  "reasoning": "2~3문장 종합 근거",
+  "risk_note": "주의할 리스크 1개"
+}
+
+<span class="hl">금지 사항:</span>
+- 제공되지 않은 정보 언급 금지 (환각 방지)
+- 투자 권유 표현 금지 ("반드시 매수" 등)
+- 교육 목적 분석임을 명심
+
+<span class="hl">[USER MESSAGE]</span>
+
+다음 데이터를 분석하세요:
+
+Ticker: <span class="var">{{ticker}}</span>
+
+Dimension 1 - Price:
+<span class="var">{{price_data}}</span>
+
+Dimension 2 - News:
+<span class="var">{{news_data}}</span>
+
+Dimension 3 - Chart:
+<span class="var">{{chart_data}}</span></pre>
+    </div>
+    <div class="var-guide">
+      <div class="var-guide-title">입력 변수</div>
+      <div class="var-list">
+        <span class="var-k">{{ticker}}</span><span class="var-d">종목 코드</span>
+        <span class="var-k">{{price_data}}</span><span class="var-d">W1 출력 JSON (price, change_pct 등)</span>
+        <span class="var-k">{{news_data}}</span><span class="var-d">W3 출력 JSON (sentiment, top_headlines 등)</span>
+        <span class="var-k">{{chart_data}}</span><span class="var-d">W4 차트 분석 JSON</span>
+      </div>
+    </div>
+    <div class="pc-notes">
+      <strong>💡 튜닝 노트:</strong> "weight" 필드는 해당 차원이 최종 판단에 얼마나 기여했는지. 사용자에게 설명력 제공. "consensus"는 Discord 임베드 색상 결정에 활용.
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ═══ 4. W5 스케줄별 브리핑 ═══ -->
+<section id="s4" data-section="4. W5 스케줄 브리핑">
+  <div class="eyebrow">Section 4</div>
+  <h2>4. W5 스케줄별 브리핑</h2>
+
+  <div class="prompt-card">
+    <div class="pc-head">
+      <div class="pc-title-wrap">
+        <div class="pc-tag">W5 · KR MORNING</div>
+        <div class="pc-title">한국장 개장 전 브리핑 (08:30)</div>
+      </div>
+      <div class="pc-meta">
+        <span class="pc-badge model">Sonnet</span>
+      </div>
+    </div>
+    <div class="pc-context">
+      <strong>용도:</strong> 한국 증시 개장 30분 전 전일 미국장 마감 + 주요 매크로 + 관심 종목 브리핑.
+    </div>
+    <div class="pc-body">
+      <button class="copy-btn" data-target="p5">📋 복사</button>
+      <pre class="pc-code" id="p5">당신은 한국 주식 트레이더의 모닝 브리퍼입니다. 오늘 장 개장 전 알아야 할 핵심만 빠르게 정리하세요.
+
+<span class="hl">&lt;데이터&gt;</span>
+날짜: <span class="var">{{today}}</span>
+전일 미국장:
+  - S&amp;P 500: <span class="var">{{sp500}}</span>
+  - Nasdaq: <span class="var">{{nasdaq}}</span>
+  - 반도체(SOX): <span class="var">{{sox}}</span>
+선물: <span class="var">{{futures}}</span>
+환율(USD/KRW): <span class="var">{{fx}}</span>
+관심 종목 뉴스: <span class="var">{{watchlist_news}}</span>
+<span class="hl">&lt;/데이터&gt;</span>
+
+다음 형식으로 답변:
+
+## 🌅 모닝 브리핑 <span class="var">{{today}}</span>
+
+### 🌎 오버나잇 핵심
+- (미국장 요약 1줄)
+- (반도체/기술주 특이 움직임 1줄)
+- (환율 임팩트 1줄)
+
+### 📋 오늘 주목
+**개장 전 체크:** (가장 중요한 1개)
+**관심 종목:** <span class="var">{{ticker_list}}</span>
+- 종목1: 주목 포인트
+- 종목2: 주목 포인트
+
+### ⚠️ 리스크
+- (오늘 조심할 것 1~2개)
+
+<span class="hl">규칙:</span>
+- 전체 300자 이내
+- 숫자는 반드시 데이터에서 가져옴 (환각 금지)
+- 추천이 아닌 사실 위주
+- 이모지는 섹션 헤더에만</pre>
+    </div>
+  </div>
+
+  <div class="prompt-card">
+    <div class="pc-head">
+      <div class="pc-title-wrap">
+        <div class="pc-tag">W5 · KR CLOSE</div>
+        <div class="pc-title">한국장 마감 리포트 (15:45)</div>
+      </div>
+      <div class="pc-meta">
+        <span class="pc-badge model">Sonnet</span>
+      </div>
+    </div>
+    <div class="pc-context">
+      <strong>용도:</strong> KOSPI 마감 후 당일 수익률 + 특징주 + 수급 요약.
+    </div>
+    <div class="pc-body">
+      <button class="copy-btn" data-target="p6">📋 복사</button>
+      <pre class="pc-code" id="p6">오늘 한국 증시 마감 리포트를 작성하세요.
+
+<span class="hl">&lt;데이터&gt;</span>
+KOSPI: <span class="var">{{kospi_close}}</span> (<span class="var">{{kospi_change}}</span>)
+KOSDAQ: <span class="var">{{kosdaq_close}}</span> (<span class="var">{{kosdaq_change}}</span>)
+외국인: <span class="var">{{foreign_net}}</span>
+기관: <span class="var">{{institution_net}}</span>
+개인: <span class="var">{{retail_net}}</span>
+상승 Top 3: <span class="var">{{top_gainers}}</span>
+하락 Top 3: <span class="var">{{top_losers}}</span>
+관심 종목 종가: <span class="var">{{watchlist_close}}</span>
+<span class="hl">&lt;/데이터&gt;</span>
+
+출력:
+
+## 🇰🇷 마감 리포트 <span class="var">{{today}}</span>
+
+**지수:** KOSPI <span class="var">{{...}}</span> · KOSDAQ <span class="var">{{...}}</span>
+
+**수급 요약 (1줄):** 외국인/기관/개인 순매매 방향과 규모
+
+**특징주:**
+- 상승: (Top 1의 이유 1줄)
+- 하락: (Top 1의 이유 1줄)
+
+**내 관심 종목:**
+- (watchlist 각 종목 1줄씩)
+
+**내일 체크 포인트:** (1개)
+
+<span class="hl">규칙:</span>
+- 300자 이내
+- 수급 규모는 "억" 단위로 표시
+- "~할 것 같다" 같은 예측 금지, 사실만</pre>
+    </div>
+  </div>
+
+  <div class="prompt-card">
+    <div class="pc-head">
+      <div class="pc-title-wrap">
+        <div class="pc-tag">W5 · CRYPTO</div>
+        <div class="pc-title">암호화폐 4시간 체크</div>
+      </div>
+      <div class="pc-meta">
+        <span class="pc-badge model">Haiku</span>
+      </div>
+    </div>
+    <div class="pc-context">
+      <strong>용도:</strong> 24/7 시장이므로 4시간마다 간단히 상태 체크. 큰 변동 시만 알림.
+    </div>
+    <div class="pc-body">
+      <button class="copy-btn" data-target="p7">📋 복사</button>
+      <pre class="pc-code" id="p7">암호화폐 4시간 간격 체크. 지난 4시간 동안 중요한 변화가 있었는지 판단하세요.
+
+<span class="hl">&lt;데이터&gt;</span>
+BTC 현재가: <span class="var">{{btc_price}}</span> / 4h 변동률: <span class="var">{{btc_4h}}</span>%
+ETH 현재가: <span class="var">{{eth_price}}</span> / 4h 변동률: <span class="var">{{eth_4h}}</span>%
+BTC Dominance: <span class="var">{{btc_dom}}</span>%
+Fear &amp; Greed Index: <span class="var">{{fng}}</span>
+특이 뉴스: <span class="var">{{crypto_news}}</span>
+<span class="hl">&lt;/데이터&gt;</span>
+
+다음 JSON으로만 답하세요:
+
+{
+  "alert_level": "QUIET" | "NOTEWORTHY" | "URGENT",
+  "should_notify": true/false,
+  "one_liner": "한 줄 요약 (alert_level에 맞는 톤)",
+  "key_change": "4시간 내 가장 주목할 변화 1개"
+}
+
+<span class="hl">판단 기준:</span>
+- ±2% 이하: QUIET, should_notify false
+- ±2~5%: NOTEWORTHY, should_notify true
+- ±5% 초과 or 주요 뉴스: URGENT, should_notify true</pre>
+    </div>
+    <div class="pc-notes">
+      <strong>💡 튜닝 노트:</strong> Discord에 스팸 발송 방지용. <code>should_notify: false</code>면 Switch 노드에서 차단. 시끄러운 알림 방지의 핵심.
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ═══ 5. W6 RAG 출처 인용 ═══ -->
+<section id="s5" data-section="5. W6 RAG Q&A">
+  <div class="eyebrow">Section 5</div>
+  <h2>5. W6 RAG 출처 인용 Q&A</h2>
+
+  <div class="prompt-card">
+    <div class="pc-head">
+      <div class="pc-title-wrap">
+        <div class="pc-tag">W6 · RAG</div>
+        <div class="pc-title">Hybrid RAG 답변 + 출처 인용</div>
+      </div>
+      <div class="pc-meta">
+        <span class="pc-badge model">Sonnet</span>
+        <span class="pc-badge">CITATION</span>
+      </div>
+    </div>
+    <div class="pc-context">
+      <strong>용도:</strong> Top-3 청크를 컨텍스트로 받아 답변 + 출처 인용. 환각 방지가 핵심.
+    </div>
+    <div class="pc-body">
+      <button class="copy-btn" data-target="p8">📋 복사</button>
+      <pre class="pc-code" id="p8"><span class="hl">[SYSTEM MESSAGE]</span>
+
+당신은 투자 리서치 어시스턴트입니다. 제공된 출처 문서만을 근거로 답변합니다.
+
+<span class="hl">엄격한 규칙 (위반 시 불합격):</span>
+1. 답변의 모든 사실은 [출처 N] 표기로 인용 필수
+2. 출처에 없는 정보는 절대 말하지 말 것 — "제공된 자료에는 해당 정보가 없습니다"라고 답변
+3. 추론·예측·추측 금지
+4. 답변은 2~3문장으로 간결하게
+5. 숫자·날짜는 출처에 있는 그대로 인용
+
+<span class="hl">출력 형식:</span>
+[답변 본문 - (출처 1) 방식으로 인용]
+
+참고한 출처:
+- 출처 1: <span class="var">{{source_1_info}}</span>
+- 출처 2: <span class="var">{{source_2_info}}</span>
+- 출처 3: <span class="var">{{source_3_info}}</span>
+
+<span class="hl">[USER MESSAGE]</span>
+
+질문: <span class="var">{{query}}</span>
+
+참고 자료:
+
+[출처 1] <span class="var">{{source_1}}</span> (p.<span class="var">{{page_1}}</span>):
+<span class="var">{{content_1}}</span>
+
+[출처 2] <span class="var">{{source_2}}</span> (p.<span class="var">{{page_2}}</span>):
+<span class="var">{{content_2}}</span>
+
+[출처 3] <span class="var">{{source_3}}</span> (p.<span class="var">{{page_3}}</span>):
+<span class="var">{{content_3}}</span>
+
+위 자료만 근거로 답하세요.</pre>
+    </div>
+    <div class="var-guide">
+      <div class="var-guide-title">입력 변수</div>
+      <div class="var-list">
+        <span class="var-k">{{query}}</span><span class="var-d">사용자 질문</span>
+        <span class="var-k">{{content_N}}</span><span class="var-d">Reranker Top-N 청크 본문</span>
+        <span class="var-k">{{source_N}}</span><span class="var-d">파일명 (예: FOMC_202503.pdf)</span>
+        <span class="var-k">{{page_N}}</span><span class="var-d">페이지 번호</span>
+      </div>
+    </div>
+    <div class="pc-notes">
+      <strong>💡 튜닝 노트:</strong> "제공된 자료에는 해당 정보가 없습니다"라는 정직한 답변이 나오면 프롬프트가 잘 작동하는 것. Claude가 그래도 환각하면 "추론 금지, 없으면 없다고 답변" 반복 강조. 
+    </div>
+  </div>
+
+  <div class="prompt-card">
+    <div class="pc-head">
+      <div class="pc-title-wrap">
+        <div class="pc-tag">W6 · QUERY</div>
+        <div class="pc-title">쿼리 확장 (Query Expansion)</div>
+      </div>
+      <div class="pc-meta">
+        <span class="pc-badge model">Haiku</span>
+      </div>
+    </div>
+    <div class="pc-context">
+      <strong>용도:</strong> 짧은 사용자 질문을 3가지 표현으로 확장해 검색 커버리지 향상.
+    </div>
+    <div class="pc-body">
+      <button class="copy-btn" data-target="p9">📋 복사</button>
+      <pre class="pc-code" id="p9">당신은 검색 쿼리 최적화 전문가입니다. 사용자의 질문을 3가지 다른 표현으로 바꿔 검색 커버리지를 높이세요.
+
+원본 질문: <span class="var">{{query}}</span>
+
+다음 JSON으로 답하세요:
+
+{
+  "original": "<span class="var">{{query}}</span>",
+  "expanded_queries": [
+    "변형 1 (핵심 키워드 중심)",
+    "변형 2 (동의어·전문용어 사용)",
+    "변형 3 (더 구체적인 표현)"
+  ]
+}
+
+<span class="hl">규칙:</span>
+- 의미는 동일해야 함
+- 금융 전문용어 활용 (예: "금리" → "기준금리", "정책금리")
+- 영어 용어와 한국어 혼용 가능
+- JSON만 출력</pre>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ═══ 6. W7 Orchestrator ═══ -->
+<section id="s6" data-section="6. W7 Orchestrator">
+  <div class="eyebrow">Section 6</div>
+  <h2>6. W7 Orchestrator + Sub-agents</h2>
+
+  <div class="prompt-card">
+    <div class="pc-head">
+      <div class="pc-title-wrap">
+        <div class="pc-tag">W7 · ORCHESTRATOR</div>
+        <div class="pc-title">Multi-Agent 팀장</div>
+      </div>
+      <div class="pc-meta">
+        <span class="pc-badge model">Sonnet</span>
+        <span class="pc-badge">TOOL USE</span>
+      </div>
+    </div>
+    <div class="pc-context">
+      <strong>용도:</strong> 3개 전문 에이전트(News/OnChain/Macro)를 조율하는 Orchestrator. AI Agent 노드의 System Message.
+    </div>
+    <div class="pc-body">
+      <button class="copy-btn" data-target="p10">📋 복사</button>
+      <pre class="pc-code" id="p10"><span class="hl">[SYSTEM MESSAGE]</span>
+
+당신은 리서치팀 팀장입니다. 3명의 전문 에이전트를 지휘합니다.
+
+<span class="hl">팀원 (사용 가능한 도구):</span>
+• <span class="hl">news_agent</span> — 주식·암호화폐 뉴스·센티먼트 전문
+  사용 시점: "AAPL 뉴스", "삼성 최근 이슈" 같은 뉴스 질문
+  
+• <span class="hl">onchain_agent</span> — 암호화폐 온체인 데이터 전문 (BTC·ETH만)
+  사용 시점: "BTC 고래 움직임", "ETH 트랜잭션" 등
+  
+• <span class="hl">macro_agent</span> — 거시경제 지표 전문 (금리·인플레이션·VIX)
+  사용 시점: "연준 금리", "경제 전망" 등
+
+<span class="hl">워크플로:</span>
+1. 질문 분석 → 관련 에이전트만 호출 (불필요 호출 금지)
+2. 일반 주식 질문: news + macro
+3. 암호화폐 질문: onchain + macro
+4. 복잡한 종합 질문: 3개 모두 호출
+5. 단순 매크로만 묻는 질문: macro만
+
+<span class="hl">답변 형식:</span>
+- 각 에이전트 결과 출처 명시 ("News Agent에 따르면...", "Macro Agent 분석:")
+- 최종 verdict 제시: BUY / WATCH / HOLD / AVOID + confidence 1~5
+- 2~3문장 종합 근거
+- 교육 목적임을 명시
+
+<span class="hl">금지 사항:</span>
+- 에이전트 결과에 없는 정보 추가 금지 (환각)
+- 단정적 매수/매도 권유 금지
+- 에이전트 호출 없이 자체 지식만으로 답변 금지</pre>
+    </div>
+  </div>
+
+  <div class="prompt-card">
+    <div class="pc-head">
+      <div class="pc-title-wrap">
+        <div class="pc-tag">W7 · NEWS AGENT</div>
+        <div class="pc-title">News Sub-Agent (Tool)</div>
+      </div>
+      <div class="pc-meta">
+        <span class="pc-badge model">Haiku</span>
+      </div>
+    </div>
+    <div class="pc-context">
+      <strong>용도:</strong> Orchestrator가 호출하는 News 서브 에이전트. Alpha Vantage 데이터 요약 전문.
+    </div>
+    <div class="pc-body">
+      <button class="copy-btn" data-target="p11">📋 복사</button>
+      <pre class="pc-code" id="p11">당신은 금융 뉴스 전문 에이전트입니다. 주어진 ticker의 최근 뉴스를 분석하여 팀장에게 구조화된 보고서를 제출합니다.
+
+<span class="hl">입력:</span>
+Ticker: <span class="var">{{ticker}}</span>
+최근 24시간 뉴스: <span class="var">{{news_data}}</span>
+
+<span class="hl">보고 형식 (JSON):</span>
+{
+  "agent": "news_agent",
+  "ticker": "<span class="var">{{ticker}}</span>",
+  "sentiment_overall": -1.0 ~ 1.0,
+  "article_count": 숫자,
+  "top_themes": [최대 3개 주요 테마],
+  "significant_events": [중요한 발표/사건 최대 3개],
+  "risk_flags": [우려 사항 최대 2개],
+  "summary": "팀장에게 전달할 2문장 요약"
+}
+
+<span class="hl">금지:</span> 뉴스 데이터에 없는 내용 생성 금지.</pre>
+    </div>
+  </div>
+
+  <div class="prompt-card">
+    <div class="pc-head">
+      <div class="pc-title-wrap">
+        <div class="pc-tag">W7 · MACRO AGENT</div>
+        <div class="pc-title">Macro Sub-Agent (Tool)</div>
+      </div>
+      <div class="pc-meta">
+        <span class="pc-badge model">Haiku</span>
+      </div>
+    </div>
+    <div class="pc-body">
+      <button class="copy-btn" data-target="p12">📋 복사</button>
+      <pre class="pc-code" id="p12">당신은 거시경제 전문 에이전트입니다. FRED 데이터를 해석해 팀장에게 보고합니다.
+
+<span class="hl">입력:</span>
+Focus: <span class="var">{{focus}}</span>  (rates | inflation | employment | vix)
+시계열 데이터 (최근 6개월): <span class="var">{{series_data}}</span>
+
+<span class="hl">보고 형식 (JSON):</span>
+{
+  "agent": "macro_agent",
+  "focus": "<span class="var">{{focus}}</span>",
+  "current_value": 최신값,
+  "trend_6m": "UP" | "DOWN" | "FLAT",
+  "trend_magnitude": "MILD" | "MODERATE" | "STRONG",
+  "historical_context": "과거 5년 대비 현재 위치 (예: 15년 최고치 근접)",
+  "market_implication": "주식/채권/달러에 대한 함의 1~2문장",
+  "summary": "팀장 보고용 2문장 요약"
+}
+
+<span class="hl">금지:</span> 구체적 미래 예측, 투자 권유.</pre>
+    </div>
+  </div>
+
+  <div class="prompt-card">
+    <div class="pc-head">
+      <div class="pc-title-wrap">
+        <div class="pc-tag">W7 · ONCHAIN AGENT</div>
+        <div class="pc-title">OnChain Sub-Agent (Tool)</div>
+      </div>
+      <div class="pc-meta">
+        <span class="pc-badge model">Haiku</span>
+      </div>
+    </div>
+    <div class="pc-body">
+      <button class="copy-btn" data-target="p13">📋 복사</button>
+      <pre class="pc-code" id="p13">당신은 암호화폐 온체인 분석 전문가입니다. Blockchair 데이터를 해석해 팀장에게 보고합니다.
+
+<span class="hl">입력:</span>
+Asset: <span class="var">{{asset}}</span>  (bitcoin | ethereum)
+온체인 데이터: <span class="var">{{onchain_data}}</span>
+
+<span class="hl">보고 형식 (JSON):</span>
+{
+  "agent": "onchain_agent",
+  "asset": "<span class="var">{{asset}}</span>",
+  "network_activity": "LOW" | "NORMAL" | "HIGH" | "EXTREME",
+  "mempool_status": "대기 트랜잭션 수와 해석",
+  "whale_signal": "WHALE_ACCUMULATING" | "WHALE_DISTRIBUTING" | "NEUTRAL" | "UNKNOWN",
+  "fundamental_score": 1-5,
+  "summary": "팀장 보고용 2문장"
+}
+
+<span class="hl">금지:</span> 가격 예측, 구체적 목표가 제시.</pre>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ═══ 7. W8 주문 결정 ═══ -->
+<section id="s7" data-section="7. W8 주문 결정">
+  <div class="eyebrow">Section 7</div>
+  <h2>7. W8 주문 결정 프롬프트</h2>
+
+  <div class="prompt-card">
+    <div class="pc-head">
+      <div class="pc-title-wrap">
+        <div class="pc-tag">W8 · ORDER DECISION</div>
+        <div class="pc-title">주문 실행 전 최종 확인</div>
+      </div>
+      <div class="pc-meta">
+        <span class="pc-badge model">Sonnet</span>
+        <span class="pc-badge">CRITICAL</span>
+      </div>
+    </div>
+    <div class="pc-context">
+      <strong>용도:</strong> Orchestrator verdict를 받아 "실제 주문을 낼지" 최종 판단. Risk Guards 4단계 중 1단계.
+    </div>
+    <div class="pc-body">
+      <button class="copy-btn" data-target="p14">📋 복사</button>
+      <pre class="pc-code" id="p14">당신은 자동 주문 실행 시스템의 최종 검증자입니다. 에이전트 verdict를 받아 실제 주문을 낼지 판단하세요.
+
+<span class="hl">입력:</span>
+Ticker: <span class="var">{{ticker}}</span>
+Verdict: <span class="var">{{verdict}}</span>
+Confidence: <span class="var">{{confidence}}</span>
+Reasoning: <span class="var">{{reasoning}}</span>
+
+계좌 상태:
+- 현재 자본: <span class="var">{{equity}}</span>
+- 당일 수익률: <span class="var">{{daily_pnl}}</span>
+- 이미 보유한 포지션: <span class="var">{{positions}}</span>
+- 대기 주문: <span class="var">{{pending_orders}}</span>
+
+<span class="hl">판단 기준 (모두 통과해야 실행):</span>
+1. verdict가 "BUY" 또는 "SELL" 이어야 함 (HOLD/WATCH = 실행 안 함)
+2. confidence >= 4
+3. 당일 수익률이 -2% 이상 (초과 시 주문 차단)
+4. 동일 종목 보유 수량이 이미 상당하면 추가 매수 금지
+5. 대기 주문 수가 5개 이상이면 신규 주문 자제
+
+<span class="hl">출력 (JSON):</span>
+{
+  "execute": true/false,
+  "action": "BUY" | "SELL" | "SKIP",
+  "reason_if_skip": "스킵한 이유 (execute=false인 경우)",
+  "suggested_qty": 수량 제안 (execute=true인 경우),
+  "suggested_price": 지정가 또는 null (시장가는 null),
+  "stop_loss_pct": 0.05 (5% 기본값),
+  "take_profit_pct": 0.10 (10% 기본값),
+  "risk_notes": "주의사항 1~2개"
+}
+
+<span class="hl">안전 원칙:</span>
+- 애매하면 실행하지 않음 (execute=false)
+- Position sizing은 자본의 2~4%만
+- "묻지도 따지지도 않고 매수" 금지
+- 교육 목적 페이퍼 트레이딩임을 기억</pre>
+    </div>
+    <div class="pc-notes">
+      <strong>💡 튜닝 노트:</strong> 이 프롬프트는 <strong>마지막 방어선</strong>. "애매하면 실행 안 함" 원칙 강조. 실전 전환 시 "confidence >= 5" 같이 기준 더 엄격하게.
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ═══ 8. SP KIS ═══ -->
+<section id="s8" data-section="8. SP KIS">
+  <div class="eyebrow">Section 8</div>
+  <h2>8. SP KIS 모의투자</h2>
+
+  <div class="prompt-card">
+    <div class="pc-head">
+      <div class="pc-title-wrap">
+        <div class="pc-tag">SP2 · KR ORDER</div>
+        <div class="pc-title">KIS 주문 결정 (한국 주식)</div>
+      </div>
+      <div class="pc-meta">
+        <span class="pc-badge model">Sonnet</span>
+      </div>
+    </div>
+    <div class="pc-context">
+      <strong>용도:</strong> 한국 주식 모의투자에서 매수/매도 결정. 호가 단위·Rate Limit 고려.
+    </div>
+    <div class="pc-body">
+      <button class="copy-btn" data-target="p15">📋 복사</button>
+      <pre class="pc-code" id="p15">당신은 한국 주식 모의투자 결정 에이전트입니다. KIS API 특성을 이해하고 주문합니다.
+
+<span class="hl">입력:</span>
+종목코드: <span class="var">{{stock_code}}</span>
+종목명: <span class="var">{{stock_name}}</span>
+현재가: <span class="var">{{current_price}}</span>원
+일봉 분석: <span class="var">{{daily_analysis}}</span>
+뉴스 센티먼트: <span class="var">{{sentiment}}</span>
+호가 스프레드: <span class="var">{{spread}}</span>
+
+계좌:
+- 모의투자 예수금: <span class="var">{{cash}}</span>원
+- 이 종목 보유: <span class="var">{{holding}}</span>주
+- 당일 매매 횟수: <span class="var">{{trades_today}}</span>
+
+<span class="hl">KIS API 주의사항:</span>
+- 모의투자 Rate Limit: 2 TPS
+- 호가 단위 준수 필요 (100원 미만 1원, 1000원 미만 5원, 1만원 미만 10원, 5만원 미만 50원, 5만원 이상 100원)
+- 정규장 시간: 09:00~15:30
+
+<span class="hl">출력 (JSON):</span>
+{
+  "action": "BUY" | "SELL" | "HOLD",
+  "order_type": "지정가" | "시장가",
+  "price": 지정가 (시장가는 0),
+  "quantity": 주문 수량,
+  "reasoning": "판단 근거 1~2문장",
+  "tick_size_check": true/false (호가 단위 준수 여부),
+  "expected_cost": 예상 거래대금
+}
+
+<span class="hl">호가 단위 계산:</span>
+- <span class="var">{{current_price}}</span>원의 호가 단위를 먼저 계산하고 price가 그 배수인지 확인
+- tick_size_check=false이면 가격 재조정</pre>
+    </div>
+  </div>
+
+  <div class="prompt-card">
+    <div class="pc-head">
+      <div class="pc-title-wrap">
+        <div class="pc-tag">SP1 · KR SCREEN</div>
+        <div class="pc-title">한국 주식 스크리닝 추천</div>
+      </div>
+      <div class="pc-meta">
+        <span class="pc-badge model">Sonnet</span>
+      </div>
+    </div>
+    <div class="pc-body">
+      <button class="copy-btn" data-target="p16">📋 복사</button>
+      <pre class="pc-code" id="p16">한국 주식 데일리 스크리너입니다. 오늘 주목할 만한 종목을 관심 종목 리스트 중에서 추려주세요.
+
+<span class="hl">입력 데이터 (관심 종목 10개):</span>
+<span class="var">{{watchlist_data}}</span>
+(각 종목별 현재가, 당일 변동률, 거래량, 전일 대비 거래량 비율, RSI 포함)
+
+<span class="hl">시장 상황:</span>
+KOSPI: <span class="var">{{kospi}}</span>
+USD/KRW: <span class="var">{{fx}}</span>
+외국인 순매매: <span class="var">{{foreign}}</span>
+
+<span class="hl">출력 (JSON):</span>
+{
+  "market_bias": "RISK_ON" | "RISK_OFF" | "NEUTRAL",
+  "top_picks": [
+    {
+      "stock_code": "005930",
+      "stock_name": "삼성전자",
+      "signal": "BUY_CANDIDATE" | "WATCH" | "AVOID",
+      "key_reason": "거래량 급증 + RSI 돌파",
+      "priority": 1-3
+    }
+  ],
+  "summary": "오늘 시장 총평 2문장"
+}
+
+<span class="hl">선택 기준:</span>
+- 거래량이 평소 대비 1.5배 이상
+- RSI가 의미있는 영역 (20 이하 반등 or 70 이상 돌파)
+- 상대강도 (대비 KOSPI)
+- 최대 3개만 선정</pre>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ═══ 9. 튜닝 가이드 ═══ -->
+<section id="s9" data-section="9. 튜닝 가이드">
+  <div class="eyebrow">Section 9</div>
+  <h2>9. 프롬프트 튜닝 가이드</h2>
+
+  <h3>문제별 해결책</h3>
+
+  <div class="pattern-box">
+    <div class="pattern-label">PATTERN 1</div>
+    <div class="pattern-title">Claude가 환각·추측을 자주 함</div>
+    <div class="pattern-body">
+      <strong>처방:</strong><br>
+      1. "제공된 데이터만 사용. 추론·추측·외부 지식 금지" 명시<br>
+      2. "정보가 없으면 '없음'이라 답변" 추가<br>
+      3. 출력 JSON에 <code>confidence</code> 필드 강제<br>
+      4. 낮은 confidence 시 "불확실"로 처리하는 후처리 로직<br>
+      5. temperature를 낮춤 (API 설정): 0.3 이하
+    </div>
+  </div>
+
+  <div class="pattern-box">
+    <div class="pattern-label">PATTERN 2</div>
+    <div class="pattern-title">JSON 파싱 실패 (```json 감싸기)</div>
+    <div class="pattern-body">
+      <strong>처방:</strong><br>
+      1. "JSON만 출력. 설명·preamble·마크다운 코드블록 금지" 명시<br>
+      2. 그래도 발생 시 Python 후처리: <code>text.strip().replace('```json', '').replace('```', '')</code><br>
+      3. API에서 <code>response_format</code> 사용 가능한지 확인 (일부 모델)<br>
+      4. Few-shot 예시로 올바른 형식 보여주기
+    </div>
+  </div>
+
+  <div class="pattern-box">
+    <div class="pattern-label">PATTERN 3</div>
+    <div class="pattern-title">응답이 너무 길어짐</div>
+    <div class="pattern-body">
+      <strong>처방:</strong><br>
+      1. "N자 이내" 글자수 명시<br>
+      2. "N문장 이내" 문장수 명시<br>
+      3. API <code>max_tokens</code> 강제 (500~800)<br>
+      4. "핵심만, 배경 설명 생략"<br>
+      5. 출력 형식을 테이블·리스트로 구조화
+    </div>
+  </div>
+
+  <div class="pattern-box">
+    <div class="pattern-label">PATTERN 4</div>
+    <div class="pattern-title">에이전트가 엉뚱한 도구 호출</div>
+    <div class="pattern-body">
+      <strong>처방:</strong><br>
+      1. Tool Description 더 구체화 — "언제 사용", "언제 사용 안 함" 명확히<br>
+      2. "주식 질문에 onchain_agent 호출 금지" 같은 <strong>Negative 지시</strong><br>
+      3. Orchestrator System Message에 의사결정 트리 추가<br>
+      4. 테스트 케이스 10개로 품질 측정 후 반복 수정
+    </div>
+  </div>
+
+  <div class="pattern-box">
+    <div class="pattern-label">PATTERN 5</div>
+    <div class="pattern-title">같은 질문에 다른 답변 (일관성 부족)</div>
+    <div class="pattern-body">
+      <strong>처방:</strong><br>
+      1. temperature 0.0~0.3로 낮춤<br>
+      2. System Message에 판단 기준 수치화 ("±2% 이상")<br>
+      3. Few-shot 2~3개 제공<br>
+      4. 의사결정 규칙을 명시적으로 열거
+    </div>
+  </div>
+
+  <h3>프롬프트 개선 사이클</h3>
+  <div class="callout green">
+    <strong>🔄 3-step 튜닝 루프:</strong><br>
+    1. <strong>실패 사례 5개 수집</strong> — 실행 로그에서 이상한 출력 찾기<br>
+    2. <strong>패턴 분석</strong> — 공통점 찾아 프롬프트 수정 지점 파악<br>
+    3. <strong>A/B 테스트</strong> — 원본 vs 수정본 각 10회 실행, 품질 비교<br>
+    이 사이클을 3~5회 반복하면 프롬프트 품질이 극적으로 향상됩니다.
+  </div>
+
+  <h3>🎯 마스터 체크리스트</h3>
+  <ul style="margin-left:18px;font-size:12px;line-height:1.9">
+    <li>□ 역할 정의가 첫 문장에 있는가?</li>
+    <li>□ 출력 형식이 명확히 지정됐는가? (JSON 스키마 등)</li>
+    <li>□ "금지 사항"이 명시되어 있는가?</li>
+    <li>□ 입력 변수가 명확히 구분되는가? (<code>{{ }}</code>)</li>
+    <li>□ 예상 실패 케이스에 대한 지침이 있는가?</li>
+    <li>□ 길이 제약이 있는가? (N자 / N문장)</li>
+    <li>□ 교육 목적임을 명시했는가? (투자 권유 회피)</li>
+    <li>□ 환각 방지 문구가 있는가?</li>
+  </ul>
+</section>
+
+<div style="background:linear-gradient(135deg,#059669,#064e3b);color:#fff;text-align:center;padding:32px 20px;margin:36px -15px 0;margin-bottom:var(--fh)">
+  <div style="font-size:10px;letter-spacing:2px;color:#6ee7b7;margin-bottom:8px;font-weight:700">📘 APPENDIX D COMPLETE</div>
+  <div style="font-size:14px;font-weight:700;margin-bottom:5px">프롬프트 패키지</div>
+  <div style="font-size:11px;color:rgba(255,255,255,.7);line-height:1.7">16 prompts · 5 tuning patterns · Ready to copy<br>2026 · ZeroOneAI Education</div>
+</div>
+
+</div>
+
+<script>
+// Copy button functionality
+document.querySelectorAll('.copy-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const targetId = btn.dataset.target;
+    const codeEl = document.getElementById(targetId);
+    const text = codeEl.textContent;
+    
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(text).then(() => {
+        btn.textContent = '✓ 복사됨';
+        btn.classList.add('copied');
+        setTimeout(() => {
+          btn.textContent = '📋 복사';
+          btn.classList.remove('copied');
+        }, 1500);
+      });
+    } else {
+      // Fallback
+      const textarea = document.createElement('textarea');
+      textarea.value = text;
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textarea);
+      btn.textContent = '✓ 복사됨';
+      btn.classList.add('copied');
+      setTimeout(() => {
+        btn.textContent = '📋 복사';
+        btn.classList.remove('copied');
+      }, 1500);
+    }
+  });
+});
+
+// Scroll tracker
+const sections = document.querySelectorAll('[data-section]');
+const sfT = document.getElementById('sf-t');
+const sfP = document.getElementById('sf-p');
+function update(){
+  const sy = window.scrollY;
+  const dh = document.documentElement.scrollHeight - window.innerHeight;
+  sfP.textContent = Math.round((sy / Math.max(dh, 1)) * 100) + '%';
+  let cur = sections[0]?.dataset.section || '';
+  sections.forEach(s => {
+    if(sy >= s.getBoundingClientRect().top + sy - 110) cur = s.dataset.section;
+  });
+  if(sfT.textContent !== cur) sfT.textContent = cur;
+}
+window.addEventListener('scroll', update, {passive:true});
+update();
+</script>
+</body>
+</html>

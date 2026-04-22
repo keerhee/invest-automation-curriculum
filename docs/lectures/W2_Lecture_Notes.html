@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>W2 — 포트폴리오 대시보드 + 기술적 지표 자동 계산</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;600&display=swap');
+:root{
+  --black:#0d0d0d;--gray:#6b6b6b;--light:#f3f3f3;--border:#e6e6e6;--white:#fff;
+  --fh:46px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Noto Sans KR',-apple-system,sans-serif;background:#fff;color:var(--black);font-size:14px;line-height:1.75;padding-bottom:var(--fh)}
+
+/* ── STICKY FOOTER ── */
+#sf{position:fixed;bottom:0;left:0;right:0;height:var(--fh);background:var(--black);display:flex;align-items:center;justify-content:space-between;padding:0 16px;z-index:999}
+#sf .lbl{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:#555}
+#sf .ttl{font-size:12px;font-weight:700;color:#fff;max-width:60%;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#sf .pct{font-size:10px;color:#555;white-space:nowrap}
+
+/* ── HERO ── */
+.hero{background:var(--black);color:#fff;padding:48px 20px 40px;text-align:center;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;top:-80px;right:-80px;width:260px;height:260px;border:1px solid rgba(255,255,255,.05);border-radius:50%}
+.hero-badge{display:inline-block;border:1px solid rgba(255,255,255,.18);border-radius:20px;padding:4px 14px;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#aaa;margin-bottom:14px}
+.hero h1{font-size:22px;font-weight:900;line-height:1.35;margin-bottom:8px;letter-spacing:-.5px}
+.hero-sub{font-size:12px;color:#777;margin-bottom:22px}
+.hero-meta{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:rgba(255,255,255,.07);border-radius:10px;overflow:hidden;margin-top:18px}
+.hero-meta-item{background:rgba(255,255,255,.04);padding:12px 5px;text-align:center}
+.hero-meta-num{font-size:15px;font-weight:900;color:#fff;display:block}
+.hero-meta-lbl{font-size:9px;color:#555;margin-top:2px;line-height:1.3}
+
+/* ── LAYOUT ── */
+.container{max-width:720px;margin:0 auto;padding:0 15px}
+section{padding:36px 0 0}
+.divider{height:1px;background:var(--border);margin:34px 0 0}
+.eyebrow{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--gray);margin-bottom:5px}
+h2{font-size:19px;font-weight:900;letter-spacing:-.3px;margin-bottom:12px;line-height:1.3}
+h3{font-size:14px;font-weight:700;margin:20px 0 8px}
+h4{font-size:12px;font-weight:700;margin:14px 0 6px;color:#333}
+p{color:#333;margin-bottom:8px;font-size:13px}
+strong{color:var(--black);font-weight:700}
+code{font-family:'JetBrains Mono',monospace;background:#eef;padding:1px 5px;border-radius:3px;font-size:11px;color:#1d4ed8}
+
+.callout{background:var(--light);border-left:3px solid var(--black);padding:13px 15px;border-radius:0 8px 8px 0;margin:10px 0;font-size:13px;line-height:1.65}
+.callout.orange{background:#fff8ed;border-left-color:#d97706}
+.callout.blue{background:#eff6ff;border-left-color:#1d4ed8}
+.callout.green{background:#f0fdf4;border-left-color:#15803d}
+.callout.purple{background:#faf5ff;border-left-color:#7c3aed}
+.callout.red{background:#fef2f2;border-left-color:#dc2626}
+
+/* ── LESSON META ── */
+.lesson-meta{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:14px 0 4px}
+.meta-card{background:var(--light);border:1px solid var(--border);border-radius:8px;padding:10px 8px;text-align:center}
+.meta-card-lbl{font-size:9px;font-weight:700;letter-spacing:1px;color:#aaa;text-transform:uppercase;margin-bottom:3px}
+.meta-card-val{font-size:12px;font-weight:700;color:var(--black);line-height:1.3}
+
+/* ── LEARNING GOALS ── */
+.goals{display:flex;flex-direction:column;gap:7px;margin:12px 0}
+.goal{display:flex;gap:11px;align-items:flex-start;background:var(--light);border-radius:9px;padding:11px 13px;border:1px solid var(--border)}
+.goal-chk{width:20px;height:20px;background:var(--black);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;flex-shrink:0}
+.goal-text{font-size:12px;line-height:1.55}
+
+/* ── 3D DIMENSION CARDS ── */
+.dim-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:14px 0}
+.dim-card{border:1px solid var(--border);border-radius:10px;padding:12px 11px;background:#fff;opacity:.55;transition:opacity .2s}
+.dim-card.active{opacity:1;border-color:var(--black);box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.dim-icon{font-size:22px;margin-bottom:5px}
+.dim-label{font-size:11px;font-weight:700;margin-bottom:5px;line-height:1.3}
+.dim-desc{font-size:10px;color:var(--gray);line-height:1.5}
+.dim-card.d-price.active{background:#eff6ff;border-color:#1d4ed8}
+.dim-card.d-news{background:#fff8ed}
+.dim-card.d-chart{background:#faf5ff}
+
+/* ── CODE BLOCK ── */
+.code-block{background:#0d1117;color:#e6edf3;border-radius:9px;padding:14px 16px;margin:10px 0;font-family:'JetBrains Mono','Courier New',monospace;font-size:11px;line-height:1.7;overflow-x:auto;white-space:pre;tab-size:2;-moz-tab-size:2;word-wrap:normal}
+.code-block code{background:transparent;padding:0;color:inherit;font-size:inherit}
+.code-block .cm{color:#8b949e;font-style:italic}
+.code-block .kw{color:#ff7b72}
+.code-block .str{color:#a5d6ff}
+.code-block .num{color:#79c0ff}
+.code-block .fn{color:#d2a8ff}
+.code-block .op{color:#ff7b72}
+
+/* ── STEP BOX ── */
+.step-block{background:#fffbeb;border:1px solid #fcd34d;border-radius:11px;padding:14px 15px;margin:12px 0}
+.step-title{font-size:11px;font-weight:700;color:#92400e;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.step-title::before{content:'▶';font-size:9px}
+.step-list{counter-reset:s;list-style:none;padding:0}
+.step-list li{counter-increment:s;position:relative;padding:6px 0 6px 30px;font-size:12px;line-height:1.65;color:#78350f;border-bottom:1px dashed #fcd34d}
+.step-list li:last-child{border-bottom:none}
+.step-list li::before{content:counter(s);position:absolute;left:0;top:8px;width:20px;height:20px;background:#d97706;color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:900}
+
+/* ── NODE CARD ── */
+.node-card{border:1px solid var(--border);border-radius:10px;margin:10px 0;overflow:hidden}
+.node-head{background:var(--black);color:#fff;padding:10px 14px;display:flex;align-items:center;gap:9px}
+.node-icon{font-size:16px}
+.node-name{font-size:12px;font-weight:700}
+.node-tag{background:rgba(255,255,255,.15);border-radius:3px;padding:2px 7px;font-size:9px;font-weight:700;margin-left:auto;letter-spacing:.5px}
+.node-body{padding:12px 14px;background:var(--light);font-size:12px;line-height:1.6}
+.node-config{background:#fff;border:1px solid var(--border);border-radius:6px;padding:10px 12px;margin-top:8px;font-size:11px;font-family:'JetBrains Mono',monospace}
+.node-config-row{padding:3px 0;border-bottom:1px dashed #eee}
+.node-config-row:last-child{border-bottom:none}
+.ncr-k{color:#6b6b6b;display:inline-block;min-width:130px}
+.ncr-v{color:#1d4ed8;font-weight:600}
+
+/* ── N8N FLOW ── */
+.n8n-flow{background:#fffbeb;border:1px solid #fcd34d;border-radius:11px;padding:14px;margin:14px 0}
+.n8n-title{font-size:11px;font-weight:700;color:#92400e;margin-bottom:10px}
+.n8n-steps{display:flex;flex-direction:column;gap:4px}
+.n8n-step{display:flex;align-items:flex-start;gap:8px;padding:4px 0}
+.n8n-node{border-radius:5px;padding:3px 9px;font-size:10px;font-weight:700;white-space:nowrap;flex-shrink:0;margin-top:1px}
+.nn-t{background:#dc2626;color:#fff}
+.nn-a{background:#2563eb;color:#fff}
+.nn-ai{background:#7c3aed;color:#fff}
+.nn-o{background:#059669;color:#fff}
+.nn-c{background:#374151;color:#fff}
+.n8n-edge{font-size:10px;color:#bbb;padding-top:5px;flex-shrink:0}
+.n8n-desc{font-size:11px;color:#78350f;flex:1;line-height:1.6;padding-top:3px}
+
+/* ── TABLE ── */
+.dtable{width:100%;border-collapse:collapse;margin:10px 0;font-size:11px}
+.dtable th{background:var(--black);color:#fff;padding:8px 10px;text-align:left;font-size:10px;font-weight:700}
+.dtable td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.5}
+.dtable tr:nth-child(even) td{background:var(--light)}
+.dtable code{font-size:10px}
+
+/* ── INDICATOR CARD ── */
+.ind-grid{display:grid;grid-template-columns:1fr;gap:10px;margin:12px 0}
+.ind-card{border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.ind-head{background:var(--black);color:#fff;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.ind-name{font-size:13px;font-weight:700}
+.ind-type{font-size:9px;color:#aaa;background:rgba(255,255,255,.08);padding:2px 7px;border-radius:3px;letter-spacing:.5px}
+.ind-body{padding:12px 14px;background:var(--light);font-size:12px;line-height:1.65}
+.ind-formula{background:#fff;border:1px solid var(--border);border-radius:6px;padding:8px 11px;margin:8px 0;font-family:'JetBrains Mono',monospace;font-size:11px;color:#1d4ed8}
+.ind-signal{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+.sig{border-radius:4px;padding:3px 9px;font-size:10px;font-weight:700}
+.sig-buy{background:#d1fae5;color:#065f46}
+.sig-sell{background:#fee2e2;color:#991b1b}
+.sig-hold{background:#fef3c7;color:#92400e}
+
+/* ── SHEET PREVIEW ── */
+.sheet-preview{border:1px solid var(--border);border-radius:8px;overflow-x:auto;margin:10px 0;background:#fff}
+.sheet-preview table{width:100%;border-collapse:collapse;font-size:10px;font-family:'JetBrains Mono',monospace;min-width:600px}
+.sheet-preview thead th{background:#15803d;color:#fff;padding:6px 8px;text-align:left;font-size:9px;font-weight:700;letter-spacing:.3px}
+.sheet-preview td{padding:5px 8px;border-bottom:1px solid #eee;border-right:1px solid #eee}
+.sheet-preview td:first-child{background:#f9fafb;color:#6b6b6b;font-weight:700;text-align:center;width:30px}
+.sp-up{color:#15803d;font-weight:600}
+.sp-dn{color:#dc2626;font-weight:600}
+.sp-yellow{background:#fef3c7}
+.sp-red{background:#fee2e2}
+.sp-green{background:#d1fae5}
+
+/* ── TROUBLESHOOT ── */
+.ts-block{background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:13px 15px;margin:10px 0}
+.ts-item{padding:8px 0;border-bottom:1px dashed #fecaca}
+.ts-item:last-child{border-bottom:none}
+.ts-q{font-size:12px;font-weight:700;color:#991b1b;margin-bottom:4px}
+.ts-q::before{content:'Q. ';color:#dc2626}
+.ts-a{font-size:11px;color:#7f1d1d;line-height:1.6;padding-left:14px}
+.ts-a::before{content:'A. ';font-weight:700}
+
+/* ── CHECKLIST ── */
+.checklist{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:13px 15px;margin:12px 0}
+.ck-title{font-size:11px;font-weight:700;color:#14532d;margin-bottom:8px}
+.ck-item{padding:5px 0 5px 22px;font-size:12px;line-height:1.5;color:#166534;position:relative}
+.ck-item::before{content:'☐';position:absolute;left:0;top:3px;font-size:14px;color:#15803d}
+
+/* ── HOMEWORK ── */
+.hw-block{background:linear-gradient(135deg,#1e3a5f,#1d4ed8);color:#fff;border-radius:11px;padding:16px;margin:14px 0}
+.hw-tag{display:inline-block;background:rgba(255,255,255,.2);border-radius:4px;padding:2px 8px;font-size:9px;font-weight:900;letter-spacing:1.5px;margin-bottom:8px}
+.hw-title{font-size:14px;font-weight:700;margin-bottom:8px}
+.hw-list{list-style:none;padding:0}
+.hw-list li{padding:5px 0 5px 16px;font-size:12px;line-height:1.55;position:relative;color:rgba(255,255,255,.9)}
+.hw-list li::before{content:'▸';position:absolute;left:0;color:#93c5fd}
+
+/* ── AGENT CONCEPT ── */
+.agent-box{background:#faf5ff;border:1px solid #e9d5ff;border-radius:10px;padding:13px 15px;margin:10px 0}
+.ag-title{font-size:11px;font-weight:700;color:#5b21b6;margin-bottom:6px;display:flex;align-items:center;gap:5px}
+.ag-body{font-size:12px;color:#5b21b6;line-height:1.65}
+
+@media(max-width:400px){
+  .lesson-meta{grid-template-columns:repeat(2,1fr)}
+  .dim-grid{grid-template-columns:1fr}
+  .hero h1{font-size:19px}
+}
+</style>
+</head>
+<body>
+
+<div id="sf">
+  <span class="lbl">W2 강의노트</span>
+  <span class="ttl" id="sf-t">포트폴리오 대시보드 + 기술적 지표</span>
+  <span class="pct" id="sf-p">0%</span>
+</div>
+
+<!-- ════ HERO ════ -->
+<div class="hero" data-section="W2 강의노트">
+  <div class="hero-badge">Week 02 · Phase 1 · n8n 기초</div>
+  <h1>포트폴리오 대시보드 + 기술적 지표 자동 계산</h1>
+  <p class="hero-sub">Google Sheets에 가격·RSI·볼린저·이동평균을 매일 자동 기록</p>
+  <div class="hero-meta">
+    <div class="hero-meta-item"><span class="hero-meta-num">3시간</span><span class="hero-meta-lbl">수업<br>시간</span></div>
+    <div class="hero-meta-item"><span class="hero-meta-num">3지표</span><span class="hero-meta-lbl">RSI·MA<br>볼린저</span></div>
+    <div class="hero-meta-item"><span class="hero-meta-num">자동화</span><span class="hero-meta-lbl">매일 9시<br>무인 실행</span></div>
+  </div>
+</div>
+
+<div class="container">
+
+<!-- ════ 학습 목표 ════ -->
+<section data-section="학습 목표">
+  <div class="eyebrow">Learning Objectives</div>
+  <h2>이번 주 학습 목표</h2>
+
+  <div class="lesson-meta">
+    <div class="meta-card"><div class="meta-card-lbl">레벨</div><div class="meta-card-val">입문+</div></div>
+    <div class="meta-card"><div class="meta-card-lbl">선수지식</div><div class="meta-card-val">W1 완료</div></div>
+    <div class="meta-card"><div class="meta-card-lbl">실습</div><div class="meta-card-val">120분</div></div>
+    <div class="meta-card"><div class="meta-card-lbl">과제</div><div class="meta-card-val">확장 1개</div></div>
+  </div>
+
+  <div class="goals">
+    <div class="goal"><div class="goal-chk">1</div><div class="goal-text"><strong>Google Sheets OAuth2</strong> 자격증명을 설정하고 n8n에서 Append Row로 데이터를 기록할 수 있다</div></div>
+    <div class="goal"><div class="goal-chk">2</div><div class="goal-text"><strong>Schedule Trigger</strong>로 매일 정해진 시각에 자동 실행되는 워크플로를 구축할 수 있다</div></div>
+    <div class="goal"><div class="goal-chk">3</div><div class="goal-text"><strong>Code 노드 JavaScript</strong>로 RSI·이동평균·볼린저밴드 3대 기술적 지표를 직접 계산할 수 있다</div></div>
+    <div class="goal"><div class="goal-chk">4</div><div class="goal-text"><strong>포트폴리오 대시보드</strong>에 조건부 서식을 적용해 과매수·과매도를 한눈에 식별할 수 있다</div></div>
+  </div>
+
+  <div class="callout green">
+    <strong>이번 주의 한 문장:</strong> "숫자는 기억하고, AI는 판단한다." 이번 주는 AI가 판단할 재료인 <strong>기술적 지표 1차원 전체</strong>를 시트에 쌓아 올립니다.
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ════ 3D 진행도 ════ -->
+<section data-section="3D 진행도">
+  <div class="eyebrow">Progress · 3D Framework</div>
+  <h2>지금 어디에 있는가 — 3D 프레임 진행도</h2>
+  <p>8주 여정 중 <strong>1차원(가격)을 완성하는 단계</strong>입니다. 이번 주가 끝나면 여러분은 "가격은 물론 <strong>RSI·볼린저·이동평균</strong>까지 매일 자동으로 기록되는 시트"를 갖게 됩니다. 이 시트가 바로 W3~W4 AI 에이전트의 주 식량입니다.</p>
+
+  <div class="dim-grid">
+    <div class="dim-card d-price active">
+      <div class="dim-icon">📊</div>
+      <div class="dim-label">1차원 — 가격 + 지표 ✓</div>
+      <div class="dim-desc"><strong>W2(이번 주)에 완성</strong>. 시세 + RSI + 이동평균 + 볼린저밴드까지 자동 계산·기록.</div>
+    </div>
+    <div class="dim-card d-news">
+      <div class="dim-icon">📰</div>
+      <div class="dim-label">2차원 — 뉴스 센티먼트</div>
+      <div class="dim-desc"><strong>W3에서 추가</strong>. Alpha Vantage NEWS_SENTIMENT로 "왜" 차원 탑재.</div>
+    </div>
+    <div class="dim-card d-chart">
+      <div class="dim-icon">📈</div>
+      <div class="dim-label">3차원 — 차트 Vision</div>
+      <div class="dim-desc"><strong>W4에서 추가</strong>. Chart-IMG + Claude Vision으로 패턴 인식.</div>
+    </div>
+  </div>
+
+  <div class="agent-box">
+    <div class="ag-title">🤖 에이전트 관점에서 본 이번 주</div>
+    <div class="ag-body">여전히 "에이전트"는 아닙니다. 하지만 <strong>에이전트의 컨텍스트 창</strong>을 채우는 작업입니다. AI에게 "판단해줘"라고 할 때 현재 가격만 주는 것과 "가격+RSI+이동평균+볼린저+어제 가격 대비 변동"을 주는 것은 판단의 질이 완전히 다릅니다. 시트는 <strong>에이전트의 기억 장치</strong>입니다.</div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ════ 1교시: Google Sheets OAuth ════ -->
+<section data-section="1교시: Google Sheets OAuth">
+  <div class="eyebrow">Session 1 · 60min</div>
+  <h2>1교시 — Google Sheets 연동 (OAuth2 세팅)</h2>
+
+  <p>n8n의 Google Sheets 노드는 공식 코어 노드로 <strong>Append Row</strong>(행 추가) · <strong>Update Row</strong>(행 업데이트) · <strong>Get Rows</strong>(행 조회) 등 주요 작업을 모두 지원합니다. 가장 큰 장벽은 <strong>OAuth2 인증</strong>인데, n8n Cloud에서는 두 가지 선택지가 있습니다.</p>
+
+  <h3>옵션 1: Managed OAuth (n8n Cloud 전용, 가장 빠름) ⭐</h3>
+  <p>n8n Cloud 사용자라면 <strong>Google Cloud Console 설정 없이</strong> 바로 로그인할 수 있는 "Sign in with Google" 방식이 제공됩니다. 초청 워크스페이스(<code>hyeok2.app.n8n.cloud</code>)를 쓰는 학생들은 이 옵션을 권장합니다.</p>
+
+  <div class="step-block">
+    <div class="step-title">Managed OAuth 설정 (2분)</div>
+    <ol class="step-list">
+      <li>워크플로에 <strong>Google Sheets</strong> 노드 추가 → Operation: <strong>Append Row</strong> 선택</li>
+      <li>Credential 드롭다운에서 <strong>Create new credential</strong> 클릭</li>
+      <li>Authentication 방식에서 <strong>OAuth2 (Recommended)</strong> 선택</li>
+      <li><strong>Sign in with Google</strong> 버튼 클릭 → 팝업에서 본인 Google 계정 선택</li>
+      <li>권한 승인 (Sheets 읽기/쓰기) → 자동으로 n8n으로 돌아옴 → <strong>Connection Successful</strong> 표시</li>
+    </ol>
+  </div>
+
+  <h3>옵션 2: Custom OAuth (Docker 셀프호스팅 사용자)</h3>
+  <p>로컬 Docker나 자체 서버로 n8n을 운영하는 경우 Google Cloud Console에서 OAuth 클라이언트를 직접 만들어야 합니다. 대학생 대상 과정에서는 <strong>과제가 아닌 참고용</strong>으로만 설명합니다.</p>
+
+  <div class="callout blue">
+    <strong>📌 요약 — 커스텀 OAuth가 필요한 단계:</strong><br>
+    ① Google Cloud Console 프로젝트 생성 · ② Sheets API + Drive API 활성화 · ③ OAuth Consent Screen 설정 (Test User에 본인 이메일 추가 필수) · ④ OAuth Client ID 생성 (Web Application) · ⑤ n8n의 callback URL을 Authorized redirect URIs에 등록 · ⑥ Client ID / Secret을 n8n Credentials에 붙여넣기. 상세는 <code>docs.n8n.io</code>의 Google credentials 문서 참고.
+  </div>
+
+  <h3>연습용 스프레드시트 만들기</h3>
+  <div class="step-block">
+    <div class="step-title">Google Sheets 준비 (3분)</div>
+    <ol class="step-list">
+      <li>Google Drive에서 새 Sheets 생성 → 이름 <code>Invest_Dashboard_W2</code></li>
+      <li>시트 탭 1: <code>portfolio</code> — 헤더 행 작성: <code>timestamp | ticker | price | change_pct | currency</code></li>
+      <li>시트 탭 2: <code>indicators</code> — 헤더 행 작성: <code>timestamp | ticker | price | rsi14 | ma20 | bb_upper | bb_lower | signal</code></li>
+      <li>URL에서 Spreadsheet ID 복사 (<code>/d/</code>와 <code>/edit</code> 사이 문자열)</li>
+      <li>n8n의 Google Sheets 노드에서 Document: <strong>By ID</strong> → ID 붙여넣기</li>
+    </ol>
+  </div>
+
+  <h3>첫 Append Row 실행</h3>
+  <div class="node-card">
+    <div class="node-head">
+      <span class="node-icon">📊</span>
+      <span class="node-name">Google Sheets — Append Row</span>
+      <span class="node-tag">OUTPUT</span>
+    </div>
+    <div class="node-body">
+      W1 마지막 Set 노드 뒤에 연결. 이전 노드의 필드를 컬럼에 매핑합니다.
+      <div class="node-config">
+        <div class="node-config-row"><span class="ncr-k">Resource:</span> <span class="ncr-v">Sheet Within Document</span></div>
+        <div class="node-config-row"><span class="ncr-k">Operation:</span> <span class="ncr-v">Append Row</span></div>
+        <div class="node-config-row"><span class="ncr-k">Document:</span> <span class="ncr-v">By ID → {Spreadsheet ID}</span></div>
+        <div class="node-config-row"><span class="ncr-k">Sheet:</span> <span class="ncr-v">portfolio</span></div>
+        <div class="node-config-row"><span class="ncr-k">Mapping Column Mode:</span> <span class="ncr-v">Map Automatically</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="ts-block">
+    <div style="font-size:11px;font-weight:700;color:#991b1b;margin-bottom:6px">🚨 OAuth 자주 겪는 문제</div>
+    <div class="ts-item">
+      <div class="ts-q">"Access denied" 또는 403 에러</div>
+      <div class="ts-a">(Custom OAuth) Google Cloud Console의 OAuth Consent Screen → Test Users에 본인 Gmail을 추가하지 않은 경우. Test User 등록 후 재시도.</div>
+    </div>
+    <div class="ts-item">
+      <div class="ts-q">"Redirect URI mismatch"</div>
+      <div class="ts-a">n8n Credential 화면에 표시된 <strong>OAuth Redirect URL</strong>을 Google Cloud Console의 Authorized redirect URIs에 정확히 복사. http/https, 포트번호, 슬래시까지 완전 일치 필요.</div>
+    </div>
+    <div class="ts-item">
+      <div class="ts-q">Append는 성공하는데 빈 행이 추가됨</div>
+      <div class="ts-a">Mapping Column Mode가 <strong>Map Manually</strong>인데 필드를 지정하지 않은 경우. Map Automatically로 바꾸거나, 수동 매핑에서 컬럼명-값 페어를 명시적으로 지정.</div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ════ 2교시: Schedule Trigger ════ -->
+<section data-section="2교시: Schedule Trigger">
+  <div class="eyebrow">Session 2 · 30min</div>
+  <h2>2교시 — Schedule Trigger로 자동화 전환</h2>
+
+  <p>W1에서는 Manual Trigger로 "Execute Workflow" 버튼을 눌러야만 실행됐습니다. 이제 <strong>Schedule Trigger</strong>로 바꿔 매일 정해진 시각에 무인 실행되도록 만듭니다.</p>
+
+  <div class="node-card">
+    <div class="node-head">
+      <span class="node-icon">⏰</span>
+      <span class="node-name">Schedule Trigger</span>
+      <span class="node-tag">TRIGGER</span>
+    </div>
+    <div class="node-body">
+      Cron 표현식 또는 간단한 Trigger Interval로 설정 가능. 초보자는 Trigger Interval 권장.
+      <div class="node-config">
+        <div class="node-config-row"><span class="ncr-k">Trigger Rules:</span> <span class="ncr-v">Add Rule</span></div>
+        <div class="node-config-row"><span class="ncr-k">Trigger Interval:</span> <span class="ncr-v">Days</span></div>
+        <div class="node-config-row"><span class="ncr-k">Days Between Triggers:</span> <span class="ncr-v">1</span></div>
+        <div class="node-config-row"><span class="ncr-k">Trigger at Hour:</span> <span class="ncr-v">9</span></div>
+        <div class="node-config-row"><span class="ncr-k">Trigger at Minute:</span> <span class="ncr-v">0</span></div>
+      </div>
+    </div>
+  </div>
+
+  <h3>Cron 표현식 (고급 옵션)</h3>
+  <p>더 세밀한 스케줄이 필요하면 Cron Expression을 직접 씁니다. <code>crontab.guru</code>에서 검증하세요.</p>
+
+  <table class="dtable">
+    <thead><tr><th>표현식</th><th>의미</th><th>투자 활용</th></tr></thead>
+    <tbody>
+      <tr><td><code>0 9 * * *</code></td><td>매일 오전 9시</td><td>한국장 개장 30분 전 브리핑</td></tr>
+      <tr><td><code>0 9 * * 1-5</code></td><td>평일 오전 9시</td><td>주말 제외 루틴</td></tr>
+      <tr><td><code>0 22 * * 1-5</code></td><td>평일 오후 10시</td><td>미국장 개장 30분 전</td></tr>
+      <tr><td><code>*/5 9-15 * * 1-5</code></td><td>평일 장중 5분마다</td><td>실시간 모니터링 (W4+)</td></tr>
+      <tr><td><code>0 15 * * 1-5</code></td><td>평일 오후 3시</td><td>한국장 마감 30분 전 체크</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout orange">
+    <strong>⚠️ 타임존 주의:</strong> n8n Cloud의 기본 타임존은 계정 생성 시 설정됩니다. 강사 워크스페이스는 <strong>Asia/Seoul</strong>로 설정되어 있어 <code>0 9 * * *</code>는 한국시간 오전 9시를 의미합니다. Docker 셀프호스팅은 기본 America/New_York이므로 환경변수 <code>GENERIC_TIMEZONE=Asia/Seoul</code>를 반드시 설정.
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ════ 3교시: 기술적 지표 계산 ════ -->
+<section data-section="3교시: 기술적 지표">
+  <div class="eyebrow">Session 3 · 90min</div>
+  <h2>3교시 — Code 노드로 기술적 지표 계산</h2>
+
+  <p>기술적 지표는 투자에서 가장 오래된 도구지만 여전히 강력합니다. Claude나 GPT도 훈련 데이터에서 이 지표들을 수없이 봤기 때문에 <strong>숫자로 입력받으면 즉시 문맥을 이해</strong>합니다. 이번 3교시에서는 3대 지표를 JavaScript로 직접 구현합니다.</p>
+
+  <div class="callout purple">
+    <strong>💡 왜 공식을 직접 구현하나:</strong> Alpha Vantage 같은 API도 지표를 제공하지만 <strong>API 호출 횟수가 낭비</strong>되고 커스터마이징이 어렵습니다. JavaScript 한 번 작성해두면 무료로 무한 재사용 + RSI 기간(14일/21일 등) 자유 변경 가능.
+  </div>
+
+  <h3>지표 1: 단순 이동평균 (MA · Moving Average)</h3>
+  <div class="ind-grid">
+    <div class="ind-card">
+      <div class="ind-head">
+        <span class="ind-name">📊 20일 이동평균 (MA20)</span>
+        <span class="ind-type">TREND</span>
+      </div>
+      <div class="ind-body">
+        최근 20일 종가의 평균. <strong>가격이 MA20 위면 상승 추세, 아래면 하락 추세</strong>로 단순 판단. 가장 기초적이지만 여전히 핵심 지표.
+        <div class="ind-formula">MA20 = (C₁ + C₂ + ... + C₂₀) / 20</div>
+        <div class="ind-signal">
+          <span class="sig sig-buy">가격 &gt; MA20: 상승</span>
+          <span class="sig sig-sell">가격 &lt; MA20: 하락</span>
+          <span class="sig sig-hold">가격 ≈ MA20: 중립</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <h3>지표 2: RSI (Relative Strength Index)</h3>
+  <div class="ind-grid">
+    <div class="ind-card">
+      <div class="ind-head">
+        <span class="ind-name">⚡ RSI(14) — 상대강도지수</span>
+        <span class="ind-type">MOMENTUM</span>
+      </div>
+      <div class="ind-body">
+        최근 14일간 상승폭과 하락폭의 비율을 0~100으로 표현. <strong>70 초과 = 과매수(조정 가능성), 30 미만 = 과매도(반등 가능성)</strong>. 단일 지표로는 가장 널리 쓰이는 모멘텀 지표.
+        <div class="ind-formula">RS = AvgGain / AvgLoss<br>RSI = 100 − (100 / (1 + RS))</div>
+        <div class="ind-signal">
+          <span class="sig sig-buy">RSI &lt; 30: 과매도</span>
+          <span class="sig sig-sell">RSI &gt; 70: 과매수</span>
+          <span class="sig sig-hold">30 ≤ RSI ≤ 70: 정상</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <h3>지표 3: 볼린저밴드 (Bollinger Bands)</h3>
+  <div class="ind-grid">
+    <div class="ind-card">
+      <div class="ind-head">
+        <span class="ind-name">🎯 볼린저밴드 (20, 2)</span>
+        <span class="ind-type">VOLATILITY</span>
+      </div>
+      <div class="ind-body">
+        MA20을 중심으로 표준편차 × 2만큼 위/아래에 밴드를 그림. <strong>가격이 상단 밴드 돌파 시 과열, 하단 터치 시 바닥 시도</strong>. 밴드 폭이 좁아지는 스퀴즈는 큰 변동성 직전 신호.
+        <div class="ind-formula">Middle = MA20<br>Upper = MA20 + 2σ<br>Lower = MA20 − 2σ</div>
+        <div class="ind-signal">
+          <span class="sig sig-sell">Upper 돌파: 과열</span>
+          <span class="sig sig-buy">Lower 터치: 반등 시도</span>
+          <span class="sig sig-hold">밴드 스퀴즈: 변동성 임박</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <h3>Code 노드 실습 — 3대 지표 통합 계산기</h3>
+  <p>Yahoo Finance의 <code>chart</code> 엔드포인트는 종가 배열을 제공합니다. 이 배열을 받아 3개 지표를 한 번에 계산하는 Code 노드를 작성합니다.</p>
+
+  <h4>입력 데이터 확인 (이전 HTTP Request 노드)</h4>
+  <p>Yahoo 응답에서 종가 배열은 <code>$json.chart.result[0].indicators.quote[0].close</code>에 있습니다. <strong>range=60d</strong>로 호출하면 약 60개 종가가 옵니다.</p>
+
+  <h4>Code 노드 — JavaScript (Run Once for Each Item)</h4>
+<pre class="code-block"><span class="cm">// ─── 입력: Yahoo chart 응답에서 종가 배열 추출 ───</span>
+<span class="kw">const</span> raw = $input.item.json.chart.result[<span class="num">0</span>].indicators.quote[<span class="num">0</span>].close;
+<span class="kw">const</span> closes = raw.<span class="fn">filter</span>(v =&gt; v !== <span class="kw">null</span>);
+<span class="kw">const</span> symbol = $input.item.json.chart.result[<span class="num">0</span>].meta.symbol;
+<span class="kw">const</span> currentPrice = closes[closes.length - <span class="num">1</span>];
+
+<span class="cm">// ─── 1. 20일 이동평균 ───</span>
+<span class="kw">function</span> <span class="fn">calcMA</span>(arr, period) {
+  <span class="kw">const</span> slice = arr.<span class="fn">slice</span>(-period);
+  <span class="kw">const</span> sum = slice.<span class="fn">reduce</span>((a, b) =&gt; a + b, <span class="num">0</span>);
+  <span class="kw">return</span> sum / slice.length;
+}
+<span class="kw">const</span> ma20 = <span class="fn">calcMA</span>(closes, <span class="num">20</span>);
+
+<span class="cm">// ─── 2. RSI(14) — Wilder 방식 ───</span>
+<span class="kw">function</span> <span class="fn">calcRSI</span>(arr, period) {
+  <span class="kw">const</span> recent = arr.<span class="fn">slice</span>(-(period + <span class="num">1</span>));
+  <span class="kw">let</span> gains = <span class="num">0</span>;
+  <span class="kw">let</span> losses = <span class="num">0</span>;
+  <span class="kw">for</span> (<span class="kw">let</span> i = <span class="num">1</span>; i &lt; recent.length; i++) {
+    <span class="kw">const</span> diff = recent[i] - recent[i - <span class="num">1</span>];
+    <span class="kw">if</span> (diff &gt; <span class="num">0</span>) gains += diff;
+    <span class="kw">else</span> losses += -diff;
+  }
+  <span class="kw">const</span> avgGain = gains / period;
+  <span class="kw">const</span> avgLoss = losses / period;
+  <span class="kw">if</span> (avgLoss === <span class="num">0</span>) <span class="kw">return</span> <span class="num">100</span>;
+  <span class="kw">const</span> rs = avgGain / avgLoss;
+  <span class="kw">return</span> <span class="num">100</span> - (<span class="num">100</span> / (<span class="num">1</span> + rs));
+}
+<span class="kw">const</span> rsi14 = <span class="fn">calcRSI</span>(closes, <span class="num">14</span>);
+
+<span class="cm">// ─── 3. 볼린저밴드(20, 2) ───</span>
+<span class="kw">function</span> <span class="fn">calcBB</span>(arr, period, mult) {
+  <span class="kw">const</span> slice = arr.<span class="fn">slice</span>(-period);
+  <span class="kw">const</span> mean = slice.<span class="fn">reduce</span>((a, b) =&gt; a + b, <span class="num">0</span>) / period;
+  <span class="kw">const</span> variance = slice.<span class="fn">reduce</span>((a, b) =&gt; a + (b - mean) * (b - mean), <span class="num">0</span>) / period;
+  <span class="kw">const</span> std = Math.<span class="fn">sqrt</span>(variance);
+  <span class="kw">return</span> {
+    upper: mean + mult * std,
+    middle: mean,
+    lower: mean - mult * std
+  };
+}
+<span class="kw">const</span> bb = <span class="fn">calcBB</span>(closes, <span class="num">20</span>, <span class="num">2</span>);
+
+<span class="cm">// ─── 4. 신호 판정 ───</span>
+<span class="kw">let</span> signal = <span class="str">'HOLD'</span>;
+<span class="kw">if</span> (rsi14 &lt; <span class="num">30</span> &amp;&amp; currentPrice &lt; bb.lower) {
+  signal = <span class="str">'BUY_STRONG'</span>;
+} <span class="kw">else if</span> (rsi14 &lt; <span class="num">35</span>) {
+  signal = <span class="str">'BUY_WATCH'</span>;
+} <span class="kw">else if</span> (rsi14 &gt; <span class="num">70</span> &amp;&amp; currentPrice &gt; bb.upper) {
+  signal = <span class="str">'SELL_STRONG'</span>;
+} <span class="kw">else if</span> (rsi14 &gt; <span class="num">65</span>) {
+  signal = <span class="str">'SELL_WATCH'</span>;
+}
+
+<span class="cm">// ─── 5. 출력 ───</span>
+<span class="kw">return</span> {
+  timestamp: <span class="kw">new</span> Date().<span class="fn">toISOString</span>(),
+  ticker: symbol,
+  price: currentPrice.<span class="fn">toFixed</span>(<span class="num">2</span>),
+  rsi14: rsi14.<span class="fn">toFixed</span>(<span class="num">2</span>),
+  ma20: ma20.<span class="fn">toFixed</span>(<span class="num">2</span>),
+  bb_upper: bb.upper.<span class="fn">toFixed</span>(<span class="num">2</span>),
+  bb_lower: bb.lower.<span class="fn">toFixed</span>(<span class="num">2</span>),
+  signal: signal
+};
+</pre>
+
+  <div class="callout blue">
+    <strong>💡 Code 노드 모드 선택:</strong><br>
+    <strong>Run Once for Each Item</strong>: 티커마다 독립적으로 실행(권장). <code>$input.item.json</code>으로 접근.<br>
+    <strong>Run Once for All Items</strong>: 모든 티커를 한 번에 처리. <code>$input.all()</code>로 배열 접근.
+  </div>
+
+  <h3>검증 — 계산 결과 확인</h3>
+  <p>Code 노드 실행 후 Output 탭에서 <code>rsi14</code> 값이 0~100 범위인지, <code>bb_upper &gt; bb_lower</code>인지, <code>ma20</code>이 최근 종가와 비슷한 수준인지 확인합니다. 수치 이상이면 대부분 <strong>종가 배열에 null이 섞여있거나</strong> 기간 부족(60일 미만)이 원인입니다.</p>
+</section>
+
+<div class="divider"></div>
+
+<!-- ════ 4교시: 대시보드 완성 ════ -->
+<section data-section="4교시: 대시보드 완성">
+  <div class="eyebrow">Session 4 · 40min</div>
+  <h2>4교시 — 포트폴리오 대시보드 완성</h2>
+
+  <h3>전체 워크플로 구조</h3>
+  <div class="n8n-flow">
+    <div class="n8n-title">🔧 W2 최종 워크플로 — 매일 9시 자동 실행</div>
+    <div class="n8n-steps">
+      <div class="n8n-step"><span class="n8n-node nn-t">Schedule</span><span class="n8n-edge">→</span><span class="n8n-desc">평일 오전 9시 자동 실행 (<code>0 9 * * 1-5</code>)</span></div>
+      <div class="n8n-step"><span class="n8n-node nn-a">HTTP ×3</span><span class="n8n-edge">→</span><span class="n8n-desc">Yahoo(주식·지수, range=60d) · CoinGecko · FRED — 각 자산 60일 히스토리 수집</span></div>
+      <div class="n8n-step"><span class="n8n-node nn-c">Merge</span><span class="n8n-edge">→</span><span class="n8n-desc">3개 응답을 배열로 합치기 (Mode: Append All)</span></div>
+      <div class="n8n-step"><span class="n8n-node nn-c">Code (Indicators)</span><span class="n8n-edge">→</span><span class="n8n-desc">각 티커에 대해 RSI·MA20·볼린저·신호 계산 (Run for Each Item)</span></div>
+      <div class="n8n-step"><span class="n8n-node nn-o">Sheets (indicators)</span><span class="n8n-edge">→</span><span class="n8n-desc">indicators 탭에 계산 결과 Append Row — 시간별 이력 누적</span></div>
+      <div class="n8n-step"><span class="n8n-node nn-o">Sheets (portfolio)</span><span class="n8n-edge">→</span><span class="n8n-desc">portfolio 탭에 가격 스냅샷 Append Row (별도 이력)</span></div>
+    </div>
+  </div>
+
+  <h3>예상 출력 — indicators 탭 미리보기</h3>
+  <div class="sheet-preview">
+    <table>
+      <thead>
+        <tr><th></th><th>timestamp</th><th>ticker</th><th>price</th><th>rsi14</th><th>ma20</th><th>bb_upper</th><th>bb_lower</th><th>signal</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>1</td><td>2026-04-21 09:00</td><td>AAPL</td><td class="sp-up">178.32</td><td>58.4</td><td>175.80</td><td>182.10</td><td>169.50</td><td class="sp-yellow">HOLD</td></tr>
+        <tr><td>2</td><td>2026-04-21 09:00</td><td>SPY</td><td class="sp-up">512.45</td><td>62.1</td><td>508.20</td><td>518.70</td><td>497.70</td><td class="sp-yellow">HOLD</td></tr>
+        <tr><td>3</td><td>2026-04-21 09:00</td><td>bitcoin</td><td class="sp-dn">62450.00</td><td>28.3</td><td>68200</td><td>72500</td><td>63900</td><td class="sp-green">BUY_STRONG</td></tr>
+        <tr><td>4</td><td>2026-04-21 09:00</td><td>ethereum</td><td class="sp-dn">3120.50</td><td>34.8</td><td>3280</td><td>3450</td><td>3110</td><td class="sp-green">BUY_WATCH</td></tr>
+        <tr><td>5</td><td>2026-04-21 09:00</td><td>^GSPC</td><td class="sp-up">5142.80</td><td>71.2</td><td>5080</td><td>5150</td><td>5010</td><td class="sp-red">SELL_WATCH</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>조건부 서식 적용 (Sheets에서 직접 설정)</h3>
+  <div class="step-block">
+    <div class="step-title">signal 컬럼에 색상 자동 표시</div>
+    <ol class="step-list">
+      <li>Sheets에서 <strong>H열(signal) 전체 선택</strong> → 서식 → 조건부 서식</li>
+      <li>규칙 1: <code>BUY_STRONG</code> 포함 → 배경 진한 녹색, 텍스트 흰색</li>
+      <li>규칙 2: <code>BUY_WATCH</code> 포함 → 배경 연두색</li>
+      <li>규칙 3: <code>SELL_STRONG</code> 포함 → 배경 빨간색, 텍스트 흰색</li>
+      <li>규칙 4: <code>SELL_WATCH</code> 포함 → 배경 연한 빨강</li>
+      <li>규칙 5: <code>HOLD</code> → 배경 노란색 (기본)</li>
+    </ol>
+  </div>
+
+  <div class="callout green">
+    <strong>✨ 체감 효과:</strong> 매일 오전 9시에 Sheets를 열면 한눈에 <strong>과매수 빨간색·과매도 녹색</strong>이 보입니다. 이게 진짜 "자동화된 대시보드"입니다. 수동으로 1시간 걸리던 작업이 <strong>0분</strong>이 됩니다.
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ════ 테스트 ════ -->
+<section data-section="테스트와 디버깅">
+  <div class="eyebrow">Test & Debug</div>
+  <h2>실행 테스트와 디버깅</h2>
+
+  <div class="ts-block">
+    <div style="font-size:11px;font-weight:700;color:#991b1b;margin-bottom:6px">🚨 이번 주 자주 발생하는 오류</div>
+    <div class="ts-item">
+      <div class="ts-q">Code 노드에서 "closes is undefined"</div>
+      <div class="ts-a">이전 노드 경로 확인. Yahoo는 <code>chart.result[0].indicators.quote[0].close</code>, CoinGecko는 OHLC 엔드포인트 사용 시 <code>$json</code>이 직접 2차원 배열. 자산군별 경로 차이에 주의.</div>
+    </div>
+    <div class="ts-item">
+      <div class="ts-q">RSI가 항상 100 또는 0으로 계산됨</div>
+      <div class="ts-a">계산 기간 동안 상승만 있었거나 하락만 있었던 경우(분모가 0). 정상 동작. range를 60d 이상으로 늘리면 완화.</div>
+    </div>
+    <div class="ts-item">
+      <div class="ts-q">Schedule Trigger가 활성화됐는데 실행 안 됨</div>
+      <div class="ts-a">워크플로를 <strong>Active 토글 ON</strong>으로 저장해야 스케줄이 작동. 비활성 상태에서는 Manual 실행만 가능. 우측 상단 Inactive/Active 스위치 확인.</div>
+    </div>
+    <div class="ts-item">
+      <div class="ts-q">Append Row가 헤더 행을 덮어씀</div>
+      <div class="ts-a">Header Row 파라미터 확인. 기본 1로 지정(첫 행 = 헤더). First Data Row는 2로 설정.</div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ════ 체크리스트 ════ -->
+<section data-section="완료 체크리스트">
+  <div class="eyebrow">Completion Checklist</div>
+  <h2>이번 주 완료 체크리스트</h2>
+
+  <div class="checklist">
+    <div class="ck-title">✅ 아래 항목이 모두 체크되면 W2 완료</div>
+    <div class="ck-item">Google Sheets OAuth2 자격증명 설정 완료 (Managed 또는 Custom)</div>
+    <div class="ck-item"><code>Invest_Dashboard_W2</code> 스프레드시트에 <code>portfolio</code>·<code>indicators</code> 두 탭 준비</div>
+    <div class="ck-item">Manual 실행으로 Sheets에 첫 행 Append 성공</div>
+    <div class="ck-item">Schedule Trigger를 평일 오전 9시로 설정하고 워크플로 Active 전환</div>
+    <div class="ck-item">Code 노드로 RSI·MA20·볼린저밴드 계산 결과가 합리적 범위(RSI 0~100) 확인</div>
+    <div class="ck-item">signal 컬럼에 BUY/SELL/HOLD 값이 조건에 따라 정확히 생성됨</div>
+    <div class="ck-item">Sheets 조건부 서식으로 signal 색상 자동 표시 작동</div>
+    <div class="ck-item">다음날 오전 9시 이후 시트에 새 행이 자동으로 추가됐는지 확인</div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ════ 과제 ════ -->
+<section data-section="이번 주 과제">
+  <div class="eyebrow">Homework</div>
+  <h2>이번 주 과제</h2>
+
+  <div class="hw-block">
+    <span class="hw-tag">📝 HOMEWORK · W2</span>
+    <div class="hw-title">나만의 신호 규칙 + 추가 지표 구현</div>
+    <ul class="hw-list">
+      <li>본인 전략에 맞게 <strong>signal 판정 규칙 수정</strong> (예: RSI 임계값 25/75로 변경, 볼린저 조건 제거 등)</li>
+      <li>Code 노드에 <strong>MACD 또는 5일 이동평균</strong> 중 하나 추가 구현</li>
+      <li><strong>전일 대비 수익률</strong> 컬럼 추가 (<code>change_pct = (오늘 - 어제) / 어제 × 100</code>)</li>
+      <li>Scheduler를 <strong>미국장 개장 시각(한국 22:30)</strong>용으로 복제 생성</li>
+      <li><strong>선택 챌린지:</strong> indicators 탭에서 signal이 BUY_STRONG인 종목만 필터링해 새 "alerts" 탭에 복사</li>
+    </ul>
+  </div>
+
+  <div class="callout green" style="margin-top:12px">
+    <strong>💡 W3 미리보기:</strong> 다음 주에는 <strong>2차원(뉴스 센티먼트)</strong>를 추가합니다. Alpha Vantage NEWS_SENTIMENT API로 종목별 뉴스를 자동 수집하고, AI Agent 노드로 Claude를 연결해 "오늘의 한 줄 코멘트"를 생성합니다. W2에서 쌓은 <code>indicators</code> 시트 데이터가 Claude의 컨텍스트로 들어가 <strong>가격+뉴스 통합 판단</strong>이 가능해집니다.
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ════ 참고 자료 ════ -->
+<section data-section="참고 자료">
+  <div class="eyebrow">References</div>
+  <h2>참고 자료</h2>
+  <table class="dtable">
+    <thead><tr><th>자료</th><th>용도</th></tr></thead>
+    <tbody>
+      <tr><td><strong>n8n Google Sheets Docs</strong><br><code>docs.n8n.io/integrations/builtin/app-nodes/n8n-nodes-base.googlesheets</code></td><td>모든 operation과 파라미터 레퍼런스</td></tr>
+      <tr><td><strong>n8n Google Credentials</strong><br><code>docs.n8n.io/integrations/builtin/credentials/google</code></td><td>OAuth2 단계별 설정 공식 가이드</td></tr>
+      <tr><td><strong>n8n Code node Docs</strong><br><code>docs.n8n.io/code/code-node</code></td><td>JavaScript·Python 모드, $input 문법</td></tr>
+      <tr><td><strong>crontab.guru</strong></td><td>Cron 표현식 실시간 검증·번역</td></tr>
+      <tr><td><strong>Investopedia — RSI</strong></td><td>RSI 공식과 해석 가이드 (영문 표준 설명)</td></tr>
+      <tr><td><strong>TradingView Chart School</strong></td><td>볼린저밴드·MA 등 지표별 시각 예제</td></tr>
+    </tbody>
+  </table>
+</section>
+
+</div><!-- /container -->
+
+<div style="background:var(--black);color:#888;text-align:center;padding:24px 20px;font-size:11px;line-height:2;margin-bottom:var(--fh)">
+  W2 강의노트 · 포트폴리오 대시보드 + 기술적 지표 · 대학생 투자 자동화 과정 · 2026
+</div>
+
+<script>
+const sections = document.querySelectorAll('[data-section]');
+const sfT = document.getElementById('sf-t');
+const sfP = document.getElementById('sf-p');
+function update(){
+  const sy = window.scrollY;
+  const dh = document.documentElement.scrollHeight - window.innerHeight;
+  sfP.textContent = Math.round((sy / Math.max(dh, 1)) * 100) + '%';
+  let cur = sections[0]?.dataset.section || '';
+  sections.forEach(s => {
+    if(sy >= s.getBoundingClientRect().top + sy - 110) cur = s.dataset.section;
+  });
+  if(sfT.textContent !== cur) sfT.textContent = cur;
+}
+window.addEventListener('scroll', update, {passive:true});
+update();
+</script>
+</body>
+</html>

@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>W7 — 멀티 에이전트 오케스트레이션</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;600&display=swap');
+:root{
+  --black:#0d0d0d;--gray:#6b6b6b;--light:#f3f3f3;--border:#e6e6e6;--white:#fff;
+  --fh:46px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Noto Sans KR',-apple-system,sans-serif;background:#fff;color:var(--black);font-size:14px;line-height:1.75;padding-bottom:var(--fh)}
+
+#sf{position:fixed;bottom:0;left:0;right:0;height:var(--fh);background:var(--black);display:flex;align-items:center;justify-content:space-between;padding:0 16px;z-index:999}
+#sf .lbl{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:#555}
+#sf .ttl{font-size:12px;font-weight:700;color:#fff;max-width:60%;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#sf .pct{font-size:10px;color:#555;white-space:nowrap}
+
+.hero{background:var(--black);color:#fff;padding:48px 20px 40px;text-align:center;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;top:-80px;right:-80px;width:260px;height:260px;border:1px solid rgba(255,255,255,.05);border-radius:50%}
+.hero-badge{display:inline-block;border:1px solid rgba(255,255,255,.18);border-radius:20px;padding:4px 14px;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#aaa;margin-bottom:14px}
+.hero h1{font-size:22px;font-weight:900;line-height:1.35;margin-bottom:8px;letter-spacing:-.5px}
+.hero-sub{font-size:12px;color:#777;margin-bottom:22px}
+.hero-meta{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:rgba(255,255,255,.07);border-radius:10px;overflow:hidden;margin-top:18px}
+.hero-meta-item{background:rgba(255,255,255,.04);padding:12px 5px;text-align:center}
+.hero-meta-num{font-size:15px;font-weight:900;color:#fff;display:block}
+.hero-meta-lbl{font-size:9px;color:#555;margin-top:2px;line-height:1.3}
+
+.container{max-width:720px;margin:0 auto;padding:0 15px}
+section{padding:36px 0 0}
+.divider{height:1px;background:var(--border);margin:34px 0 0}
+.eyebrow{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--gray);margin-bottom:5px}
+h2{font-size:19px;font-weight:900;letter-spacing:-.3px;margin-bottom:12px;line-height:1.3}
+h3{font-size:14px;font-weight:700;margin:20px 0 8px}
+h4{font-size:12px;font-weight:700;margin:14px 0 6px;color:#333}
+p{color:#333;margin-bottom:8px;font-size:13px}
+strong{color:var(--black);font-weight:700}
+code{font-family:'JetBrains Mono','Courier New',monospace;background:#eef;padding:1px 5px;border-radius:3px;font-size:11px;color:#1d4ed8}
+
+.callout{background:var(--light);border-left:3px solid var(--black);padding:13px 15px;border-radius:0 8px 8px 0;margin:10px 0;font-size:13px;line-height:1.65}
+.callout.orange{background:#fff8ed;border-left-color:#d97706}
+.callout.blue{background:#eff6ff;border-left-color:#1d4ed8}
+.callout.green{background:#f0fdf4;border-left-color:#15803d}
+.callout.purple{background:#faf5ff;border-left-color:#7c3aed}
+.callout.red{background:#fef2f2;border-left-color:#dc2626}
+
+/* PHASE TRANSITION */
+.phase-transition{background:linear-gradient(135deg,#0f172a,#7c3aed);color:#fff;border-radius:12px;padding:18px 16px;margin:14px 0}
+.pt-label{font-size:9px;font-weight:900;letter-spacing:2px;color:#c4b5fd;margin-bottom:5px}
+.pt-title{font-size:15px;font-weight:700;margin-bottom:5px}
+.pt-sub{font-size:11px;color:rgba(255,255,255,.75);line-height:1.6}
+
+.lesson-meta{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:14px 0 4px}
+.meta-card{background:var(--light);border:1px solid var(--border);border-radius:8px;padding:10px 8px;text-align:center}
+.meta-card-lbl{font-size:9px;font-weight:700;letter-spacing:1px;color:#aaa;text-transform:uppercase;margin-bottom:3px}
+.meta-card-val{font-size:12px;font-weight:700;color:var(--black);line-height:1.3}
+
+.goals{display:flex;flex-direction:column;gap:7px;margin:12px 0}
+.goal{display:flex;gap:11px;align-items:flex-start;background:var(--light);border-radius:9px;padding:11px 13px;border:1px solid var(--border)}
+.goal-chk{width:20px;height:20px;background:var(--black);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;flex-shrink:0}
+.goal-text{font-size:12px;line-height:1.55}
+
+/* CODE BLOCK */
+.code-block{background:#0d1117;color:#e6edf3;border-radius:9px;padding:14px 16px;margin:10px 0;font-family:'JetBrains Mono','Courier New',monospace;font-size:11px;line-height:1.7;overflow-x:auto;white-space:pre;tab-size:2;-moz-tab-size:2;word-wrap:normal}
+.code-block code{background:transparent;padding:0;color:inherit;font-size:inherit}
+.code-block .cm{color:#8b949e;font-style:italic}
+.code-block .kw{color:#ff7b72}
+.code-block .str{color:#a5d6ff}
+.code-block .num{color:#79c0ff}
+.code-block .fn{color:#d2a8ff}
+
+.step-block{background:#fffbeb;border:1px solid #fcd34d;border-radius:11px;padding:14px 15px;margin:12px 0}
+.step-title{font-size:11px;font-weight:700;color:#92400e;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.step-title::before{content:'▶';font-size:9px}
+.step-list{counter-reset:s;list-style:none;padding:0}
+.step-list li{counter-increment:s;position:relative;padding:6px 0 6px 30px;font-size:12px;line-height:1.65;color:#78350f;border-bottom:1px dashed #fcd34d}
+.step-list li:last-child{border-bottom:none}
+.step-list li::before{content:counter(s);position:absolute;left:0;top:8px;width:20px;height:20px;background:#d97706;color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:900}
+
+.node-card{border:1px solid var(--border);border-radius:10px;margin:10px 0;overflow:hidden}
+.node-head{background:var(--black);color:#fff;padding:10px 14px;display:flex;align-items:center;gap:9px}
+.node-icon{font-size:16px}
+.node-name{font-size:12px;font-weight:700}
+.node-tag{background:rgba(255,255,255,.15);border-radius:3px;padding:2px 7px;font-size:9px;font-weight:700;margin-left:auto;letter-spacing:.5px}
+.node-body{padding:12px 14px;background:var(--light);font-size:12px;line-height:1.6}
+.node-config{background:#fff;border:1px solid var(--border);border-radius:6px;padding:10px 12px;margin-top:8px;font-size:11px;font-family:'JetBrains Mono','Courier New',monospace}
+.node-config-row{padding:3px 0;border-bottom:1px dashed #eee}
+.node-config-row:last-child{border-bottom:none}
+.ncr-k{color:#6b6b6b;display:inline-block;min-width:130px}
+.ncr-v{color:#1d4ed8;font-weight:600}
+
+.n8n-flow{background:#fffbeb;border:1px solid #fcd34d;border-radius:11px;padding:14px;margin:14px 0}
+.n8n-title{font-size:11px;font-weight:700;color:#92400e;margin-bottom:10px}
+.n8n-steps{display:flex;flex-direction:column;gap:4px}
+.n8n-step{display:flex;align-items:flex-start;gap:8px;padding:4px 0}
+.n8n-node{border-radius:5px;padding:3px 9px;font-size:10px;font-weight:700;white-space:nowrap;flex-shrink:0;margin-top:1px}
+.nn-t{background:#dc2626;color:#fff}
+.nn-a{background:#2563eb;color:#fff}
+.nn-ai{background:#7c3aed;color:#fff}
+.nn-o{background:#059669;color:#fff}
+.nn-c{background:#374151;color:#fff}
+.nn-r{background:#db2777;color:#fff}
+.n8n-edge{font-size:10px;color:#bbb;padding-top:5px;flex-shrink:0}
+.n8n-desc{font-size:11px;color:#78350f;flex:1;line-height:1.6;padding-top:3px}
+
+.dtable{width:100%;border-collapse:collapse;margin:10px 0;font-size:11px}
+.dtable th{background:var(--black);color:#fff;padding:8px 10px;text-align:left;font-size:10px;font-weight:700}
+.dtable td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.5}
+.dtable tr:nth-child(even) td{background:var(--light)}
+.dtable code{font-size:10px}
+
+/* AGENT TEAM VISUAL */
+.agent-team{background:var(--light);border:1px solid var(--border);border-radius:12px;padding:16px;margin:14px 0}
+.orchestrator-center{background:linear-gradient(135deg,#7c3aed,#1d4ed8);color:#fff;border-radius:10px;padding:14px;text-align:center;margin:0 auto 16px;max-width:280px;box-shadow:0 4px 12px rgba(124,58,237,.25)}
+.orch-label{font-size:9px;font-weight:700;letter-spacing:2px;color:#c4b5fd;margin-bottom:4px}
+.orch-name{font-size:13px;font-weight:700;margin-bottom:3px}
+.orch-desc{font-size:10px;color:rgba(255,255,255,.85);line-height:1.5}
+.sub-agents{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.sub-agent{border-radius:8px;padding:10px 8px;text-align:center;color:#fff}
+.sa-news{background:#d97706}
+.sa-chain{background:#059669}
+.sa-macro{background:#dc2626}
+.sa-icon{font-size:20px;margin-bottom:3px}
+.sa-name{font-size:11px;font-weight:700;margin-bottom:2px}
+.sa-role{font-size:9px;opacity:.9;line-height:1.4}
+
+/* AGENT ROLE CARDS */
+.role-cards{display:grid;grid-template-columns:1fr;gap:10px;margin:12px 0}
+.role-card{border:2px solid var(--border);border-radius:10px;overflow:hidden}
+.role-card.news{border-color:#d97706}
+.role-card.chain{border-color:#059669}
+.role-card.macro{border-color:#dc2626}
+.role-head{padding:11px 13px;color:#fff;display:flex;align-items:center;gap:8px}
+.role-head.news{background:#d97706}
+.role-head.chain{background:#059669}
+.role-head.macro{background:#dc2626}
+.role-icon{font-size:22px}
+.role-title{flex:1}
+.role-name{font-size:13px;font-weight:700;margin-bottom:2px}
+.role-tagline{font-size:10px;opacity:.9}
+.role-body{padding:12px 13px;background:#fff;font-size:11px;line-height:1.6}
+.role-body h5{font-size:10px;font-weight:700;color:#333;margin:6px 0 3px;text-transform:uppercase;letter-spacing:.5px}
+
+/* PROMPT CARD */
+.prompt-card{background:#1e293b;color:#e2e8f0;border-radius:10px;padding:14px 16px;margin:10px 0;font-size:12px;line-height:1.7}
+.pc-label{font-size:9px;font-weight:700;color:#94a3b8;letter-spacing:1px;margin-bottom:6px}
+.prompt-card strong{color:#fbbf24}
+
+/* MESSAGE BUS */
+.msg-flow{background:#fff;border:1px solid var(--border);border-radius:10px;padding:12px;margin:10px 0}
+.msg-event{display:grid;grid-template-columns:70px 1fr;gap:10px;padding:6px 0;border-bottom:1px dashed #eee;font-size:11px;line-height:1.5;align-items:center}
+.msg-event:last-child{border-bottom:none}
+.msg-time{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--gray);text-align:right}
+.msg-body{color:#333}
+.msg-actor{background:#eee;border-radius:3px;padding:1px 6px;font-size:9px;font-weight:700;margin-right:5px}
+.msg-actor.orch{background:#c4b5fd;color:#5b21b6}
+.msg-actor.news{background:#fef3c7;color:#92400e}
+.msg-actor.chain{background:#d1fae5;color:#065f46}
+.msg-actor.macro{background:#fee2e2;color:#991b1b}
+
+.ts-block{background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:13px 15px;margin:10px 0}
+.ts-item{padding:8px 0;border-bottom:1px dashed #fecaca}
+.ts-item:last-child{border-bottom:none}
+.ts-q{font-size:12px;font-weight:700;color:#991b1b;margin-bottom:4px}
+.ts-q::before{content:'Q. ';color:#dc2626}
+.ts-a{font-size:11px;color:#7f1d1d;line-height:1.6;padding-left:14px}
+.ts-a::before{content:'A. ';font-weight:700}
+
+.checklist{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:13px 15px;margin:12px 0}
+.ck-title{font-size:11px;font-weight:700;color:#14532d;margin-bottom:8px}
+.ck-item{padding:5px 0 5px 22px;font-size:12px;line-height:1.5;color:#166534;position:relative}
+.ck-item::before{content:'☐';position:absolute;left:0;top:3px;font-size:14px;color:#15803d}
+
+.hw-block{background:linear-gradient(135deg,#7c3aed,#1d4ed8);color:#fff;border-radius:11px;padding:16px;margin:14px 0}
+.hw-tag{display:inline-block;background:rgba(255,255,255,.2);border-radius:4px;padding:2px 8px;font-size:9px;font-weight:900;letter-spacing:1.5px;margin-bottom:8px}
+.hw-title{font-size:14px;font-weight:700;margin-bottom:8px}
+.hw-list{list-style:none;padding:0}
+.hw-list li{padding:5px 0 5px 16px;font-size:12px;line-height:1.55;position:relative;color:rgba(255,255,255,.9)}
+.hw-list li::before{content:'▸';position:absolute;left:0;color:#c4b5fd}
+
+/* BEFORE/AFTER */
+.ba-compare{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}
+.ba-card{border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.ba-head{padding:9px 12px;font-size:11px;font-weight:700;color:#fff}
+.ba-head.before{background:#6b6b6b}
+.ba-head.after{background:#7c3aed}
+.ba-body{padding:11px 12px;background:var(--light);font-size:11px;line-height:1.6}
+
+@media(max-width:400px){
+  .lesson-meta{grid-template-columns:repeat(2,1fr)}
+  .sub-agents{grid-template-columns:1fr}
+  .ba-compare{grid-template-columns:1fr}
+  .hero h1{font-size:19px}
+}
+</style>
+</head>
+<body>
+
+<div id="sf">
+  <span class="lbl">W7 강의노트</span>
+  <span class="ttl" id="sf-t">멀티 에이전트 오케스트레이션</span>
+  <span class="pct" id="sf-p">0%</span>
+</div>
+
+<!-- HERO -->
+<div class="hero" data-section="W7 강의노트">
+  <div class="hero-badge">Week 07 · Phase 4 · 멀티 에이전트</div>
+  <h1>멀티 에이전트 오케스트레이션</h1>
+  <p class="hero-sub">1명이 아닌 4명 — 뉴스·온체인·매크로 전문 에이전트 + 조율자</p>
+  <div class="hero-meta">
+    <div class="hero-meta-item"><span class="hero-meta-num">3시간</span><span class="hero-meta-lbl">수업<br>시간</span></div>
+    <div class="hero-meta-item"><span class="hero-meta-num">4 Agent</span><span class="hero-meta-lbl">Orchestrator<br>+ 3 Specialist</span></div>
+    <div class="hero-meta-item"><span class="hero-meta-num">Team</span><span class="hero-meta-lbl">리서치팀<br>아키텍처</span></div>
+  </div>
+</div>
+
+<div class="container">
+
+<!-- Phase 4 전환 -->
+<section data-section="Phase 4 시작">
+  <div class="phase-transition">
+    <div class="pt-label">▶ PHASE 4 INTEGRATION — W7 &amp; W8</div>
+    <div class="pt-title">에이전트를 "한 명"에서 "한 팀"으로</div>
+    <div class="pt-sub">지금까지 만든 에이전트는 혼자 모든 일을 했습니다. Phase 4는 <strong>역할 분담</strong>의 미학입니다. 각 에이전트가 자기 전문 영역만 깊이 파고, Orchestrator가 이들을 조율합니다. 실제 리서치팀 구조와 동일합니다.</div>
+  </div>
+</section>
+
+<!-- 학습 목표 -->
+<section data-section="학습 목표">
+  <div class="eyebrow">Learning Objectives</div>
+  <h2>이번 주 학습 목표</h2>
+
+  <div class="lesson-meta">
+    <div class="meta-card"><div class="meta-card-lbl">레벨</div><div class="meta-card-val">고급+</div></div>
+    <div class="meta-card"><div class="meta-card-lbl">선수지식</div><div class="meta-card-val">W1~W6</div></div>
+    <div class="meta-card"><div class="meta-card-lbl">실습</div><div class="meta-card-val">130분</div></div>
+    <div class="meta-card"><div class="meta-card-lbl">과제</div><div class="meta-card-val">확장 1개</div></div>
+  </div>
+
+  <div class="goals">
+    <div class="goal"><div class="goal-chk">1</div><div class="goal-text"><strong>단일 에이전트 vs 멀티 에이전트</strong>의 차이점을 이해하고 Gatekeeper 패턴의 필요성을 설명할 수 있다</div></div>
+    <div class="goal"><div class="goal-chk">2</div><div class="goal-text"><strong>n8n AI Agent Tool 노드</strong>로 3개 전문 에이전트(뉴스·온체인·매크로)를 Orchestrator의 툴로 연결할 수 있다</div></div>
+    <div class="goal"><div class="goal-chk">3</div><div class="goal-text">각 서브 에이전트에 <strong>전용 System Message + 전용 데이터 API</strong>를 부여해 역할 분담을 명확히 할 수 있다</div></div>
+    <div class="goal"><div class="goal-chk">4</div><div class="goal-text"><strong>메시지 버스 로깅</strong>으로 에이전트 간 상호작용을 추적하고 문제 발생 시 디버깅할 수 있다</div></div>
+  </div>
+
+  <div class="callout green">
+    <strong>이번 주의 한 문장:</strong> "한 명의 천재보다 전문가 팀." 이번 주는 Claude 한 명이 모든 것을 알려고 하는 대신, 각자의 전문 영역에서 뛰어난 4명의 Claude가 팀으로 일하는 구조를 만듭니다. <strong>이게 바로 실전 AI 시스템의 모습</strong>입니다.
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- 왜 멀티 에이전트인가 -->
+<section data-section="왜 멀티 에이전트인가">
+  <div class="eyebrow">Why Multi-Agent</div>
+  <h2>단일 에이전트의 한계</h2>
+
+  <p>W3~W6에서 만든 에이전트는 매우 똑똑하지만 문제가 있습니다. <strong>모든 툴을 다 알아야 한다</strong>는 점입니다. 실제로 AI Agent에 <strong>5~7개 이상의 툴</strong>이 연결되면 에이전트의 판단 정확도가 급격히 떨어집니다. "결정 피로"가 발생하는 것입니다.</p>
+
+  <div class="ba-compare">
+    <div class="ba-card">
+      <div class="ba-head before">❌ 단일 에이전트 (W6까지)</div>
+      <div class="ba-body">
+        <strong>1명의 에이전트</strong>에게 15개 툴 연결:<br>
+        • Yahoo Finance, CoinGecko, FRED<br>
+        • Alpha Vantage News, Chart-IMG<br>
+        • Supabase Search, Cohere Rerank<br>
+        • Discord, Gmail, Telegram...<br><br>
+        <strong>문제:</strong> System Message가 거대해짐 → 툴 선택 오류 → 비용 낭비 → 답변 품질 저하
+      </div>
+    </div>
+    <div class="ba-card">
+      <div class="ba-head after">✅ 멀티 에이전트 (이번 주)</div>
+      <div class="ba-body">
+        <strong>4명의 에이전트</strong>가 역할 분담:<br>
+        • Orchestrator: 3개 툴(서브 에이전트)<br>
+        • News Agent: 뉴스 API만 3개<br>
+        • Chain Agent: 온체인 API만 3개<br>
+        • Macro Agent: 매크로 API만 3개<br><br>
+        <strong>효과:</strong> 각자 System Message 작고 명확 → 툴 선택 정확 → 확장 용이
+      </div>
+    </div>
+  </div>
+
+  <h3>팀 아키텍처 시각화</h3>
+  <div class="agent-team">
+    <div class="orchestrator-center">
+      <div class="orch-label">ORCHESTRATOR</div>
+      <div class="orch-name">🎼 리서치 팀장 Claude</div>
+      <div class="orch-desc">질문 받고 어느 전문가에게 물어볼지 결정 → 답변 종합</div>
+    </div>
+    <div style="text-align:center;color:#bbb;font-size:16px;margin:6px 0">▼ 호출 ▼</div>
+    <div class="sub-agents">
+      <div class="sub-agent sa-news">
+        <div class="sa-icon">📰</div>
+        <div class="sa-name">News Agent</div>
+        <div class="sa-role">Alpha Vantage +<br>GDELT 뉴스</div>
+      </div>
+      <div class="sub-agent sa-chain">
+        <div class="sa-icon">⛓️</div>
+        <div class="sa-name">OnChain Agent</div>
+        <div class="sa-role">Blockchair +<br>Whale Alert</div>
+      </div>
+      <div class="sub-agent sa-macro">
+        <div class="sa-icon">🌍</div>
+        <div class="sa-name">Macro Agent</div>
+        <div class="sa-role">FRED +<br>World Bank</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="callout purple">
+    <strong>💡 왜 이게 "실전"인가:</strong> 골드만삭스·블랙록의 리서치팀도 정확히 이 구조입니다. 뉴스 담당, 온체인 담당, 매크로 담당이 따로 있고 CIO가 이들을 조율합니다. 우리는 이 구조를 AI로 복제합니다. <strong>Gatekeeper 패턴</strong>이라고도 부릅니다.
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- 1교시: 서브 에이전트 설계 -->
+<section data-section="1교시: 서브 에이전트 설계">
+  <div class="eyebrow">Session 1 · 40min</div>
+  <h2>1교시 — 3개 전문 에이전트 역할 설계</h2>
+
+  <p>서브 에이전트 각각에 <strong>좁은 역할 + 전용 데이터 소스 + 구조화된 출력</strong>을 부여합니다. 각 에이전트의 "명함"을 만드는 작업입니다.</p>
+
+  <div class="role-cards">
+    <div class="role-card news">
+      <div class="role-head news">
+        <div class="role-icon">📰</div>
+        <div class="role-title">
+          <div class="role-name">News Agent</div>
+          <div class="role-tagline">"무슨 일이 일어났나" 전문가</div>
+        </div>
+      </div>
+      <div class="role-body">
+        <h5>데이터 소스</h5>
+        Alpha Vantage NEWS_SENTIMENT (기본) + GDELT Project API (무료, 전세계 뉴스)
+        <h5>입력</h5>
+        <code>ticker</code>, <code>hours_back</code>, <code>focus</code>(실적/리스크/공급망 등)
+        <h5>출력 JSON</h5>
+        <code>{sentiment_score, top_headlines[], key_events[], risk_flags[]}</code>
+        <h5>결정 권한</h5>
+        뉴스 <strong>사실</strong>만 보고. 투자 판단은 금지 → Orchestrator 몫.
+      </div>
+    </div>
+
+    <div class="role-card chain">
+      <div class="role-head chain">
+        <div class="role-icon">⛓️</div>
+        <div class="role-title">
+          <div class="role-name">OnChain Agent</div>
+          <div class="role-tagline">"고래는 뭘 하나" 전문가</div>
+        </div>
+      </div>
+      <div class="role-body">
+        <h5>데이터 소스</h5>
+        Blockchair API (무료, Bitcoin/ETH 트랜잭션) + Whale Alert Public Feed + CoinGecko
+        <h5>입력</h5>
+        <code>asset</code>(BTC/ETH/etc), <code>window_hours</code>
+        <h5>출력 JSON</h5>
+        <code>{active_addresses, whale_tx_count, exchange_inflow, dominant_flow_direction}</code>
+        <h5>결정 권한</h5>
+        <strong>온체인 지표만</strong>. 가격 예측은 금지.
+      </div>
+    </div>
+
+    <div class="role-card macro">
+      <div class="role-head macro">
+        <div class="role-icon">🌍</div>
+        <div class="role-title">
+          <div class="role-name">Macro Agent</div>
+          <div class="role-tagline">"세상이 어떻게 돌아가나" 전문가</div>
+        </div>
+      </div>
+      <div class="role-body">
+        <h5>데이터 소스</h5>
+        FRED API (금리, CPI, 실업률, VIX, USD index) + W6 RAG (FOMC 의사록 검색)
+        <h5>입력</h5>
+        <code>focus</code>(rates/inflation/employment), <code>period</code>
+        <h5>출력 JSON</h5>
+        <code>{current_values, trend, policy_stance, related_fomc_context}</code>
+        <h5>결정 권한</h5>
+        <strong>거시 환경 해석</strong>만. 종목 추천은 금지.
+      </div>
+    </div>
+  </div>
+
+  <div class="callout orange">
+    <strong>⚠️ 역할 분리 원칙:</strong> 각 에이전트는 <strong>자기 영역의 사실</strong>만 보고하도록 강제합니다. "이 뉴스는 긍정적이니 매수하세요"처럼 통합 판단을 하면 안 됩니다. <strong>통합 판단은 Orchestrator만</strong>의 역할. 이래야 디버깅이 쉽고, 각 에이전트의 결정을 독립적으로 검증할 수 있습니다.
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- 2교시: 각 에이전트 구현 -->
+<section data-section="2교시: 서브 에이전트 구현">
+  <div class="eyebrow">Session 2 · 45min</div>
+  <h2>2교시 — 서브 에이전트 구현</h2>
+
+  <h3>패턴 — 각 서브 에이전트의 공통 구조</h3>
+  <p>모든 서브 에이전트는 동일한 패턴입니다: <strong>AI Agent Tool 노드</strong> + 전용 Chat Model + 전용 툴 2~3개 + 전용 System Message.</p>
+
+  <div class="node-card">
+    <div class="node-head">
+      <span class="node-icon">🤖</span>
+      <span class="node-name">AI Agent Tool 노드 (sub-agent용)</span>
+      <span class="node-tag">SUB-AGENT</span>
+    </div>
+    <div class="node-body">
+      Orchestrator의 AI Agent 노드에 Tool로 연결됨. 자체적으로 서브 툴도 가질 수 있음.
+      <div class="node-config">
+        <div class="node-config-row"><span class="ncr-k">Tool Name:</span> <span class="ncr-v">news_agent / chain_agent / macro_agent</span></div>
+        <div class="node-config-row"><span class="ncr-k">Tool Description:</span> <span class="ncr-v">에이전트 역할 + 입력 형식 명시</span></div>
+        <div class="node-config-row"><span class="ncr-k">System Message:</span> <span class="ncr-v">역할 집중 프롬프트</span></div>
+        <div class="node-config-row"><span class="ncr-k">Chat Model:</span> <span class="ncr-v">Anthropic — claude-haiku-4-5 (서브는 빠른 모델)</span></div>
+        <div class="node-config-row"><span class="ncr-k">Output Parser:</span> <span class="ncr-v">Structured Output Parser (JSON 강제)</span></div>
+      </div>
+    </div>
+  </div>
+
+  <h3>News Agent 구현</h3>
+
+  <div class="prompt-card">
+    <div class="pc-label">NEWS AGENT — SYSTEM MESSAGE</div>
+당신은 <strong>금융 뉴스 전문 리서처</strong>입니다. 오직 뉴스 관련 사실만 수집·정리합니다.<br><br>
+<strong>가용 도구:</strong><br>
+1. <code>fetch_news</code> — Alpha Vantage NEWS_SENTIMENT로 종목 뉴스 조회<br>
+2. <code>search_global_news</code> — GDELT API로 거시 뉴스 검색<br><br>
+<strong>규칙:</strong><br>
+• 투자 추천 금지. 오직 뉴스 사실 보고<br>
+• 주관적 평가 금지. 원문의 센티먼트 스코어만 제시<br>
+• 중복 기사 필터링<br>
+• relevance_score ≥ 0.3 기사만 채택<br><br>
+<strong>출력 JSON (엄격):</strong><br>
+{<br>
+&nbsp;&nbsp;"ticker": "...",<br>
+&nbsp;&nbsp;"sentiment_avg": -0.35 ~ 0.35,<br>
+&nbsp;&nbsp;"article_count": number,<br>
+&nbsp;&nbsp;"top_headlines": [{title, source, score}],<br>
+&nbsp;&nbsp;"key_events": ["이벤트 요약 1문장"],<br>
+&nbsp;&nbsp;"risk_flags": ["리스크 요소 1문장"]<br>
+}
+  </div>
+
+  <h3>OnChain Agent 구현</h3>
+  <p>대학생 친화적 무료 API로 <strong>Blockchair</strong>(Bitcoin/Ethereum 트랜잭션) + <strong>Whale Alert Public Feed</strong> 조합을 사용합니다.</p>
+
+<pre class="code-block"><span class="cm">// OnChain Agent의 툴 #1 — Blockchair Bitcoin 활성 주소</span>
+<span class="cm">// Method: GET</span>
+<span class="cm">// URL: https://api.blockchair.com/bitcoin/stats</span>
+<span class="cm">// 응답에서 중요 필드:</span>
+{
+  <span class="str">"data"</span>: {
+    <span class="str">"blocks"</span>: <span class="num">830000</span>,
+    <span class="str">"transactions_24h"</span>: <span class="num">450000</span>,
+    <span class="str">"outputs_24h"</span>: <span class="num">1200000</span>,
+    <span class="str">"circulation"</span>: <span class="str">"19700000"</span>,
+    <span class="str">"market_price_usd"</span>: <span class="num">62450</span>,
+    <span class="str">"hashrate_24h"</span>: <span class="str">"..."</span>,
+    <span class="str">"mempool_transactions"</span>: <span class="num">18500</span>
+  }
+}
+</pre>
+
+  <p>Whale Alert의 무료 공개 피드는 <code>twitter.com/whale_alert</code> 또는 RSS를 통해 간접 수집합니다. n8n RSS Feed Trigger 노드로 처리.</p>
+
+  <div class="prompt-card">
+    <div class="pc-label">ONCHAIN AGENT — SYSTEM MESSAGE</div>
+당신은 <strong>온체인 데이터 분석가</strong>입니다. Bitcoin·Ethereum의 네트워크 활동만 분석합니다.<br><br>
+<strong>가용 도구:</strong><br>
+1. <code>blockchair_stats</code> — Bitcoin/ETH 24시간 네트워크 통계<br>
+2. <code>whale_alert_feed</code> — 최근 100 BTC/1000 ETH 이상 고래 이체<br>
+3. <code>coingecko_exchange_flow</code> — 거래소 순유출입<br><br>
+<strong>규칙:</strong><br>
+• 가격 예측 금지. 오직 온체인 지표 해석<br>
+• "고래가 거래소로 대량 이체" 같은 <strong>사실</strong>만 보고<br>
+• 전일 대비 변동률이 ±20% 이상이면 risk_flag 발동<br><br>
+<strong>출력 JSON:</strong><br>
+{<br>
+&nbsp;&nbsp;"asset": "BTC" or "ETH",<br>
+&nbsp;&nbsp;"active_addresses_24h": number,<br>
+&nbsp;&nbsp;"tx_volume_24h_usd": number,<br>
+&nbsp;&nbsp;"whale_tx_count_24h": number,<br>
+&nbsp;&nbsp;"exchange_net_flow": "INFLOW" | "OUTFLOW" | "NEUTRAL",<br>
+&nbsp;&nbsp;"dominant_signal": "문장 1개 요약"<br>
+}
+  </div>
+
+  <h3>Macro Agent 구현 — W6 RAG와 결합</h3>
+  <p>Macro Agent는 특별합니다. FRED API(숫자 데이터) + W6에서 구축한 Vector DB(FOMC 의사록)를 모두 활용합니다.</p>
+
+  <div class="prompt-card">
+    <div class="pc-label">MACRO AGENT — SYSTEM MESSAGE</div>
+당신은 <strong>거시경제 분석가</strong>입니다. 금리·인플레이션·고용·VIX 등 매크로 지표를 다룹니다.<br><br>
+<strong>가용 도구:</strong><br>
+1. <code>fred_indicator</code> — FRED에서 시리즈(DFF, CPIAUCSL, UNRATE, VIXCLS) 조회<br>
+2. <code>fomc_rag_search</code> — W6 지식베이스에서 FOMC 의사록 검색 (출처 포함)<br><br>
+<strong>규칙:</strong><br>
+• 해석은 <strong>중립적</strong>으로. "매파적/비둘기파적" 같은 용어는 FOMC 원문에 근거할 때만<br>
+• 수치 변동은 전기 대비 변동률로 표기<br>
+• FOMC 발언 인용 시 반드시 출처 명시<br><br>
+<strong>출력 JSON:</strong><br>
+{<br>
+&nbsp;&nbsp;"focus_area": "rates" | "inflation" | "employment",<br>
+&nbsp;&nbsp;"current_value": number,<br>
+&nbsp;&nbsp;"trend_6m": "UP" | "DOWN" | "FLAT",<br>
+&nbsp;&nbsp;"fomc_stance_quote": "최근 FOMC 인용 + 출처",<br>
+&nbsp;&nbsp;"implication_1line": "시장에 미치는 영향 1문장"<br>
+}
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- 3교시: Orchestrator 구현 -->
+<section data-section="3교시: Orchestrator 구현">
+  <div class="eyebrow">Session 3 · 40min</div>
+  <h2>3교시 — Orchestrator 에이전트 구현</h2>
+
+  <p>Orchestrator는 <strong>팀장</strong>입니다. 질문을 보고 어느 전문가에게 물어볼지 결정하고, 답변들을 종합해 최종 답변을 만듭니다. Claude Sonnet(Haiku보다 상위)을 씁니다.</p>
+
+  <div class="node-card">
+    <div class="node-head">
+      <span class="node-icon">🎼</span>
+      <span class="node-name">AI Agent — Orchestrator (root)</span>
+      <span class="node-tag">ROOT</span>
+    </div>
+    <div class="node-body">
+      3개의 AI Agent Tool을 sub-node로 연결. Chat Model은 Sonnet으로 상향.
+      <div class="node-config">
+        <div class="node-config-row"><span class="ncr-k">Agent Type:</span> <span class="ncr-v">Tools Agent</span></div>
+        <div class="node-config-row"><span class="ncr-k">Chat Model:</span> <span class="ncr-v">Anthropic — claude-sonnet-4-6</span></div>
+        <div class="node-config-row"><span class="ncr-k">Max Iterations:</span> <span class="ncr-v">5 (충분한 reasoning 턴 허용)</span></div>
+        <div class="node-config-row"><span class="ncr-k">Return Intermediate Steps:</span> <span class="ncr-v">ON (디버깅용)</span></div>
+        <div class="node-config-row"><span class="ncr-k">Tools:</span> <span class="ncr-v">news_agent, chain_agent, macro_agent</span></div>
+      </div>
+    </div>
+  </div>
+
+  <h3>Orchestrator System Message — 가장 중요한 프롬프트</h3>
+
+  <div class="prompt-card">
+    <div class="pc-label">ORCHESTRATOR SYSTEM MESSAGE</div>
+당신은 <strong>리서치팀 팀장</strong>입니다. 3명의 전문 에이전트를 조율합니다.<br><br>
+<strong>팀 구성:</strong><br>
+• <code>news_agent</code>: 뉴스·센티먼트 전문 (어떤 사건이 일어났나)<br>
+• <code>chain_agent</code>: 온체인 데이터 전문 (암호화폐 네트워크 활동)<br>
+• <code>macro_agent</code>: 거시경제 전문 (금리·인플레이션·FOMC)<br><br>
+<strong>워크플로:</strong><br>
+1. 사용자 질문 분석 → <strong>어느 에이전트가 필요한지 결정</strong><br>
+2. 관련 있는 에이전트만 호출 (불필요한 호출 = 비용 낭비)<br>
+3. 암호화폐 질문: chain_agent + macro_agent<br>
+4. 주식 질문: news_agent + macro_agent<br>
+5. 복잡한 질문: 3명 모두 호출 후 종합<br><br>
+<strong>종합 규칙:</strong><br>
+• 각 에이전트 답변을 <strong>출처로 명시</strong>하며 통합 ("News Agent에 따르면...")<br>
+• 에이전트 간 <strong>충돌 발견 시</strong> 명시: "온체인은 긍정적이나 뉴스는 부정적"<br>
+• 최종 verdict: BUY / WATCH / HOLD / AVOID + confidence 1~5<br>
+• 투자 권유 아닌 <strong>교육 목적 종합 분석</strong>임을 명시<br><br>
+<strong>출력 형식:</strong><br>
+{<br>
+&nbsp;&nbsp;"query_type": "crypto" | "stock" | "macro" | "mixed",<br>
+&nbsp;&nbsp;"agents_called": ["news_agent", ...],<br>
+&nbsp;&nbsp;"agent_findings": {agent_name: summary},<br>
+&nbsp;&nbsp;"consensus": "ALIGNED" | "MIXED" | "CONFLICTED",<br>
+&nbsp;&nbsp;"final_verdict": "...",<br>
+&nbsp;&nbsp;"confidence": 1-5,<br>
+&nbsp;&nbsp;"reasoning": "2-3문장 종합"<br>
+}
+  </div>
+
+  <h3>전체 워크플로</h3>
+  <div class="n8n-flow">
+    <div class="n8n-title">🔧 멀티 에이전트 워크플로 (단일 캔버스)</div>
+    <div class="n8n-steps">
+      <div class="n8n-step"><span class="n8n-node nn-t">Chat/Webhook Trigger</span><span class="n8n-edge">→</span><span class="n8n-desc">Discord /ask 또는 다른 입력</span></div>
+      <div class="n8n-step"><span class="n8n-node nn-ai">Orchestrator Agent</span><span class="n8n-edge">→</span><span class="n8n-desc">Sonnet이 질문 분석 + 필요 에이전트 호출 결정</span></div>
+      <div class="n8n-step"><span class="n8n-node nn-r">News Agent Tool</span><span class="n8n-edge">→</span><span class="n8n-desc">Haiku + Alpha Vantage + GDELT (필요 시)</span></div>
+      <div class="n8n-step"><span class="n8n-node nn-r">OnChain Agent Tool</span><span class="n8n-edge">→</span><span class="n8n-desc">Haiku + Blockchair + Whale Alert (필요 시)</span></div>
+      <div class="n8n-step"><span class="n8n-node nn-r">Macro Agent Tool</span><span class="n8n-edge">→</span><span class="n8n-desc">Haiku + FRED + FOMC RAG (필요 시)</span></div>
+      <div class="n8n-step"><span class="n8n-node nn-ai">Orchestrator 종합</span><span class="n8n-edge">→</span><span class="n8n-desc">에이전트 결과 통합 + 최종 verdict + reasoning</span></div>
+      <div class="n8n-step"><span class="n8n-node nn-c">Code (Message Bus)</span><span class="n8n-edge">→</span><span class="n8n-desc">intermediate steps에서 에이전트 간 대화 로그 추출</span></div>
+      <div class="n8n-step"><span class="n8n-node nn-o">Discord + Sheets</span><span class="n8n-edge">→</span><span class="n8n-desc">최종 답변 + 전체 로그 기록</span></div>
+    </div>
+  </div>
+
+  <div class="callout blue">
+    <strong>💡 모델 비용 최적화 전략:</strong><br>
+    • <strong>Orchestrator = Sonnet</strong> (판단 품질 중요, 호출 1회)<br>
+    • <strong>Sub-agents = Haiku</strong> (속도 + 낮은 비용, 호출 여러 번)<br>
+    복잡한 질문 1회당: Sonnet $0.01 + Haiku × 3 = $0.005 ≈ <strong>총 $0.015</strong>. 하루 10회 × 30일 = 월 $4.5.
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- 4교시: 메시지 버스 로깅 -->
+<section data-section="4교시: 메시지 버스 로깅">
+  <div class="eyebrow">Session 4 · 45min</div>
+  <h2>4교시 — 메시지 버스 로깅과 디버깅</h2>
+
+  <p>멀티 에이전트의 가장 큰 함정은 <strong>"왜 이런 답이 나왔는지 모른다"</strong>는 점입니다. 에이전트 3명이 동시에 일하는데 중간 과정을 못 보면 디버깅이 지옥. 메시지 버스로 모든 에이전트 대화를 기록합니다.</p>
+
+  <h3>Return Intermediate Steps 활용</h3>
+  <p>Orchestrator의 <strong>Return Intermediate Steps를 ON</strong>으로 하면 응답에 모든 sub-agent 호출 내역이 포함됩니다.</p>
+
+<pre class="code-block"><span class="cm">// Orchestrator 응답에서 메시지 버스 추출</span>
+<span class="kw">const</span> orchestratorOutput = $input.item.json;
+<span class="kw">const</span> steps = orchestratorOutput.intermediateSteps || [];
+
+<span class="cm">// 각 sub-agent 호출을 타임스탬프와 함께 로그화</span>
+<span class="kw">const</span> messageBus = [];
+<span class="kw">const</span> startTime = <span class="kw">new</span> Date();
+
+<span class="kw">for</span> (<span class="kw">let</span> i = <span class="num">0</span>; i &lt; steps.length; i++) {
+  <span class="kw">const</span> step = steps[i];
+  <span class="kw">const</span> agentName = step.action?.tool || <span class="str">'unknown'</span>;
+  <span class="kw">const</span> input = step.action?.toolInput || {};
+  <span class="kw">const</span> output = step.observation || <span class="str">''</span>;
+  
+  <span class="cm">// 호출 시점</span>
+  messageBus.<span class="fn">push</span>({
+    t: <span class="kw">new</span> Date(startTime.<span class="fn">getTime</span>() + i * <span class="num">100</span>).<span class="fn">toISOString</span>(),
+    actor: <span class="str">'orchestrator'</span>,
+    action: <span class="str">'CALL'</span>,
+    target: agentName,
+    payload: JSON.<span class="fn">stringify</span>(input).<span class="fn">slice</span>(<span class="num">0</span>, <span class="num">100</span>)
+  });
+  
+  <span class="cm">// 응답 시점</span>
+  messageBus.<span class="fn">push</span>({
+    t: <span class="kw">new</span> Date(startTime.<span class="fn">getTime</span>() + i * <span class="num">100</span> + <span class="num">50</span>).<span class="fn">toISOString</span>(),
+    actor: agentName,
+    action: <span class="str">'RESPOND'</span>,
+    target: <span class="str">'orchestrator'</span>,
+    payload: <span class="kw">typeof</span> output === <span class="str">'string'</span> ? output.<span class="fn">slice</span>(<span class="num">0</span>, <span class="num">150</span>) : JSON.<span class="fn">stringify</span>(output).<span class="fn">slice</span>(<span class="num">0</span>, <span class="num">150</span>)
+  });
+}
+
+<span class="cm">// 최종 결정</span>
+messageBus.<span class="fn">push</span>({
+  t: <span class="kw">new</span> Date().<span class="fn">toISOString</span>(),
+  actor: <span class="str">'orchestrator'</span>,
+  action: <span class="str">'FINAL'</span>,
+  target: <span class="str">'user'</span>,
+  payload: orchestratorOutput.output?.<span class="fn">slice</span>(<span class="num">0</span>, <span class="num">200</span>) || <span class="str">''</span>
+});
+
+<span class="kw">return</span> {
+  final_answer: orchestratorOutput.output,
+  message_bus: messageBus,
+  agent_count_called: steps.length,
+  total_time_ms: <span class="kw">new</span> Date() - startTime
+};
+</pre>
+
+  <h3>예시 메시지 버스 (Discord 디버그 채널 출력)</h3>
+  <div class="msg-flow">
+    <div class="msg-event">
+      <div class="msg-time">00:00.00</div>
+      <div class="msg-body"><span class="msg-actor orch">ORCH</span><strong>CALL</strong> → news_agent ({ticker: "AAPL", hours: 24})</div>
+    </div>
+    <div class="msg-event">
+      <div class="msg-time">00:01.23</div>
+      <div class="msg-body"><span class="msg-actor news">NEWS</span><strong>RESPOND</strong> → sentiment +0.18, 주요 사건: WWDC AI 칩 발표</div>
+    </div>
+    <div class="msg-event">
+      <div class="msg-time">00:01.50</div>
+      <div class="msg-body"><span class="msg-actor orch">ORCH</span><strong>CALL</strong> → macro_agent ({focus: "rates"})</div>
+    </div>
+    <div class="msg-event">
+      <div class="msg-time">00:02.87</div>
+      <div class="msg-body"><span class="msg-actor macro">MACRO</span><strong>RESPOND</strong> → 금리 5.50% 동결, FOMC 점도표 3.625 (2026)</div>
+    </div>
+    <div class="msg-event">
+      <div class="msg-time">00:03.42</div>
+      <div class="msg-body"><span class="msg-actor orch">ORCH</span><strong>FINAL</strong> → WATCH (confidence 3): 기술적 모멘텀 긍정적이나 고금리 지속...</div>
+    </div>
+  </div>
+
+  <div class="callout green">
+    <strong>✨ 이 로그가 왜 중요한가:</strong> 다음 날 에이전트가 이상한 답변을 했을 때 <strong>"왜"가 바로 보입니다</strong>. "News Agent가 제대로 안 물어봤네", "Macro Agent가 FOMC 검색을 놓쳤네" 같은 원인 분석이 즉시 가능. 이게 없으면 블랙박스.
+  </div>
+
+  <h3>로그 저장 — Sheets "agent_trace" 탭</h3>
+  <p>메시지 버스를 Google Sheets에 기록해두면 주간·월간 분석에 유용합니다. <strong>어느 에이전트가 가장 자주 틀리는지</strong>, <strong>평균 응답 시간은 얼마인지</strong> 집계 가능.</p>
+
+  <table class="dtable">
+    <thead><tr><th>필드</th><th>예시 값</th><th>용도</th></tr></thead>
+    <tbody>
+      <tr><td><code>query_id</code></td><td>uuid-1234</td><td>같은 질문의 여러 에이전트 호출 묶기</td></tr>
+      <tr><td><code>actor</code></td><td>news_agent</td><td>누가 말했는지</td></tr>
+      <tr><td><code>target</code></td><td>orchestrator</td><td>누구에게</td></tr>
+      <tr><td><code>action</code></td><td>RESPOND</td><td>CALL / RESPOND / FINAL</td></tr>
+      <tr><td><code>latency_ms</code></td><td>1230</td><td>응답 시간</td></tr>
+      <tr><td><code>payload_summary</code></td><td>sentiment +0.18</td><td>핵심 내용 요약</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<div class="divider"></div>
+
+<!-- 디버깅 -->
+<section data-section="테스트와 디버깅">
+  <div class="eyebrow">Test &amp; Debug</div>
+  <h2>실행 테스트와 디버깅</h2>
+
+  <div class="ts-block">
+    <div style="font-size:11px;font-weight:700;color:#991b1b;margin-bottom:6px">🚨 이번 주 자주 발생하는 오류</div>
+    <div class="ts-item">
+      <div class="ts-q">Orchestrator가 서브 에이전트를 하나도 호출 안 함</div>
+      <div class="ts-a">Tool Description이 너무 모호함. "뉴스 관련 질문에 사용"보다 "주식/암호화폐에 대한 최근 뉴스·센티먼트·사건 질문에 사용. 예: '애플 최근 뉴스', 'BTC 관련 이벤트'"처럼 <strong>예시까지 포함</strong>.</div>
+    </div>
+    <div class="ts-item">
+      <div class="ts-q">서브 에이전트가 자유 텍스트로 답해서 후처리 실패</div>
+      <div class="ts-a">Structured Output Parser 연결 + System Message 마지막에 <strong>"JSON만 출력. 설명 금지."</strong> 강조. Temperature 0.1로.</div>
+    </div>
+    <div class="ts-item">
+      <div class="ts-q">Max Iterations 도달로 에이전트 멈춤</div>
+      <div class="ts-a">기본 10에서 <strong>5~7로 조정</strong>. 10번 내내 reasoning만 하는 건 질문이 너무 복잡하거나 프롬프트가 모호. 테스트할 때 <strong>질문을 명확하게</strong>.</div>
+    </div>
+    <div class="ts-item">
+      <div class="ts-q">비용이 예상보다 많이 나옴</div>
+      <div class="ts-a">서브 에이전트가 Haiku가 아닌 Sonnet으로 잘못 설정됨. 각 서브의 Chat Model 설정 확인. 토큰 사용량은 Anthropic Console → Usage에서 모델별 확인 가능.</div>
+    </div>
+    <div class="ts-item">
+      <div class="ts-q">서브 에이전트 응답이 너무 느림</div>
+      <div class="ts-a">각 서브의 툴 수를 3~5개로 제한. 5개 초과 시 결정 피로 발생. 또는 Max Iterations를 서브별로 2~3으로 낮춤.</div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- 체크리스트 -->
+<section data-section="완료 체크리스트">
+  <div class="eyebrow">Completion Checklist</div>
+  <h2>이번 주 완료 체크리스트</h2>
+
+  <div class="checklist">
+    <div class="ck-title">✅ 아래 항목이 모두 체크되면 W7 완료</div>
+    <div class="ck-item">News Agent 구현 — Alpha Vantage + GDELT 툴 연결 + JSON 출력 검증</div>
+    <div class="ck-item">OnChain Agent 구현 — Blockchair + Whale Alert 연결 + BTC/ETH 쿼리 성공</div>
+    <div class="ck-item">Macro Agent 구현 — FRED + W6 FOMC RAG 연결 + 출처 인용 확인</div>
+    <div class="ck-item">각 서브 에이전트가 <strong>Haiku</strong>로 설정됨 + System Message 명확</div>
+    <div class="ck-item">Orchestrator 에이전트 생성 — Sonnet + 3개 AI Agent Tool 연결</div>
+    <div class="ck-item">Return Intermediate Steps 옵션 ON</div>
+    <div class="ck-item">"AAPL 오늘 어때?" 테스트 → 2개 에이전트 호출 + 종합 verdict 수신</div>
+    <div class="ck-item">"BTC 분석해줘" 테스트 → chain + macro 호출 확인</div>
+    <div class="ck-item">Code 노드로 메시지 버스 로그 추출 + Sheets "agent_trace" 탭 기록</div>
+    <div class="ck-item">Discord에 최종 답변 + (옵션) 디버그 채널에 메시지 버스 로그</div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- 과제 -->
+<section data-section="이번 주 과제">
+  <div class="eyebrow">Homework</div>
+  <h2>이번 주 과제</h2>
+
+  <div class="hw-block">
+    <span class="hw-tag">📝 HOMEWORK · W7</span>
+    <div class="hw-title">4번째 전문 에이전트 추가</div>
+    <ul class="hw-list">
+      <li>본인 관심 영역에 맞는 <strong>4번째 서브 에이전트</strong> 설계 및 추가 (예: "실적 발표 Agent" — Alpha Vantage EARNINGS_CALENDAR 활용, 또는 "한국 종목 Agent" — DART 공시 API 활용)</li>
+      <li>새 에이전트의 System Message 작성 → Orchestrator에 툴로 연결 → 테스트</li>
+      <li><strong>1주일간 에이전트 호출 통계 수집:</strong> agent_trace 시트에서 "어느 에이전트가 가장 자주 호출되나", "평균 응답 시간", "실패율" 집계</li>
+      <li><strong>선택 챌린지 A:</strong> Orchestrator가 에이전트 <strong>병렬 호출</strong>하도록 Split In Batches + Merge 노드 구성 → 응답 시간 단축 비교</li>
+      <li><strong>선택 챌린지 B:</strong> <strong>Human-in-the-loop 승인 단계</strong> 추가 — verdict가 BUY_STRONG일 때 Discord 버튼으로 승인/거부 받은 후에만 알림 발송</li>
+    </ul>
+  </div>
+
+  <div class="callout green" style="margin-top:12px">
+    <strong>💡 W8 미리보기:</strong> 마지막 주(Phase 4 완성)는 <strong>페이퍼 트레이딩 + 최종 발표</strong>입니다. 지금까지 만든 4-에이전트 시스템을 <strong>실제 가상 돈으로</strong> 연결합니다. Alpaca Paper Trading과 Binance Testnet을 연동해 에이전트의 BUY/AVOID 판단이 <strong>실제 가상 주문</strong>으로 이어지는 완전한 시스템을 만듭니다. 그리고 발표 준비 — 지원서·포트폴리오로 바로 쓸 수 있게.
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- 참고 자료 -->
+<section data-section="참고 자료">
+  <div class="eyebrow">References</div>
+  <h2>참고 자료</h2>
+  <table class="dtable">
+    <thead><tr><th>자료</th><th>용도</th></tr></thead>
+    <tbody>
+      <tr><td><strong>n8n AI Agent Tool 노드 Docs</strong><br><code>docs.n8n.io/integrations/builtin/cluster-nodes/sub-nodes/n8n-nodes-langchain.toolaiagent</code></td><td>서브 에이전트 Tool 패턴 공식 가이드</td></tr>
+      <tr><td><strong>n8n Multi-Agent Patterns</strong><br><code>blog.n8n.io/ai-agentic-workflows</code></td><td>Gatekeeper 패턴, 단일 vs 멀티 비교</td></tr>
+      <tr><td><strong>Blockchair API Docs</strong><br><code>blockchair.com/api/docs</code></td><td>Bitcoin/Ethereum 무료 stats 엔드포인트</td></tr>
+      <tr><td><strong>Whale Alert</strong><br><code>whale-alert.io</code></td><td>공개 피드 및 API 문서</td></tr>
+      <tr><td><strong>GDELT Project</strong><br><code>blog.gdeltproject.org</code></td><td>무료 전세계 뉴스 DB (매크로 뉴스용)</td></tr>
+      <tr><td><strong>Structured Output Parser</strong><br><code>docs.n8n.io/integrations/builtin/cluster-nodes/sub-nodes/n8n-nodes-langchain.outputparserstructured</code></td><td>JSON 스키마 강제 응답</td></tr>
+      <tr><td><strong>Anthropic Console — Usage</strong><br><code>console.anthropic.com/settings/usage</code></td><td>모델별 토큰 사용량·비용 추적</td></tr>
+    </tbody>
+  </table>
+</section>
+
+</div>
+
+<div style="background:var(--black);color:#888;text-align:center;padding:24px 20px;font-size:11px;line-height:2;margin-bottom:var(--fh)">
+  W7 강의노트 · 멀티 에이전트 오케스트레이션 · 대학생 투자 자동화 과정 · 2026
+</div>
+
+<script>
+const sections = document.querySelectorAll('[data-section]');
+const sfT = document.getElementById('sf-t');
+const sfP = document.getElementById('sf-p');
+function update(){
+  const sy = window.scrollY;
+  const dh = document.documentElement.scrollHeight - window.innerHeight;
+  sfP.textContent = Math.round((sy / Math.max(dh, 1)) * 100) + '%';
+  let cur = sections[0]?.dataset.section || '';
+  sections.forEach(s => {
+    if(sy >= s.getBoundingClientRect().top + sy - 110) cur = s.dataset.section;
+  });
+  if(sfT.textContent !== cur) sfT.textContent = cur;
+}
+window.addEventListener('scroll', update, {passive:true});
+update();
+</script>
+</body>
+</html>
