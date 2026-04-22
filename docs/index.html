@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>투자 자동화 커리큘럼 — 목차</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --border: #30363d;
+      --text: #e6edf3;
+      --muted: #8b949e;
+      --accent: #58a6ff;
+      --accent-hover: #79c0ff;
+      --orange: #ff9d4d;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans KR", Roboto, sans-serif;
+      line-height: 1.6;
+    }
+    .container {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 48px 24px;
+    }
+    header {
+      text-align: center;
+      margin-bottom: 48px;
+      padding-bottom: 32px;
+      border-bottom: 1px solid var(--border);
+    }
+    header h1 {
+      margin: 0 0 12px;
+      font-size: 2rem;
+      letter-spacing: -0.02em;
+    }
+    header p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 1rem;
+    }
+    header .repo-link {
+      display: inline-block;
+      margin-top: 16px;
+      color: var(--accent);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    header .repo-link:hover { color: var(--accent-hover); }
+    section {
+      margin-bottom: 40px;
+    }
+    section h2 {
+      font-size: 1.25rem;
+      margin: 0 0 16px;
+      padding-left: 12px;
+      border-left: 3px solid var(--orange);
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 12px;
+    }
+    .card {
+      display: block;
+      padding: 14px 16px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      text-decoration: none;
+      transition: border-color 0.15s, transform 0.15s;
+    }
+    .card:hover {
+      border-color: var(--accent);
+      transform: translateY(-1px);
+    }
+    .card .label {
+      font-size: 0.75rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .card .title {
+      margin-top: 4px;
+      font-weight: 500;
+    }
+    .card.overview { border-color: var(--orange); }
+    footer {
+      margin-top: 64px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+    footer a { color: var(--accent); text-decoration: none; }
+    footer a:hover { color: var(--accent-hover); }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>🤖 투자 자동화 커리큘럼</h1>
+      <p>AI 에이전트 · n8n · 페이퍼 트레이딩으로 배우는 8주 실습형 교육 과정</p>
+      <a class="repo-link" href="https://github.com/keerhee/invest-automation-curriculum">GitHub 저장소 →</a>
+    </header>
+
+    <section>
+      <h2>📘 개요</h2>
+      <div class="grid">
+        <a class="card overview" href="lectures/00_Curriculum_Overview.html">
+          <div class="label">Overview</div>
+          <div class="title">커리큘럼 전체 개요</div>
+        </a>
+        <a class="card overview" href="lectures/SP_KIS_API_Special_Sessions.html">
+          <div class="label">Special</div>
+          <div class="title">KIS API 특별 세션</div>
+        </a>
+      </div>
+    </section>
+
+    <section>
+      <h2>📚 강의 노트 (Lectures)</h2>
+      <div class="grid">
+        <a class="card" href="lectures/W1_Lecture_Notes.html"><div class="label">Week 1</div><div class="title">n8n 설치 + 첫 시세 수집</div></a>
+        <a class="card" href="lectures/W2_Lecture_Notes.html"><div class="label">Week 2</div><div class="title">4자산 확장 + 기술지표</div></a>
+        <a class="card" href="lectures/W3_Lecture_Notes.html"><div class="label">Week 3</div><div class="title">뉴스 센티먼트</div></a>
+        <a class="card" href="lectures/W4_Lecture_Notes.html"><div class="label">Week 4</div><div class="title">차트 패턴 (Claude Vision)</div></a>
+        <a class="card" href="lectures/W5_Lecture_Notes.html"><div class="label">Week 5</div><div class="title">스케줄러 + 에러 핸들러</div></a>
+        <a class="card" href="lectures/W6_Lecture_Notes.html"><div class="label">Week 6</div><div class="title">Vector RAG</div></a>
+        <a class="card" href="lectures/W7_Lecture_Notes.html"><div class="label">Week 7</div><div class="title">멀티 에이전트 오케스트레이션</div></a>
+        <a class="card" href="lectures/W8_Lecture_Notes.html"><div class="label">Week 8</div><div class="title">Paper Trading 통합</div></a>
+      </div>
+    </section>
+
+    <section>
+      <h2>📝 과제 (Homework)</h2>
+      <div class="grid">
+        <a class="card" href="homework/W1_Homework.html"><div class="label">Week 1</div><div class="title">W1 과제</div></a>
+        <a class="card" href="homework/W2_Homework.html"><div class="label">Week 2</div><div class="title">W2 과제</div></a>
+        <a class="card" href="homework/W3_Homework.html"><div class="label">Week 3</div><div class="title">W3 과제</div></a>
+        <a class="card" href="homework/W4_Homework.html"><div class="label">Week 4</div><div class="title">W4 과제</div></a>
+        <a class="card" href="homework/W5_Homework.html"><div class="label">Week 5</div><div class="title">W5 과제</div></a>
+        <a class="card" href="homework/W6_Homework.html"><div class="label">Week 6</div><div class="title">W6 과제</div></a>
+        <a class="card" href="homework/W7_Homework.html"><div class="label">Week 7</div><div class="title">W7 과제</div></a>
+        <a class="card" href="homework/W8_Homework.html"><div class="label">Week 8</div><div class="title">W8 과제</div></a>
+        <a class="card" href="homework/KIS_Homework.html"><div class="label">Special</div><div class="title">KIS API 과제</div></a>
+      </div>
+    </section>
+
+    <section>
+      <h2>🧪 실습 노트북 (Labs)</h2>
+      <p style="color: var(--muted); font-size: 0.9rem; margin-top: -8px;">.ipynb 파일은 GitHub에서 렌더링됩니다.</p>
+      <div class="grid">
+        <a class="card" href="https://github.com/keerhee/invest-automation-curriculum/blob/main/docs/labs/W1_Lab.ipynb"><div class="label">Week 1</div><div class="title">W1 Lab</div></a>
+        <a class="card" href="https://github.com/keerhee/invest-automation-curriculum/blob/main/docs/labs/W2_Lab.ipynb"><div class="label">Week 2</div><div class="title">W2 Lab</div></a>
+        <a class="card" href="https://github.com/keerhee/invest-automation-curriculum/blob/main/docs/labs/W3_Lab.ipynb"><div class="label">Week 3</div><div class="title">W3 Lab</div></a>
+        <a class="card" href="https://github.com/keerhee/invest-automation-curriculum/blob/main/docs/labs/W4_Lab.ipynb"><div class="label">Week 4</div><div class="title">W4 Lab</div></a>
+        <a class="card" href="https://github.com/keerhee/invest-automation-curriculum/blob/main/docs/labs/W5_Lab.ipynb"><div class="label">Week 5</div><div class="title">W5 Lab</div></a>
+        <a class="card" href="https://github.com/keerhee/invest-automation-curriculum/blob/main/docs/labs/W6_Lab.ipynb"><div class="label">Week 6</div><div class="title">W6 Lab</div></a>
+        <a class="card" href="https://github.com/keerhee/invest-automation-curriculum/blob/main/docs/labs/W7_Lab.ipynb"><div class="label">Week 7</div><div class="title">W7 Lab</div></a>
+        <a class="card" href="https://github.com/keerhee/invest-automation-curriculum/blob/main/docs/labs/W8_Lab.ipynb"><div class="label">Week 8</div><div class="title">W8 Lab</div></a>
+      </div>
+    </section>
+
+    <section>
+      <h2>📎 부록 (Appendix)</h2>
+      <div class="grid">
+        <a class="card" href="appendix/Appendix_A_n8n_Manual.html"><div class="label">Appendix A</div><div class="title">n8n 매뉴얼</div></a>
+        <a class="card" href="appendix/Appendix_B_Hybrid_RAG_Guide.html"><div class="label">Appendix B</div><div class="title">Hybrid RAG 가이드</div></a>
+        <a class="card" href="appendix/Appendix_C_KIS_API_Reference.html"><div class="label">Appendix C</div><div class="title">KIS API 레퍼런스</div></a>
+        <a class="card" href="appendix/Appendix_D_Prompt_Package.html"><div class="label">Appendix D</div><div class="title">Prompt Package</div></a>
+        <a class="card" href="appendix/Appendix_E_Safety_Checklist.html"><div class="label">Appendix E</div><div class="title">Safety Checklist</div></a>
+      </div>
+    </section>
+
+    <footer>
+      Licensed under <a href="https://github.com/keerhee/invest-automation-curriculum/blob/main/LICENSE">CC BY-NC 4.0</a> ·
+      <a href="https://github.com/keerhee/invest-automation-curriculum">Source on GitHub</a>
+    </footer>
+  </div>
+</body>
+</html>
