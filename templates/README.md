@@ -71,7 +71,7 @@ cp templates/env/.env.example .env
 
 ## 💡 커스터마이징
 
-자신의 환경에 맞게 수정한 템플릿을 다른 학생들과 공유하고 싶다면:
+자신의 환경에 맞게 수정한 템플릿을 다른 수강생들과 공유하고 싶다면:
 
 1. [CONTRIBUTING.md](../CONTRIBUTING.md) 참조
 2. 포크 → 수정 → Pull Request

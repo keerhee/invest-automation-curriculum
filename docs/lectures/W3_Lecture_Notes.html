@@ -322,14 +322,14 @@ code{font-family:'JetBrains Mono','Courier New',monospace;background:#eef;paddin
     <div class="step-title">Alpha Vantage 가입 + 키 발급 (2분)</div>
     <ol class="step-list">
       <li><code>https://www.alphavantage.co/support/#api-key</code> 접속</li>
-      <li>이메일, 기관(학생이면 <code>University Student</code>), 용도 기입 → <strong>GET FREE API KEY</strong></li>
+      <li>이메일, 기관(예: <code>University Student</code> 또는 <code>Individual</code>), 용도 기입 → <strong>GET FREE API KEY</strong></li>
       <li>즉시 화면에 16자리 키 표시 — 복사해 안전한 곳에 저장</li>
       <li>n8n Credentials 메뉴 → Header Auth 또는 쿼리 파라미터로 저장</li>
     </ol>
   </div>
 
   <div class="callout orange">
-    <strong>⚠️ 무료 티어 한계:</strong> <strong>25 requests/day</strong>. 대학생 과정 범위에는 충분하지만 남발하지 말 것. 종목 5개 × 하루 1회 = 5 req/day 권장. 한도 초과 시 메시지 <code>"Note: API rate limit"</code>이 응답에 포함.
+    <strong>⚠️ 무료 티어 한계:</strong> <strong>25 requests/day</strong>. 본 과정 범위에는 충분하지만 남발하지 말 것. 종목 5개 × 하루 1회 = 5 req/day 권장. 한도 초과 시 메시지 <code>"Note: API rate limit"</code>이 응답에 포함.
   </div>
 
   <h3>NEWS_SENTIMENT API 호출</h3>
@@ -548,14 +548,14 @@ code{font-family:'JetBrains Mono','Courier New',monospace;background:#eef;paddin
 
   <div class="prompt-card">
     <div class="pc-label">SYSTEM MESSAGE (System Prompt)</div>
-당신은 <strong>대학생 투자자를 돕는 시장 분석 보조 에이전트</strong>입니다.<br><br>
+당신은 <strong>개인 투자자를 돕는 시장 분석 보조 에이전트</strong>입니다.<br><br>
 입력으로 다음 두 가지가 JSON으로 들어옵니다:<br>
 1. <strong>price_data</strong>: 현재가, RSI(14), MA20, 볼린저밴드, 기술적 신호(signal)<br>
 2. <strong>news_data</strong>: 24시간 내 주요 뉴스 5개, 가중평균 센티먼트, 레이블<br><br>
 당신의 임무:<br>
 (1) 가격 기술적 신호와 뉴스 센티먼트가 <strong>일치하는지 충돌하는지</strong> 먼저 판단<br>
 (2) 충돌 시 뉴스 쪽에 더 무게를 두고 해석 (뉴스가 원인, 가격이 결과)<br>
-(3) 대학생 수준에서 이해 가능한 <strong>2문장 이내</strong> 코멘트 작성<br>
+(3) 입문자 수준에서 이해 가능한 <strong>2문장 이내</strong> 코멘트 작성<br>
 (4) 반드시 아래 JSON 형식으로만 응답. 다른 텍스트 금지.<br><br>
 <strong>출력 스키마:</strong><br>
 {<br>
@@ -717,7 +717,7 @@ code{font-family:'JetBrains Mono','Courier New',monospace;background:#eef;paddin
 </div>
 
 <div style="background:var(--black);color:#888;text-align:center;padding:24px 20px;font-size:11px;line-height:2;margin-bottom:var(--fh)">
-  W3 강의노트 · 뉴스 센티먼트 + AI Agent 입문 · 대학생 투자 자동화 과정 · 2026
+  W3 강의노트 · 뉴스 센티먼트 + AI Agent 입문 · 투자 자동화 과정 · 2026
 </div>
 
 <script>
